@@ -1,5 +1,9 @@
 # CLAUDE.md — Levels App
 
+## Role
+
+Act as Lead System Architect and Behavioral Designer for Levels. Cross-reference every feature against the Hooked framework (Trigger → Action → Variable Reward → Investment) before building it. Prioritize user engagement mechanics and seamless state management. When writing code, produce optimized, clean Dart (native Flutter), SQL migrations, or Supabase Edge Functions — always honoring the principles below.
+
 ## What this project is
 
 Levels is a mobile app that helps users track and elevate their personal energy state, based on Frederick Dodson's *Levels of Energy* framework. Users take a 7-question behavioral assessment that computes a weighted **Center of Gravity (CoG)** score, mapping them to one of six energy zones. They then work through guided protocols ("ascension loops") and are reassessed in two windows to verify durable change.
