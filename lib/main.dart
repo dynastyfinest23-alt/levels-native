@@ -1,19 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
-  runApp(const MainApp());
+import 'core/env.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Env.validate();
+  await Supabase.initialize(
+    url: Env.supabaseUrl,
+    publishableKey: Env.supabasePublishableKey,
+  );
+  runApp(const LevelsApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class LevelsApp extends StatelessWidget {
+  const LevelsApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+    return MaterialApp(
+      title: 'Levels',
+      theme: ThemeData(
+        colorSchemeSeed: const Color(0xFF5B4FD9),
+        useMaterial3: true,
+      ),
+      home: const Scaffold(
+        body: Center(child: Text('Levels')),
       ),
     );
   }

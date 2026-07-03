@@ -1,6 +1,9 @@
 # Supabase
 supabase/.temp/
 
+# Local environment config (use env.example.json as template)
+env.json
+
 # Miscellaneous
 *.class
 *.log
