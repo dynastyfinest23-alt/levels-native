@@ -28,21 +28,23 @@ All scoring, classification, and routing logic lives in deterministic Postgres f
 
 ### Answer enum → raw score (p1_answer)
 
+Calibration source: Frederick Dodson's *Levels of Energy* scale (shame 30, apathy 50, grief 80, fear 100, desire 120, anger 160, pride 190, contentment 200, courage 275, willingness 320, neutrality 400, love 530). Composite tokens use the anchor of their range. These values match the deployed `answer_to_raw_score` function body (verified against production 2026-07-03); earlier drafts of this table carried stale Hawkins-derived numbers. `shame_apathy` = 30 intentionally anchors on Shame (30), not the shame–apathy band midpoint.
+
 | Token | Raw score |
 |---|---|
-| shame_apathy | 25 |
-| apathy_grief | 60 |
+| shame_apathy | 30 |
+| apathy_grief | 65 |
 | fear | 100 |
-| desire | 125 |
-| anger | 150 |
-| pride | 175 |
+| desire | 120 |
+| anger | 160 |
+| pride | 190 |
 | contentment | 200 |
 | courage | 275 |
 | willingness | 320 |
 | neutrality | 400 |
-| love_flow | 500 |
+| love_flow | 530 |
 
-Note: `contentment` (200), `courage` (275), `willingness` (320), and `neutrality` (400) are the **true Dodson calibration** tokens introduced in v1.1, replacing the earlier conflated `courage_neutrality` / `willingness_acceptance` / `reason` tokens. If you find code or docs referencing the old tokens, treat them as stale and flag them.
+Note: `contentment` (200), `courage` (275), `willingness` (320), and `neutrality` (400) are the **true Dodson calibration** tokens introduced in v1.1, replacing the earlier conflated `courage_neutrality` / `willingness_acceptance` / `reason` tokens. The old tokens still exist in the DB enum (Postgres enums cannot drop values) but must never be written. If you find code or docs referencing the old tokens, treat them as stale and flag them.
 
 ### Downward anchor weighting
 
@@ -50,11 +52,13 @@ Any raw score **< 200** is multiplied by **1.5** before averaging (`apply_downwa
 
 ### Score → zone (score_to_zone)
 
+Boundaries match the deployed `score_to_zone` function body (upper bounds exclusive; verified against production 2026-07-03).
+
 | Zone | Range |
 |---|---|
-| collapsed | < 76 |
-| contracted | 76–149 |
-| reactive | 150–199 |
+| collapsed | < 90 |
+| contracted | 90–139 |
+| reactive | 140–199 |
 | threshold | 200–299 |
 | builder | 300–499 |
 | flow | 500+ |
@@ -106,7 +110,7 @@ Classification thresholds: combined_delta = (q1_delta + q2_delta) / 2. Delta ≥
 - Enum values: query `pg_type` joined to `pg_enum` (NOT `information_schema.columns`).
 - Function body: `SELECT pg_get_functiondef(p.oid) FROM pg_proc p WHERE proname = '<name>';`
 - RLS INSERT policy: check the `with_check` column on `pg_policies`.
-- Golden tests for scoring: `score_to_zone(60)→collapsed`, `(110)→contracted`, `(165)→reactive`, `(230)→threshold`, `(380)→builder`, `(520)→flow`; `apply_downward_anchor_weight(100)→150.00`, `(225)→225.00`.
+- Golden tests for scoring: `score_to_zone(60)→collapsed`, `(110)→contracted`, `(165)→reactive`, `(230)→threshold`, `(380)→builder`, `(520)→flow`; boundary edges: `(89.99)→collapsed`, `(90)→contracted`, `(139.99)→contracted`, `(140)→reactive`, `(199.99)→reactive`, `(200)→threshold`, `(299.99)→threshold`, `(300)→builder`, `(499.99)→builder`, `(500)→flow`; `apply_downward_anchor_weight(100)→150.00`, `(199)→298.50`, `(200)→200.00`, `(225)→225.00`.
 - Classification tests: `compute_phase5_classification(30, 28.5, 'ascension')` → delta 29.25, true_ascension, new_loop; `(15, 12.0, 'movement')` → residual_charge, deepening_protocol; `(-5, -8.0, 'regression')` → false_positive, track_reassignment.
 
 Maintain an automated client-side test suite that asserts the Dart/TS mirror functions produce identical outputs to these golden values, so client/DB drift is caught in CI.
