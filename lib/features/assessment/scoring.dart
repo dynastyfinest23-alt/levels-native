@@ -76,10 +76,10 @@ EnergyZone scoreToZone(num score) {
 /// otherwise allow an all-love_flow assessment to score into Flow directly.
 const double singleAssessmentCogCap = 499.99;
 
-/// Provisional Center of Gravity: weighted average of all 7 answers, clamped
-/// to [singleAssessmentCogCap] and rounded to 2 decimals, in the same order
-/// as the DB (`LEAST` before `ROUND(v_cog, 2)`).
-double computeCogPreview(List<P1Answer> answers) {
+/// Unrounded, unclamped weighted average — the DB's `v_cog` right after the
+/// AVG and before the clamp. Shared by [computeCogPreview] and
+/// [cogPreviewWasClamped] so both read the same pre-clamp value.
+double _unclampedCog(List<P1Answer> answers) {
   if (answers.length != 7) {
     throw ArgumentError.value(
       answers.length,
@@ -91,7 +91,20 @@ double computeCogPreview(List<P1Answer> answers) {
     0,
     (total, answer) => total + applyDownwardAnchorWeight(answer.rawScore),
   );
-  final cog = weightedSum / 7;
+  return weightedSum / 7;
+}
+
+/// Provisional Center of Gravity: weighted average of all 7 answers, clamped
+/// to [singleAssessmentCogCap] and rounded to 2 decimals, in the same order
+/// as the DB (`LEAST` before `ROUND(v_cog, 2)`).
+double computeCogPreview(List<P1Answer> answers) {
+  final cog = _unclampedCog(answers);
   final clamped = cog > singleAssessmentCogCap ? singleAssessmentCogCap : cog;
   return (clamped * 100).round() / 100;
 }
+
+/// Mirror of the DB's `v_was_clamped := (v_cog > 499.99)`, captured against
+/// the pre-clamp average. Stored server-side in
+/// `phase1_assessments.was_clamped`; the DB row is authoritative.
+bool cogPreviewWasClamped(List<P1Answer> answers) =>
+    _unclampedCog(answers) > singleAssessmentCogCap;

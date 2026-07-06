@@ -106,6 +106,24 @@ void main() {
       expect(scoreToZone(computeCogPreview(answers)), EnergyZone.builder);
     });
 
+    test('cogPreviewWasClamped mirrors was_clamped capture-before-clamp', () {
+      // Verified against production 2026-07-06: all-love_flow row stored
+      // was_clamped = true, the 492.86 mixed row stored false.
+      expect(cogPreviewWasClamped(List.filled(7, P1Answer.loveFlow)), isTrue);
+      expect(
+        cogPreviewWasClamped([
+          P1Answer.loveFlow,
+          P1Answer.loveFlow,
+          P1Answer.loveFlow,
+          P1Answer.loveFlow,
+          P1Answer.loveFlow,
+          P1Answer.neutrality,
+          P1Answer.neutrality,
+        ]),
+        isFalse,
+      );
+    });
+
     test('mixed high set under 500 passes through unclamped', () {
       // 5 x 530 + 2 x 400 = 3450 / 7 = 492.857142... -> 492.86 (no clamp).
       final answers = [

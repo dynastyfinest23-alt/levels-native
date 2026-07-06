@@ -48,7 +48,7 @@ Note: `contentment` (200), `courage` (275), `willingness` (320), and `neutrality
 
 ### Downward anchor weighting
 
-Any raw score **< 200** is multiplied by **1.5** before averaging (`apply_downward_anchor_weight`). Scores ≥ 200 pass through unchanged. Center of Gravity = weighted average across all 7 answers, then **clamped to ≤ 499.99** — this single-assessment cap is *enforced inside* `compute_center_of_gravity` (`v_cog := LEAST(v_cog, 499.99)`, applied before zone derivation; deployed 2026-07-05), not merely a documentation rule. It exists because `love_flow = 530` sits above the Flow threshold (500): an all-love_flow assessment would otherwise average 530 and land directly in Flow, violating the climb-only Flow reachability rule. An all-love_flow assessment therefore scores 499.99 → `builder`. The Dart mirror `computeCogPreview` applies the identical clamp.
+Any raw score **< 200** is multiplied by **1.5** before averaging (`apply_downward_anchor_weight`). Scores ≥ 200 pass through unchanged. Center of Gravity = weighted average across all 7 answers, then **clamped to ≤ 499.99** — this single-assessment cap is *enforced inside* `compute_center_of_gravity` (`v_cog := LEAST(v_cog, 499.99)`, applied before zone derivation; deployed 2026-07-05), not merely a documentation rule. It exists because `love_flow = 530` sits above the Flow threshold (500): an all-love_flow assessment would otherwise average 530 and land directly in Flow, violating the climb-only Flow reachability rule. An all-love_flow assessment therefore scores 499.99 → `builder`. The Dart mirror `computeCogPreview` applies the identical clamp. Clamp state is stored as a first-class fact in `phase1_assessments.was_clamped` (BOOLEAN NOT NULL DEFAULT FALSE), captured inside `compute_center_of_gravity` via `v_was_clamped := (v_cog > 499.99)` *before* the `LEAST` clamp line (deployed 2026-07-06) — Phase 2's Edge Function reads it from the row, never derives it from `center_of_gravity = 499.99` (which a legitimate unclamped average could also produce). Dart mirror: `cogPreviewWasClamped`.
 
 ### Score → zone (score_to_zone)
 
@@ -66,6 +66,8 @@ Boundaries match the deployed `score_to_zone` function body (upper bounds exclus
 ### Consistency flag
 
 `consistent` (3+ answers cluster within ±50 pts), `transitional` (moderate variance), `scattered` (high variance → energetically inconsistent flag set).
+
+The cluster check compares **raw scores against the raw mean** (`ABS(s - v_raw_mean) <= 50`), not against the weighted/clamped CoG — so the ≤499.99 clamp does **not** feed the consistency flag. Verified against production 2026-07-06 both by function body and by a discriminating test: an all-`pride` assessment (raw mean 190, weighted CoG 285) returns `consistent`; a CoG-based check would have returned `transitional`. Re-verify this independence on any recalibration or function rewrite.
 
 ### Flow reachability (climb-based, never single-assessment)
 
@@ -110,7 +112,7 @@ Classification thresholds: combined_delta = (q1_delta + q2_delta) / 2. Delta ≥
 - Enum values: query `pg_type` joined to `pg_enum` (NOT `information_schema.columns`).
 - Function body: `SELECT pg_get_functiondef(p.oid) FROM pg_proc p WHERE proname = '<name>';`
 - RLS INSERT policy: check the `with_check` column on `pg_policies`.
-- Golden tests for scoring: `score_to_zone(60)→collapsed`, `(110)→contracted`, `(165)→reactive`, `(230)→threshold`, `(380)→builder`, `(520)→flow`; boundary edges: `(89.99)→collapsed`, `(90)→contracted`, `(139.99)→contracted`, `(140)→reactive`, `(199.99)→reactive`, `(200)→threshold`, `(299.99)→threshold`, `(300)→builder`, `(499.99)→builder`, `(500)→flow`; `apply_downward_anchor_weight(100)→150.00`, `(199)→298.50`, `(200)→200.00`, `(225)→225.00`.
+- Golden tests for scoring: `score_to_zone(60)→collapsed`, `(110)→contracted`, `(165)→reactive`, `(230)→threshold`, `(380)→builder`, `(520)→flow`; boundary edges: `(89.99)→collapsed`, `(90)→contracted`, `(139.99)→contracted`, `(140)→reactive`, `(199.99)→reactive`, `(200)→threshold`, `(299.99)→threshold`, `(300)→builder`, `(499.99)→builder`, `(500)→flow`; `apply_downward_anchor_weight(100)→150.00`, `(199)→298.50`, `(200)→200.00`, `(225)→225.00`. Clamp/consistency discriminators (full `compute_center_of_gravity` runs): all-`love_flow` → 499.99, `builder`, `was_clamped=true`; 5×`love_flow`+2×`neutrality` → 492.86, `builder`, `was_clamped=false`; all-`pride` → 285.00, `consistent` (proves the cluster check uses the raw mean — a clamped/weighted-CoG check would return `transitional`).
 - Classification tests: `compute_phase5_classification(30, 28.5, 'ascension')` → delta 29.25, true_ascension, new_loop; `(15, 12.0, 'movement')` → residual_charge, deepening_protocol; `(-5, -8.0, 'regression')` → false_positive, track_reassignment.
 
 Maintain an automated client-side test suite that asserts the Dart/TS mirror functions produce identical outputs to these golden values, so client/DB drift is caught in CI.
