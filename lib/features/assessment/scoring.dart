@@ -70,8 +70,15 @@ EnergyZone scoreToZone(num score) {
   return EnergyZone.flow;
 }
 
-/// Provisional Center of Gravity: weighted average of all 7 answers, rounded
-/// to 2 decimals like the DB's `ROUND(v_cog, 2)`.
+/// Mirror of the DB's `LEAST(v_cog, 499.99)` clamp: single assessments cap
+/// below Flow (500). Flow zones are only reachable via accumulated verified
+/// loops per the Flow reachability formula. Calibrated love_flow=530 would
+/// otherwise allow an all-love_flow assessment to score into Flow directly.
+const double singleAssessmentCogCap = 499.99;
+
+/// Provisional Center of Gravity: weighted average of all 7 answers, clamped
+/// to [singleAssessmentCogCap] and rounded to 2 decimals, in the same order
+/// as the DB (`LEAST` before `ROUND(v_cog, 2)`).
 double computeCogPreview(List<P1Answer> answers) {
   if (answers.length != 7) {
     throw ArgumentError.value(
@@ -84,5 +91,7 @@ double computeCogPreview(List<P1Answer> answers) {
     0,
     (total, answer) => total + applyDownwardAnchorWeight(answer.rawScore),
   );
-  return (weightedSum / 7 * 100).round() / 100;
+  final cog = weightedSum / 7;
+  final clamped = cog > singleAssessmentCogCap ? singleAssessmentCogCap : cog;
+  return (clamped * 100).round() / 100;
 }

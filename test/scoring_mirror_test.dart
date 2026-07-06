@@ -96,6 +96,31 @@ void main() {
       expect(scoreToZone(computeCogPreview(answers)), EnergyZone.threshold);
     });
 
+    test('single-assessment Flow clamp: all-7 love_flow -> 499.99 -> builder',
+        () {
+      // Unclamped: 7 x 530 avg = 530 -> flow. Deployed function clamps with
+      // LEAST(v_cog, 499.99) before deriving the zone (verified against
+      // production 2026-07-05), so a single assessment can never reach Flow.
+      final answers = List.filled(7, P1Answer.loveFlow);
+      expect(computeCogPreview(answers), 499.99);
+      expect(scoreToZone(computeCogPreview(answers)), EnergyZone.builder);
+    });
+
+    test('mixed high set under 500 passes through unclamped', () {
+      // 5 x 530 + 2 x 400 = 3450 / 7 = 492.857142... -> 492.86 (no clamp).
+      final answers = [
+        P1Answer.loveFlow,
+        P1Answer.loveFlow,
+        P1Answer.loveFlow,
+        P1Answer.loveFlow,
+        P1Answer.loveFlow,
+        P1Answer.neutrality,
+        P1Answer.neutrality,
+      ];
+      expect(computeCogPreview(answers), 492.86);
+      expect(scoreToZone(computeCogPreview(answers)), EnergyZone.builder);
+    });
+
     test('rejects incomplete assessments like the DB guard', () {
       expect(
         () => computeCogPreview([P1Answer.fear]),

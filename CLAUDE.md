@@ -48,7 +48,7 @@ Note: `contentment` (200), `courage` (275), `willingness` (320), and `neutrality
 
 ### Downward anchor weighting
 
-Any raw score **< 200** is multiplied by **1.5** before averaging (`apply_downward_anchor_weight`). Scores ≥ 200 pass through unchanged. Center of Gravity = weighted average across all 7 answers.
+Any raw score **< 200** is multiplied by **1.5** before averaging (`apply_downward_anchor_weight`). Scores ≥ 200 pass through unchanged. Center of Gravity = weighted average across all 7 answers, then **clamped to ≤ 499.99** — this single-assessment cap is *enforced inside* `compute_center_of_gravity` (`v_cog := LEAST(v_cog, 499.99)`, applied before zone derivation; deployed 2026-07-05), not merely a documentation rule. It exists because `love_flow = 530` sits above the Flow threshold (500): an all-love_flow assessment would otherwise average 530 and land directly in Flow, violating the climb-only Flow reachability rule. An all-love_flow assessment therefore scores 499.99 → `builder`. The Dart mirror `computeCogPreview` applies the identical clamp.
 
 ### Score → zone (score_to_zone)
 
@@ -69,7 +69,7 @@ Boundaries match the deployed `score_to_zone` function body (upper bounds exclus
 
 ### Flow reachability (climb-based, never single-assessment)
 
-A single assessment caps at 500. Flow-band states are reachable only through accumulated **verified loops**:
+A single assessment caps at **499.99** (enforced by the `LEAST(v_cog, 499.99)` clamp inside `compute_center_of_gravity` — see Downward anchor weighting above). Flow-band states are reachable only through accumulated **verified loops**:
 
 ```
 effective_ceiling = 500 + 500 × (1 − e^(−0.03 × units))
