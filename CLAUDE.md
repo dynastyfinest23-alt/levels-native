@@ -1,4 +1,4 @@
-# CLAUDE.md — Levels App
+# CLAUDE.md — Levels App (native client)
 
 ## Role
 
@@ -16,12 +16,57 @@ Every feature is designed against the **Hooked framework** (Trigger → Action �
 
 All scoring, classification, and routing logic lives in deterministic Postgres functions. LLM-generated content (dashboard copy, encouragement, drill framing) is presentation only — it may *describe* an outcome, never *compute* one. Client-side Dart/TS scoring functions exist solely for instant preview and must be exact arithmetic mirrors of the DB functions. The database result is always authoritative.
 
+## This repository
+
+This repo (`levels-native`, Flutter project name `levels_native`) is the **native client track**. It also owns the Supabase migrations and Edge Functions for the shared backend (the `supabase/` dir here is linked to the production project). **Web (Chrome) is the only enabled platform for now.**
+
+```
+lib/
+  main.dart                     # Env.validate() → Supabase.initialize → LevelsApp
+  core/
+    env.dart                    # compile-time config via --dart-define-from-file
+    router.dart                 # go_router + default-deny auth gate (authRedirect)
+  features/
+    auth/                       # login_screen.dart, signup_screen.dart
+    home/                       # home_screen.dart
+    assessment/
+      questions.dart            # the 7 questions + behavioral answer copy
+      scoring.dart              # Dart mirrors of the deployed Postgres scoring fns
+      assessment_controller.dart # single typed state object + single submit path
+      assessment_screen.dart, assessment_result_screen.dart
+    dashboard/
+      dashboard_copy.dart       # typed parser for the four-part reveal schema
+test/
+  scoring_mirror_test.dart      # golden-mirror suite (client ↔ deployed DB fns)
+  auth_gate_test.dart           # pins the default-deny auth-gate contract
+supabase/
+  migrations/                   # the ONLY schema-change path
+  functions/generate-dashboard-copy/  # index.ts + fallback.ts
+docs/                           # currently empty
+```
+
+Dependencies are deliberately minimal: `go_router` and `supabase_flutter` only (plus `flutter_lints`). **Do not add a dependency — including any state-management package — without explicit approval.** State management is plain `ChangeNotifier`; keep it that way.
+
+## Commands
+
+- Run (dev): `flutter run -d chrome --dart-define-from-file=env.json`
+- Tests: `flutter test` — must pass before any commit.
+- Static analysis: `flutter analyze` — zero warnings before any commit.
+- New migration: `npx supabase migration new <name>` → paste SQL → `npx supabase db push`
+- Deploy an Edge Function: `npx supabase functions deploy generate-dashboard-copy`
+
+## Environment & secrets
+
+- Client config is compile-time via `--dart-define-from-file=env.json`. `env.json` is gitignored; `env.example.json` is the template. `Env.validate()` fails fast at startup — keep that property for any new env var.
+- The client uses the **publishable** key only. The service-role key and `ANTHROPIC_API_KEY` live exclusively in Edge Function secrets — never in the repo, client, or shell scrollback.
+- The project skill `.claude/skills/SKILL.md` (secrets-and-debug-discipline) is binding: never put a secret's literal value in a command, never paste keys into the conversation, follow the debug ladder before pivoting auth mechanisms.
+
 ## Tech stack
 
 - **Backend:** Supabase / PostgreSQL — project ID `dnqwsgpkinieitiiikij`. Schema v1.1 deployed and verified. This backend is the shared source of truth for both frontends.
-- **Frontend (current production track):** FlutterFlow with custom Dart actions.
-- **Frontend (this build):** Native client built with Claude Code against the same Supabase project. Do not modify shared schema or functions without explicit approval — other clients depend on them.
-- **Migrations:** Supabase CLI. `npx supabase migration new <name>` → paste SQL → `npx supabase db push`. Repo working dir mirrors `C:\Users\Administrator\levels-app`.
+- **Frontend (current production track):** FlutterFlow with custom Dart actions — lives in a separate repo (`C:\Users\Administrator\levels-app`), not here.
+- **Frontend (this repo):** Native Flutter client against the same Supabase project. Do not modify shared schema or functions without explicit approval — other clients depend on them.
+- **Migrations:** Supabase CLI, run from this repo's `supabase/` dir (linked to production).
 - **Marketing site (separate workstream):** Framer.
 
 ## Scoring model (canonical numbers)
@@ -82,12 +127,20 @@ Constants: `FLOW_FLOOR = 480`, `FLOW_GATE = 3` consecutive verified loops, `RETE
 ## The five-phase journey (mapped to Hooked)
 
 1. **Phase 1 — Assessment.** 7 behavioral questions (Opportunity Mirror, Conflict Trigger, Inertia Test, Scarcity/Abundance Probe, Locus of Control, Body-State Scan, Meaning Probe). *Action* phase: minimize friction, one tap per question. Q5 (Locus of Control) is the most critical input for Phase 2.
-2. **Phase 2 — Dashboard.** CoG score reveal + zone illumination + LLM-generated personalized copy. This is the *Variable Reward*: the reveal must feel earned and slightly unpredictable in framing (copy varies), while the number itself is deterministic. Copy uses the canonical **four-part reveal schema** — `reality_tunnel` (the pattern the zone implies), `hidden_benefit` (the secondary gain), `illusion` (the belief that makes the zone feel permanent), `bridge_question` (open question that seeds the user's first Phase 3 answer; stored in `phase2_dashboard_views.bridge_question_shown`). The `was_clamped` ceiling framing lives in the **illusion** field specifically (a peak reading isn't arrival; Flow is earned across verified loops). Generated by the `generate-dashboard-copy` Edge Function (`claude-sonnet-4-6`, one cached row per loop via `one_dashboard_per_loop`, `copy_source` = `llm`/`fallback`; the score is never sent to the model). The schema is duplicated in `supabase/functions/generate-dashboard-copy/fallback.ts` (TS) and `lib/features/dashboard/dashboard_copy.dart` (Dart parser) — they share no runtime, so any schema change must update both.
-3. **Phase 3 — Origin drills.** Guided protocols targeting the dominant block. *Investment*: user effort stored as drill logs.
+2. **Phase 2 — Dashboard.** CoG score reveal + zone illumination + LLM-generated personalized copy. This is the *Variable Reward*: the reveal must feel earned and slightly unpredictable in framing (copy varies), while the number itself is deterministic. Copy uses the canonical **four-part reveal schema** — `reality_tunnel` (the pattern the zone implies), `hidden_benefit` (the secondary gain), `illusion` (the belief that makes the zone feel permanent), `bridge_question` (open question that seeds the user's first Phase 3 answer; stored in `phase2_dashboard_views.bridge_question_shown`). The `was_clamped` ceiling framing lives in the **illusion** field specifically (a peak reading isn't arrival; Flow is earned across verified loops). Generated by the `generate-dashboard-copy` Edge Function (`claude-sonnet-4-6`, one cached row per loop via `one_dashboard_per_loop`, `copy_source` = `llm`/`fallback`; the score is never sent to the model).
+3. **Phase 3 — Origin drills.** Guided protocols targeting the dominant block. *Investment*: user effort stored as drill logs. The Phase 2→3 hand-off seam is the user's answer to `bridge_question_shown`, keyed by loop — captured in the Phase 3 flow, not in the Edge Function.
 4. **Phase 4 — Track sessions.** Four ascension tracks: `completion`, `belief_audit`, `embodiment`, `commitment`. Ongoing *Action + Investment* loop; embodiment track writes `embodiment_daily_logs`.
 5. **Phase 5 — Reassessment.** Two windows: Day 5–7 (Window 2 check-in) and Day 21 (Window 3 durability). `compute_phase5_classification(q1_delta, q2_delta, q3_flag)` returns classification (`true_ascension` / `residual_charge` / `false_positive`) and routing (`new_loop` / `deepening_protocol` / `retest_scheduled` / `track_reassignment`). The Day 5–7 notification is the *external Trigger* that restarts the Hook cycle. Window 3 entry point: `process_window3_durability()`.
 
 Classification thresholds: combined_delta = (q1_delta + q2_delta) / 2. Delta ≥ 25 with ascension/movement flag → true_ascension → new_loop. Delta ≥ 25 with regression flag → residual_charge (behavior tells the truth over self-report). Delta 1–24 → residual_charge → deepening_protocol. Delta ≤ 0 with movement flag → false_positive → retest in 48h. Delta ≤ 0 otherwise → false_positive → track_reassignment.
+
+## Mirror sync map (change one → change all)
+
+These artifact groups share no runtime; nothing but discipline (and the tests listed) keeps them aligned. Any change to one member of a group must update every member in the same commit.
+
+1. **Scoring:** deployed Postgres functions (`answer_to_raw_score`, `apply_downward_anchor_weight`, `score_to_zone`, `compute_center_of_gravity` incl. clamp + `was_clamped`) ↔ `lib/features/assessment/scoring.dart` ↔ `test/scoring_mirror_test.dart` ↔ the golden values in this file.
+2. **Four-part reveal schema:** `supabase/functions/generate-dashboard-copy/fallback.ts` (TS interface + static copy) ↔ `index.ts` (`REQUIRED_FIELDS`, prompt, JSON schema) ↔ `lib/features/dashboard/dashboard_copy.dart` (Dart parser).
+3. **Auth-gate contract:** `authRedirect` in `lib/core/router.dart` ↔ `test/auth_gate_test.dart`.
 
 ## Database inventory (deployed, verified)
 
@@ -104,9 +157,9 @@ Classification thresholds: combined_delta = (q1_delta + q2_delta) / 2. Delta ≥
 4. Wrap migrations in `BEGIN/COMMIT` where safe (i.e., except cases 1 and 3).
 5. Docker Desktop warnings during `db push` are non-fatal local caching noise. The authoritative success signal is `Applying migration <file>...` followed by `Finished supabase db push`.
 6. In the Supabase SQL Editor, only the last SELECT displays — combine multi-value checks into one query with labeled columns.
-7. Never run DDL via ad-hoc `execute_sql` against production. Migrations are the only schema-change path.
+7. Never run DDL via ad-hoc `execute_sql` against production. Migrations are the only schema-change path. (Read-only SELECTs via `execute_sql` for verification are fine — that is what Verify-as-you-go uses.)
 
-## Verify-as-you-go (run these after every change)
+## Verify-as-you-go (run these after every backend change)
 
 - Trigger active: `SELECT tgname, tgrelid::regclass FROM pg_trigger WHERE tgname = 'on_auth_user_created';`
 - Enum values: query `pg_type` joined to `pg_enum` (NOT `information_schema.columns`).
@@ -115,17 +168,40 @@ Classification thresholds: combined_delta = (q1_delta + q2_delta) / 2. Delta ≥
 - Golden tests for scoring: `score_to_zone(60)→collapsed`, `(110)→contracted`, `(165)→reactive`, `(230)→threshold`, `(380)→builder`, `(520)→flow`; boundary edges: `(89.99)→collapsed`, `(90)→contracted`, `(139.99)→contracted`, `(140)→reactive`, `(199.99)→reactive`, `(200)→threshold`, `(299.99)→threshold`, `(300)→builder`, `(499.99)→builder`, `(500)→flow`; `apply_downward_anchor_weight(100)→150.00`, `(199)→298.50`, `(200)→200.00`, `(225)→225.00`. Clamp/consistency discriminators (full `compute_center_of_gravity` runs): all-`love_flow` → 499.99, `builder`, `was_clamped=true`; 5×`love_flow`+2×`neutrality` → 492.86, `builder`, `was_clamped=false`; all-`pride` → 285.00, `consistent` (proves the cluster check uses the raw mean — a clamped/weighted-CoG check would return `transitional`).
 - Classification tests: `compute_phase5_classification(30, 28.5, 'ascension')` → delta 29.25, true_ascension, new_loop; `(15, 12.0, 'movement')` → residual_charge, deepening_protocol; `(-5, -8.0, 'regression')` → false_positive, track_reassignment.
 
-Maintain an automated client-side test suite that asserts the Dart/TS mirror functions produce identical outputs to these golden values, so client/DB drift is caught in CI.
+The client-side golden-mirror suite already exists at `test/scoring_mirror_test.dart` and pins the values above against the Dart mirrors. Whenever a deployed scoring function changes: re-read the function body from production, update the golden values here, and extend the mirror suite — all in the same change.
 
 ## Client architecture rules
 
-1. **Auth gate first.** The app must never reach the assessment flow without a live session. (Root cause of the FlutterFlow Q7 silent failure: preview launched directly on the questions page with no session, so `currentUser?.id` was null. Structural fix: authenticated router.)
-2. **Single typed assessment state object** holding all 7 answers; one submit path; one RPC call to `compute_center_of_gravity` after insert. No per-button write chains.
-3. **Errors must surface.** Never swallow exceptions in catch blocks — return/log the error string and show it (snackbar in dev builds).
-4. **LLM copy via Edge Function only.** Prompts and API keys stay server-side. The Edge Function receives the deterministic result (score, zone, classification) and returns copy — it never receives raw answers to re-score.
-5. **Client mirrors, DB decides.** Any client-side scoring display is provisional until the DB row confirms it.
+1. **Auth gate first.** The app must never reach the assessment flow without a live session. Implemented as the default-deny `authRedirect` in `lib/core/router.dart`: any location not in `publicPaths` (`/login`, `/signup`) requires a session — **including routes that don't exist yet**, so new routes are private by default. (Root cause of the FlutterFlow Q7 silent failure: preview launched directly on the questions page with no session, so `currentUser?.id` was null. Structural fix: authenticated router.)
+2. **Single typed assessment state object** holding all 7 answers; one submit path; one RPC call to `compute_center_of_gravity` after insert. No per-button write chains. Implemented as `AssessmentController` — the submit path is insert loop → insert assessment → RPC → read the authoritative row back.
+3. **Errors must surface.** Never swallow exceptions in catch blocks — return/log the error string and show it (snackbar in dev builds). Parsers throw on missing/empty fields (`DashboardCopy.fromJson`) rather than rendering blanks; token-mapping lookups throw on unknown tokens rather than silently defaulting.
+4. **LLM copy via Edge Function only.** Prompts and API keys stay server-side. The Edge Function receives the deterministic result (score, zone, classification) and returns copy — it never receives raw answers to re-score. In `generate-dashboard-copy` specifically: the numeric score is deliberately withheld from the model, a digit guard (`leaksNumbers`) rejects output containing numbers, and every rejection or API failure falls back to the static per-zone copy in `fallback.ts` — the reveal never fails over copy.
+5. **Client mirrors, DB decides.** Any client-side scoring display is provisional until the DB row confirms it. `AssessmentResult` is only ever constructed from the read-back DB row, never from client math.
+6. **Navigation follows the session.** Screens never navigate manually after auth calls — the router's `refreshListenable` on `onAuthStateChange` is the single source of navigation truth.
 
-## FlutterFlow-specific gotchas (relevant when touching the FF track)
+## Coding conventions (match what's already here)
+
+- **Doc comments explain *why* and cite verification.** Nontrivial invariants carry the date they were verified against production (e.g. "verified against production 2026-07-05"). Keep doing this — it is how this project distinguishes fact from intention.
+- **Pure functions for testable contracts.** Logic that pins a contract (auth gate, scoring) is extracted as a pure function so tests need no Supabase.
+- **Assessment question copy is behavioral, never emotional.** Answer options describe reactions; the token mapping stays invisible to the user. Each question spans low-to-high tokens; across the 7 questions all 11 v1.1 tokens appear.
+- **Commit messages:** imperative mood, no prefixes/conventional-commit tags, one summary line describing the change and its scope (see `git log` for the register).
+- **Tests are pinned contracts, not coverage filler.** Each test group states which source of truth it pins and when that truth was verified.
+
+## Definition of done
+
+Work is finished only when all of these hold:
+
+1. `flutter analyze` is clean and `flutter test` passes.
+2. If a deployed DB function, enum, or schema changed: the relevant Verify-as-you-go checks were run against production and the results reported (not assumed).
+3. Every member of any touched mirror-sync group (see the sync map) was updated in the same change — including the golden values in this file if scoring changed.
+4. New routes, tables, or functions preserve the standing security properties: default-deny routing, RLS scoped to `auth.uid() = user_id`, `SET search_path = public, pg_temp` on SECURITY DEFINER.
+5. No secret's literal value appears in any command, file, or output.
+6. The feature was cross-referenced against the Hooked framework and the Tone and product ethics section.
+7. Outcomes are reported faithfully — failing tests or skipped verifications are stated, never glossed.
+
+## FlutterFlow-specific gotchas
+
+**These apply only when working in the separate FlutterFlow repo (`levels-app`) — never to this repo's code.**
 
 - Delete `import '/actions/actions.dart' as action_blocks;` and `import 'index.dart';` from pasted custom-action code; only add `import 'dart:convert';` beyond the auto-generated header.
 - Q1–Q6 buttons use a two-action chain: Update App State (enum string) → PageView Next Page, with "Don't Rebuild" set.
@@ -133,12 +209,12 @@ Maintain an automated client-side test suite that asserts the Dart/TS mirror fun
 
 ## Current open items
 
-- Q7 `submitPhase1Assessment` runtime failure — root cause is missing auth session in preview; fix structurally via auth gate (native build) / surface error string via snackbar (FF build).
 - Google/Apple OAuth wiring (blocked on credentials).
 - Phase 2 Edge Function (generate-dashboard-copy): VERIFIED end-to-end on the fallback path in production (caller auth via user JWT, ownership 403, cache-hit/miss, one_dashboard_per_loop race handling, four-part schema write, bridge_question_shown stored). LLM path is code-complete and verified up to the Anthropic API boundary: request shape and model ID (claude-sonnet-4-6) confirmed valid against the live API reference; the sole blocker is Anthropic credit balance (API returns 400 'credit balance too low'). No code changes needed — the LLM path activates automatically when credits are added; the secret is already set. Root cause history: the multi-session debugging chain was (a) an invalid API key, then (b) zero credits — never an architecture, auth-design, or code defect. NOTE: an abandoned 2-month-old function `generate_phase2_dashboard` (underscores) was deleted 2026-07-08 via `supabase functions delete`; `generate-dashboard-copy` (hyphens) is canonical.
 - Phase 2 dashboard UI: separate commit (candidate layout: progressive tap-to-reveal matching the `reality_tunnel_read` / `hidden_benefit_opened` / `illusion_opened` columns).
 - Phases 3–5 UI.
 - Framer marketing site with animated score visualization and zone illumination.
+- (Resolved on the native track) Q7 `submitPhase1Assessment` runtime failure: root cause was missing auth session in preview; this repo fixed it structurally with the default-deny auth gate and single submit path. Still relevant to the FF build (surface error string via snackbar there).
 
 ## Tone and product ethics
 

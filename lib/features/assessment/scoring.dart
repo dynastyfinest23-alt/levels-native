@@ -3,9 +3,9 @@
 /// These exist ONLY for instant provisional previews. The database result
 /// (`compute_center_of_gravity`) is always authoritative. Every constant and
 /// boundary here must remain an exact arithmetic mirror of the DEPLOYED
-/// function bodies — not the CLAUDE.md tables, which have drifted (deployed
-/// raw scores and zone boundaries were re-verified against production on
-/// 2026-07-03). Drift is caught by `test/scoring_mirror_test.dart`.
+/// function bodies — those are the source of truth. The CLAUDE.md tables
+/// match them (re-verified against production 2026-07-03). Drift is caught
+/// by `test/scoring_mirror_test.dart`.
 library;
 
 /// Mirror of the `p1_answer` enum, v1.1 calibration tokens only.
