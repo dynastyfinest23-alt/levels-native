@@ -66,7 +66,7 @@ Dependencies are deliberately minimal: `go_router` and `supabase_flutter` only (
 - **Backend:** Supabase / PostgreSQL — project ID `dnqwsgpkinieitiiikij`. Schema v1.1 deployed and verified. This backend is the shared source of truth for both frontends.
 - **Frontend (current production track):** FlutterFlow with custom Dart actions — lives in a separate repo (`C:\Users\Administrator\levels-app`), not here.
 - **Frontend (this repo):** Native Flutter client against the same Supabase project. Do not modify shared schema or functions without explicit approval — other clients depend on them.
-- **Migrations:** Supabase CLI, run from this repo's `supabase/` dir (linked to production).
+- **Migrations:** Supabase CLI, run from this repo's `supabase/` dir — **this repo is the sole authority for migrations.** The `levels-app` repo also has a `supabase/` dir linked to the same production project, but it is stale (frozen at the 2026-06-26 migration, missing everything since). Never create or push migrations from `levels-app` — doing so would fork the migration history against production.
 - **Marketing site (separate workstream):** Framer.
 
 ## Scoring model (canonical numbers)
@@ -184,7 +184,8 @@ The client-side golden-mirror suite already exists at `test/scoring_mirror_test.
 - **Doc comments explain *why* and cite verification.** Nontrivial invariants carry the date they were verified against production (e.g. "verified against production 2026-07-05"). Keep doing this — it is how this project distinguishes fact from intention.
 - **Pure functions for testable contracts.** Logic that pins a contract (auth gate, scoring) is extracted as a pure function so tests need no Supabase.
 - **Assessment question copy is behavioral, never emotional.** Answer options describe reactions; the token mapping stays invisible to the user. Each question spans low-to-high tokens; across the 7 questions all 11 v1.1 tokens appear.
-- **Commit messages:** imperative mood, no prefixes/conventional-commit tags, one summary line describing the change and its scope (see `git log` for the register).
+- **Commit messages:** imperative mood, no prefixes/conventional-commit tags, one summary line describing the change and its scope (see `git log` for the register). **No Co-Authored-By or other AI trailers** — plain messages only.
+- **Branch:** the default branch is `main` (renamed from `master` 2026-07-08; no remote configured yet). Commit directly to `main` unless the user asks for a branch.
 - **Tests are pinned contracts, not coverage filler.** Each test group states which source of truth it pins and when that truth was verified.
 
 ## Definition of done
@@ -214,6 +215,7 @@ Work is finished only when all of these hold:
 - Phase 2 dashboard UI: separate commit (candidate layout: progressive tap-to-reveal matching the `reality_tunnel_read` / `hidden_benefit_opened` / `illusion_opened` columns).
 - Phases 3–5 UI.
 - Framer marketing site with animated score visualization and zone illumination.
+- iOS/Android platform enablement (near-term; web/Chrome is the only enabled platform today — see "This repository").
 - (Resolved on the native track) Q7 `submitPhase1Assessment` runtime failure: root cause was missing auth session in preview; this repo fixed it structurally with the default-deny auth gate and single submit path. Still relevant to the FF build (surface error string via snackbar there).
 
 ## Tone and product ethics
