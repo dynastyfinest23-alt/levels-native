@@ -135,7 +135,8 @@ Maintain an automated client-side test suite that asserts the Dart/TS mirror fun
 
 - Q7 `submitPhase1Assessment` runtime failure — root cause is missing auth session in preview; fix structurally via auth gate (native build) / surface error string via snackbar (FF build).
 - Google/Apple OAuth wiring (blocked on credentials).
-- Phase 2 dashboard build: Edge Function + fallback copy + Dart parser written; deploy blocked on `supabase secrets set ANTHROPIC_API_KEY` (fallback path works without it). Dashboard UI is a separate commit (candidate layout: progressive tap-to-reveal matching the `reality_tunnel_read` / `hidden_benefit_opened` / `illusion_opened` columns).
+- Phase 2 Edge Function (generate-dashboard-copy): VERIFIED end-to-end on the fallback path in production (caller auth via user JWT, ownership 403, cache-hit/miss, one_dashboard_per_loop race handling, four-part schema write, bridge_question_shown stored). LLM path is code-complete and verified up to the Anthropic API boundary: request shape and model ID (claude-sonnet-4-6) confirmed valid against the live API reference; the sole blocker is Anthropic credit balance (API returns 400 'credit balance too low'). No code changes needed — the LLM path activates automatically when credits are added; the secret is already set. Root cause history: the multi-session debugging chain was (a) an invalid API key, then (b) zero credits — never an architecture, auth-design, or code defect. NOTE: an abandoned 2-month-old function `generate_phase2_dashboard` (underscores) was deleted 2026-07-08 via `supabase functions delete`; `generate-dashboard-copy` (hyphens) is canonical.
+- Phase 2 dashboard UI: separate commit (candidate layout: progressive tap-to-reveal matching the `reality_tunnel_read` / `hidden_benefit_opened` / `illusion_opened` columns).
 - Phases 3–5 UI.
 - Framer marketing site with animated score visualization and zone illumination.
 
