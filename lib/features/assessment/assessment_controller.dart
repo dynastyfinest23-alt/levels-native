@@ -7,11 +7,15 @@ import 'scoring.dart';
 /// `compute_center_of_gravity` runs. Never constructed from client math.
 class AssessmentResult {
   const AssessmentResult({
+    required this.loopId,
     required this.centerOfGravity,
     required this.dominantZone,
     required this.consistencyFlag,
   });
 
+  /// The ascension loop this assessment belongs to — the key the Phase 2
+  /// dashboard uses to fetch/generate its reveal copy.
+  final String loopId;
   final double centerOfGravity;
   final EnergyZone dominantZone;
   final String consistencyFlag;
@@ -102,6 +106,7 @@ class AssessmentController extends ChangeNotifier {
           .single();
 
       return AssessmentResult(
+        loopId: loopId,
         centerOfGravity: (scored['center_of_gravity'] as num).toDouble(),
         dominantZone: EnergyZone.fromToken(scored['dominant_zone'] as String),
         consistencyFlag: scored['consistency_flag'] as String,

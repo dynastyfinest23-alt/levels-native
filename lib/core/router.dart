@@ -5,10 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../features/assessment/assessment_controller.dart';
-import '../features/assessment/assessment_result_screen.dart';
 import '../features/assessment/assessment_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/signup_screen.dart';
+import '../features/dashboard/dashboard_screen.dart';
 import '../features/home/home_screen.dart';
 
 /// The only locations reachable without a session.
@@ -65,12 +65,31 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const AssessmentScreen(),
     ),
     GoRoute(
-      path: '/assessment/result',
-      builder: (context, state) => AssessmentResultScreen(
-        result: state.extra is AssessmentResult
-            ? state.extra as AssessmentResult
-            : null,
-      ),
+      path: '/dashboard',
+      builder: (context, state) {
+        final result = state.extra;
+        if (result is! AssessmentResult) {
+          // Reached without a result (deep link / refresh): there is
+          // nothing to show — the dashboard is only handed forward from a
+          // completed submission.
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('No assessment result to display.'),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => context.go('/'),
+                    child: const Text('Go home'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        return DashboardScreen(result: result);
+      },
     ),
   ],
   errorBuilder: (context, state) => Scaffold(
