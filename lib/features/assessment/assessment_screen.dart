@@ -45,7 +45,7 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
     try {
       final result = await _controller.submit();
       if (!mounted) return;
-      context.go('/dashboard', extra: result);
+      context.go('/dashboard/${result.loopId}');
     } catch (error) {
       if (!mounted) return;
       // Surface the full error string — never swallow it.

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../features/assessment/assessment_controller.dart';
 import '../features/assessment/assessment_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/signup_screen.dart';
@@ -65,31 +64,10 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const AssessmentScreen(),
     ),
     GoRoute(
-      path: '/dashboard',
-      builder: (context, state) {
-        final result = state.extra;
-        if (result is! AssessmentResult) {
-          // Reached without a result (deep link / refresh): there is
-          // nothing to show — the dashboard is only handed forward from a
-          // completed submission.
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('No assessment result to display.'),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () => context.go('/'),
-                    child: const Text('Go home'),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-        return DashboardScreen(result: result);
-      },
+      path: '/dashboard/:loopId',
+      builder: (context, state) => DashboardScreen(
+        loopId: state.pathParameters['loopId']!,
+      ),
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

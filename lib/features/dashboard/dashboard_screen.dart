@@ -5,13 +5,15 @@ import '../assessment/assessment_controller.dart';
 import 'dashboard_controller.dart';
 import 'dashboard_copy.dart';
 
-/// Phase 2 — the Variable Reward. The score and zone are read straight from
-/// [result] (already authoritative from Phase 1); the four-part reveal copy
-/// is fetched from the Edge Function and opened one tap at a time.
+/// Phase 2 — the Variable Reward. Score and zone are fetched fresh from the
+/// authoritative `phase1_assessments` row by [loopId] (so a refresh or deep
+/// link works, not just navigation handed forward from Phase 1 submission);
+/// the four-part reveal copy is fetched from the Edge Function and opened
+/// one tap at a time.
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key, required this.result});
+  const DashboardScreen({super.key, required this.loopId});
 
-  final AssessmentResult result;
+  final String loopId;
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -23,12 +25,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = DashboardController(loopId: widget.result.loopId);
+    _controller = DashboardController(loopId: widget.loopId);
     _controller.load();
   }
 
   @override
   void dispose() {
+    _controller.recordTimeOnScreen();
     _controller.dispose();
     super.dispose();
   }
@@ -48,17 +51,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             return _DashboardErrorView(error: error, onRetry: _controller.load);
           }
           final copy = _controller.copy;
-          if (copy == null) {
-            // load() always sets either copy or error before clearing
-            // loading — unreachable, but errors must surface, never render
-            // blank.
+          final result = _controller.assessmentResult;
+          if (copy == null || result == null) {
+            // load() always sets both (or error) before clearing loading —
+            // unreachable, but errors must surface, never render blank.
             return _DashboardErrorView(
-              error: 'No dashboard copy was returned.',
+              error: 'No dashboard data was returned.',
               onRetry: _controller.load,
             );
           }
           return _DashboardBody(
-            result: widget.result,
+            result: result,
             copy: copy,
             revealedCount: _controller.revealedCount,
             onRevealPanel: _controller.revealPanel,
