@@ -43,6 +43,44 @@ class AuthStateListenable extends ChangeNotifier {
   }
 }
 
+typedef _RouteBuilder = Widget Function(BuildContext context, GoRouterState state);
+
+Widget _buildHome(BuildContext context, GoRouterState state) => const HomeScreen();
+Widget _buildLogin(BuildContext context, GoRouterState state) => const LoginScreen();
+Widget _buildSignup(BuildContext context, GoRouterState state) => const SignupScreen();
+Widget _buildAssessment(BuildContext context, GoRouterState state) =>
+    const AssessmentScreen();
+Widget _buildDashboard(BuildContext context, GoRouterState state) =>
+    DashboardScreen(loopId: state.pathParameters['loopId']!);
+// Placeholder scaffolds — real screens land in M3-M5 (PRD M1.4). Existing now
+// so the home hub's phase CTAs resolve and the auth gate covers them.
+Widget _buildDrill(BuildContext context, GoRouterState state) =>
+    const _ComingSoonScreen(title: 'Origin drill');
+Widget _buildTrack(BuildContext context, GoRouterState state) =>
+    const _ComingSoonScreen(title: 'Track');
+Widget _buildReassessment(BuildContext context, GoRouterState state) =>
+    const _ComingSoonScreen(title: 'Reassessment');
+
+/// Single source of truth for every path [appRouter] serves: `routes` below
+/// is built by iterating this table, and [registeredRoutePaths] reads its
+/// keys — so removing an entry here drops it from the live router and from
+/// the paths `test/router_test.dart` pins in the same stroke. A route added
+/// only to `GoRouter.routes` directly (bypassing this table) would not be
+/// caught by that test; route registration always goes through this map.
+const Map<String, _RouteBuilder> _routeTable = {
+  '/': _buildHome,
+  '/login': _buildLogin,
+  '/signup': _buildSignup,
+  '/assessment': _buildAssessment,
+  '/dashboard/:loopId': _buildDashboard,
+  '/drill': _buildDrill,
+  '/track': _buildTrack,
+  '/reassessment': _buildReassessment,
+};
+
+/// Every path registered with [appRouter]. Pinned by `test/router_test.dart`.
+final List<String> registeredRoutePaths = _routeTable.keys.toList();
+
 /// Root router. Lazy top-level final: first accessed from [LevelsApp.build],
 /// which runs only after `Supabase.initialize` completes.
 final GoRouter appRouter = GoRouter(
@@ -53,36 +91,8 @@ final GoRouter appRouter = GoRouter(
     location: state.matchedLocation,
   ),
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
-    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-    GoRoute(
-      path: '/signup',
-      builder: (context, state) => const SignupScreen(),
-    ),
-    GoRoute(
-      path: '/assessment',
-      builder: (context, state) => const AssessmentScreen(),
-    ),
-    GoRoute(
-      path: '/dashboard/:loopId',
-      builder: (context, state) => DashboardScreen(
-        loopId: state.pathParameters['loopId']!,
-      ),
-    ),
-    // Placeholder scaffolds — real screens land in M3-M5 (PRD M1.4). Existing
-    // now so the home hub's phase CTAs resolve and the auth gate covers them.
-    GoRoute(
-      path: '/drill',
-      builder: (context, state) => const _ComingSoonScreen(title: 'Origin drill'),
-    ),
-    GoRoute(
-      path: '/track',
-      builder: (context, state) => const _ComingSoonScreen(title: 'Track'),
-    ),
-    GoRoute(
-      path: '/reassessment',
-      builder: (context, state) => const _ComingSoonScreen(title: 'Reassessment'),
-    ),
+    for (final entry in _routeTable.entries)
+      GoRoute(path: entry.key, builder: entry.value),
   ],
   errorBuilder: (context, state) => Scaffold(
     body: Center(
