@@ -227,6 +227,7 @@ The project is done when every box checks:
 |---|---|---|
 | M1 | Journey spine | The app knows where a user is in their loop; home becomes the hub that routes to the right phase. |
 | M2 | Phase 2 dashboard | The variable-reward reveal: score, zone, four-part progressive copy, engagement columns written. |
+| M-DS | Design system application | Apply `design-system/MASTER.md` (added 2026-07-08) across existing screens so M3+ screens are born themed. Runs after M2, before M3. |
 | M3 | Phase 3 origin drill | Diagnose the block (3 structured + free-text questions), route to a track via `assign_phase4_track`. |
 | M4 | Phase 4 tracks | All four track session flows; embodiment's 7-day daily loop. |
 | M5 | Phase 5 reassessment | Window gating, both reassessment flows, rediag path, all four routing outcomes wired. |
@@ -304,6 +305,38 @@ describe observable reactions, never emotion labels, matching
 4. **M2.4 — Tone pass (review gate).** Present the full reveal flow
    (screenshots or run) to Noah against the Tone and product ethics section.
    Done when: Noah approves in writing; blockers become follow-up tasks.
+
+### M-DS — Design system application (added 2026-07-08; runs before M3)
+
+`design-system/MASTER.md` is binding for every task below and for all M3–M5
+screens. Read it in full first. Every task ends with `flutter analyze` clean,
+`flutter test` green, and zero inline hex/ad-hoc TextStyles introduced.
+
+1. **M-DS.1 — Token foundation.** Create `lib/core/design_tokens.dart` from
+   MASTER.md §1–§5; download Fraunces + Inter (OFL) into `assets/fonts/` and
+   declare in `pubspec.yaml` (font files are approved; the `google_fonts`
+   package is not); rebuild `ThemeData` in `main.dart` from tokens. Done
+   when: app boots on the `void`/aurora base with Inter body type and no
+   Material-default purple anywhere.
+2. **M-DS.2 — ZoneStyle resolver.** Create `lib/core/zone_style.dart`
+   (`ZoneStyle.of(EnergyZone)` → display name + zoneColor + zoneGlow, throws
+   on unknown). Done when: a test pins all six display names and colors to
+   MASTER.md §2 and fails if any mapping is edited.
+3. **M-DS.3 — Dashboard restyle.** Apply MASTER.md §6: CoG anchor with glow
+   + `breath`, glass reveal panels with locked/tappable/revealed states,
+   bridge_question as the invitation layout, and replace the raw zone token
+   with the ZoneStyle display name (fixes the "builder" leak observed
+   2026-07-08). Done when: Noah visually approves a screenshot set against
+   the anti-pattern list (this is the M-DS visual gate; blocks M-DS.4+).
+4. **M-DS.4 — Home hub restyle.** Aurora backdrop, phase CTA per spec,
+   quiet calibration strip. Done when: hub matches spec in a manual run.
+5. **M-DS.5 — Auth + assessment restyle.** Neutral-accent treatment (no
+   zone glow), assessment options as tokenized cards. Done when: manual run
+   + no inline styles.
+6. **M-DS.6 — Placeholders, loading, error states + anti-pattern sweep.**
+   Style remaining surfaces per §6, then grep-audit `lib/` against MASTER.md
+   §8 (inline hex, raw tokens, fixed heights). Done when: sweep findings are
+   zero or fixed in the same commit.
 
 ### M3 — Phase 3 origin drill
 

@@ -207,7 +207,7 @@ The client-side golden-mirror suite already exists at `test/scoring_mirror_test.
 
 ## Design system (reference — do not restyle ad hoc)
 
-The visual system will live in `design-system/MASTER.md`, generated later via the ui-ux-pro-max skill from `levels-design-system-brief.md` — **neither file exists yet; this section is forward-looking, not broken.** Once MASTER.md exists:
+The visual system lives in `design-system/MASTER.md` (authored 2026-07-08 from `levels-design-system-brief.md`; the ui-ux-pro-max skill it was once planned around does not exist). Application roadmap is PRD milestone M-DS. Rules:
 
 - **Read it before building or modifying any screen.** All colors, type, spacing, and motion come from its tokens via `ThemeData` — no inline hex values, no per-screen font choices.
 - The six-zone palette is a single ascending spectrum (value/saturation/temperature climb with energy). Never substitute a chakra-rainbow mapping.
