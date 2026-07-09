@@ -203,7 +203,7 @@ The client-side golden-mirror suite already exists at `test/scoring_mirror_test.
 - **Assessment question copy is behavioral, never emotional.** Answer options describe reactions; the token mapping stays invisible to the user. Each question spans low-to-high tokens; across the 7 questions all 11 v1.1 tokens appear.
 - **Commit messages:** imperative mood, no prefixes/conventional-commit tags, one summary line describing the change and its scope (see `git log` for the register). **No Co-Authored-By or other AI trailers** — plain messages only.
 - **Branch:** the default branch is `main` (renamed from `master` 2026-07-08; no remote configured yet). Commit directly to `main` unless the user asks for a branch.
-- **Tests are pinned contracts, not coverage filler.** Each test group states which source of truth it pins and when that truth was verified.
+- **Tests are pinned contracts, not coverage filler.** Each test group states which source of truth it pins and when that truth was verified. A pinning test must fail when the change it pins is reverted — before writing one, confirm it would fail without the change; a test that passes either way pins nothing.
 
 ## Design system (reference — do not restyle ad hoc)
 
@@ -226,6 +226,7 @@ Work is finished only when all of these hold:
 5. No secret's literal value appears in any command, file, or output.
 6. The feature was cross-referenced against the Hooked framework and the Tone and product ethics section.
 7. Outcomes are reported faithfully — failing tests or skipped verifications are stated, never glossed.
+8. If a task's done-when says "manual run shows X", unit tests cannot substitute. If the manual check is blocked, the task stays IN FLIGHT with the blocker named — it is never reported done with "compensating evidence".
 
 ## FlutterFlow-specific gotchas
 
