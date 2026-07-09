@@ -49,7 +49,7 @@ results.
   the fallback path; LLM path is code-complete and blocked only on Anthropic
   credits. It caches one row per loop in `phase2_dashboard_views`.
 - **Project skills:** `levels-verify` (production verification suite) and
-  `levels-backend-change` (migration runbook). Use them exactly when their
+  `levels-dev-loop` (migration runbook). Use them exactly when their
   descriptions say to.
 
 ### Deployed schema the client will consume (verified 2026-07-08)
@@ -143,7 +143,7 @@ Only the columns the client touches are listed; all tables also carry
 - The Phase 1 flow, auth gate, and golden-mirror tests.
 - Any deployed scoring/classification function — **changing an existing
   deployed function body requires Noah's explicit sign-off**; new additive
-  migrations are allowed via the `levels-backend-change` runbook.
+  migrations are allowed via the `levels-dev-loop` runbook.
 - The `one_dashboard_per_loop` cache contract and the Edge Function's
   fallback behavior.
 - RLS and default-deny routing (new routes are private automatically; keep
@@ -198,7 +198,7 @@ The project is done when every box checks:
   No client code computes a score, classification, or routing. Dart mirrors
   are preview-only and must be pinned by tests.
 - **Backend changes:** additive migrations only, via the
-  `levels-backend-change` skill from this repo (sole migration authority).
+  `levels-dev-loop` skill from this repo (sole migration authority).
   Existing deployed function bodies are frozen without Noah's sign-off.
   Run `levels-verify` after every backend change.
 - **Content:** Phase 3/4 protocol content is **static Dart constants in
@@ -361,7 +361,7 @@ screens. Read it in full first. Every task ends with `flutter analyze` clean,
    is displayed and their free-text answer captured (this is the Phase 2→3
    hand-off seam; it seeds `q1_free_text`). Done when: Noah has reviewed and
    approved the copy in writing.
-3. **M3.3 — Persistence migration.** Via the `levels-backend-change` skill:
+3. **M3.3 — Persistence migration.** Via the `levels-dev-loop` skill:
    add `process_phase3_drill(p_drill_id uuid)` — SECURITY DEFINER, `SET
    search_path = public, pg_temp` — which reads the drill row, calls
    `assign_phase4_track(q1_origin_type, q2_domain, q3_mechanism)`, writes
@@ -493,7 +493,7 @@ RPC. The Dart mirrors (`scoring.dart`, and the token mirrors you'll add)
 exist only for instant previews and parsing, and every one must be pinned by
 a test citing a production-verification date.
 
-**Backend etiquette.** Migrations only through the `levels-backend-change`
+**Backend etiquette.** Migrations only through the `levels-dev-loop`
 skill from this repo (never from `levels-app` — its supabase dir is stale
 and would fork history). Additive changes only; existing function bodies are
 frozen without Noah's sign-off. After any push: `levels-verify`, and read
