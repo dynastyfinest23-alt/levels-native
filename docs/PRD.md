@@ -245,6 +245,8 @@ describe observable reactions, never emotion labels, matching
 
 ### M1 — Journey spine
 
+**Status: COMPLETE — verified 2026-07-08.** M1.1–M1.4 shipped (`2067e8c`, `a71d710`, `b67cdb5`, `bf9c424`, `e1fc094`). Manual done-when observed by Noah in Chrome on his machine: mid-loop user (Loop 1, Day 5) showed "Day 5–7 check-in open" with the correct CTA resolving to the reassessment placeholder; a fresh account showed "Begin assessment" (null-loop branch); calibration strip rendered a real `user_calibration` row (verified floor 343.57).
+
 1. **M1.1 — Loop state model.** Create `lib/features/journey/loop_state.dart`:
    a pure, immutable `LoopState` computed from plain inputs (loop row fields,
    existence of phase2/3 rows, latest phase4 session, phase5 rows, `DateTime
