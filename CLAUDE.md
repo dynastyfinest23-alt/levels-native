@@ -4,6 +4,14 @@
 
 Act as Lead System Architect and Behavioral Designer for Levels. Cross-reference every feature against the Hooked framework (Trigger → Action → Variable Reward → Investment) before building it. Prioritize user engagement mechanics and seamless state management. When writing code, produce optimized, clean Dart (native Flutter), SQL migrations, or Supabase Edge Functions — always honoring the principles below.
 
+## Operator standards (read before doing anything)
+
+- **Who you're working with:** Noah — sole developer, IT/systems background, ADHD. Optimize for small verifiable steps, one thing at a time, explicit done-when criteria. Recommend one option and name the tradeoff — never a wall of options. Don't narrate routine steps.
+- **Ground truth hierarchy (when sources disagree):** 1) the live database (read via Supabase MCP: `pg_get_functiondef`, `pg_type`+`pg_enum`, `pg_trigger`) — always wins; 2) passing golden tests; 3) this file; 4) `levels_schema.sql` — reference sketch only, known to lag production. Docs found stale get fixed in the same session, with the migration filename noted.
+- **Verification defaults:** one commit per verified change; per-command approval, not blanket grants. "Pushed" is not "verified" — a backend change is done only after an MCP read-back (the full loop lives in the `levels-dev-loop` skill).
+- **Session boundaries:** end every session with the five-section handoff block (SHIPPED & VERIFIED / IN FLIGHT / NOT STARTED / LANDMINES / NEXT SESSION PROMPT — see the `session-handoff` skill). Start every session by re-verifying the one claim the new work depends on.
+- **Writing standards:** run any user-facing or LLM-generated copy through the delete-ai-words rules. Reveal copy tone scales with zone — compressed and stark at low zones, expansive and warm at high zones. Copy never mentions numbers, scores, or zone names as mechanics.
+
 ## What this project is
 
 Levels is a mobile app that helps users track and elevate their personal energy state, based on Frederick Dodson's *Levels of Energy* framework. Users take a 7-question behavioral assessment that computes a weighted **Center of Gravity (CoG)** score, mapping them to one of six energy zones. They then work through guided protocols ("ascension loops") and are reassessed in two windows to verify durable change.
@@ -14,7 +22,7 @@ Every feature is designed against the **Hooked framework** (Trigger → Action �
 
 **The LLM never decides; functions do.**
 
-All scoring, classification, and routing logic lives in deterministic Postgres functions. LLM-generated content (dashboard copy, encouragement, drill framing) is presentation only — it may *describe* an outcome, never *compute* one. Client-side Dart/TS scoring functions exist solely for instant preview and must be exact arithmetic mirrors of the DB functions. The database result is always authoritative.
+All scoring, classification, and routing logic lives in deterministic Postgres functions. LLM-generated content (dashboard copy, encouragement, drill framing) is presentation only — it may *describe* an outcome, never *compute* one. Client-side Dart/TS scoring functions exist solely for instant preview and must be exact arithmetic mirrors of the DB functions. The database result is always authoritative. **The number wins:** if copy and score ever disagree, the score is right.
 
 ## This repository
 
@@ -33,23 +41,30 @@ lib/
       questions.dart            # the 7 questions + behavioral answer copy
       scoring.dart              # Dart mirrors of the deployed Postgres scoring fns
       assessment_controller.dart # single typed state object + single submit path
-      assessment_screen.dart, assessment_result_screen.dart
+      assessment_screen.dart
     dashboard/
       dashboard_copy.dart       # typed parser for the four-part reveal schema
+      dashboard_controller.dart, dashboard_screen.dart  # Phase 2 tap-to-reveal
+    journey/
+      loop_state.dart           # pure phase/window model (day 5–7, day 21 gates)
+      journey_repository.dart   # single read path for active loop + calibration
 test/
   scoring_mirror_test.dart      # golden-mirror suite (client ↔ deployed DB fns)
   auth_gate_test.dart           # pins the default-deny auth-gate contract
+  loop_state_test.dart          # pins phase progression + window boundaries
+  dashboard_repository_test.dart
 supabase/
   migrations/                   # the ONLY schema-change path
   functions/generate-dashboard-copy/  # index.ts + fallback.ts
-docs/                           # currently empty
+docs/
+  PRD.md                        # standing PRD + task roadmap (Phases 2–5)
 ```
 
 Dependencies are deliberately minimal: `go_router` and `supabase_flutter` only (plus `flutter_lints`). **Do not add a dependency — including any state-management package — without explicit approval.** State management is plain `ChangeNotifier`; keep it that way.
 
 ## Commands
 
-- Run (dev): `flutter run -d chrome --dart-define-from-file=env.json`
+- Run (dev): `flutter run -d web-server --web-port=8080 --dart-define-from-file=env.json`, then open `localhost:8080` — Chrome auto-launch (`-d chrome`) fails on this machine.
 - Tests: `flutter test` — must pass before any commit.
 - Static analysis: `flutter analyze` — zero warnings before any commit.
 - New migration: `npx supabase migration new <name>` → paste SQL → `npx supabase db push`
@@ -151,6 +166,8 @@ These artifact groups share no runtime; nothing but discipline (and the tests li
 
 ## Migration & SQL discipline (hard-won rules — do not relearn these)
 
+The binding end-to-end loop (read live state → migrate → MCP-verify → Dart mirror → golden tests → doc sync) is the `levels-dev-loop` skill in `.claude/skills/` — it supersedes any looser habit described anywhere else. The rules below are the SQL-level constraints it enforces.
+
 1. **Enum migrations must be split across two sequential files.** `ALTER TYPE ... ADD VALUE` cannot be used in the same transaction that references the new value.
 2. **`CREATE POLICY` has no `IF NOT EXISTS`.** Always precede with `DROP POLICY IF EXISTS`.
 3. **`REFRESH MATERIALIZED VIEW CONCURRENTLY` cannot run inside a transaction** — it rolls back the entire operation. Call it outside BEGIN/COMMIT.
@@ -188,6 +205,16 @@ The client-side golden-mirror suite already exists at `test/scoring_mirror_test.
 - **Branch:** the default branch is `main` (renamed from `master` 2026-07-08; no remote configured yet). Commit directly to `main` unless the user asks for a branch.
 - **Tests are pinned contracts, not coverage filler.** Each test group states which source of truth it pins and when that truth was verified.
 
+## Design system (reference — do not restyle ad hoc)
+
+The visual system will live in `design-system/MASTER.md`, generated later via the ui-ux-pro-max skill from `levels-design-system-brief.md` — **neither file exists yet; this section is forward-looking, not broken.** Once MASTER.md exists:
+
+- **Read it before building or modifying any screen.** All colors, type, spacing, and motion come from its tokens via `ThemeData` — no inline hex values, no per-screen font choices.
+- The six-zone palette is a single ascending spectrum (value/saturation/temperature climb with energy). Never substitute a chakra-rainbow mapping.
+- The CoG number is the visual anchor of the dashboard; `bridge_question` is styled as an invitation, distinct from the other three reveal parts.
+- Every text container must tolerate variable-length LLM copy — no fixed heights.
+- Check new screens against MASTER.md's anti-pattern list before calling them done. If a decision isn't covered, propose the token addition there first; don't improvise in the widget.
+
 ## Definition of done
 
 Work is finished only when all of these hold:
@@ -212,8 +239,8 @@ Work is finished only when all of these hold:
 
 - Google/Apple OAuth wiring (blocked on credentials).
 - Phase 2 Edge Function (generate-dashboard-copy): VERIFIED end-to-end on the fallback path in production (caller auth via user JWT, ownership 403, cache-hit/miss, one_dashboard_per_loop race handling, four-part schema write, bridge_question_shown stored). LLM path is code-complete and verified up to the Anthropic API boundary: request shape and model ID (claude-sonnet-4-6) confirmed valid against the live API reference; the sole blocker is Anthropic credit balance (API returns 400 'credit balance too low'). No code changes needed — the LLM path activates automatically when credits are added; the secret is already set. Root cause history: the multi-session debugging chain was (a) an invalid API key, then (b) zero credits — never an architecture, auth-design, or code defect. NOTE: an abandoned 2-month-old function `generate_phase2_dashboard` (underscores) was deleted 2026-07-08 via `supabase functions delete`; `generate-dashboard-copy` (hyphens) is canonical.
-- Phase 2 dashboard UI: separate commit (candidate layout: progressive tap-to-reveal matching the `reality_tunnel_read` / `hidden_benefit_opened` / `illusion_opened` columns).
-- Phases 3–5 UI.
+- Phase 2 dashboard UI: SHIPPED (progressive tap-to-reveal writing the `reality_tunnel_read` / `hidden_benefit_opened` / `illusion_opened` columns; `time_on_screen_secs` and Noah's tone review — PRD task M2.4 — still pending).
+- Phases 3–5 UI (roadmap in `docs/PRD.md`; journey spine M1 largely done — home hub, LoopState, JourneyRepository).
 - Framer marketing site with animated score visualization and zone illumination.
 - iOS/Android platform enablement (near-term; web/Chrome is the only enabled platform today — see "This repository").
 - (Resolved on the native track) Q7 `submitPhase1Assessment` runtime failure: root cause was missing auth session in preview; this repo fixed it structurally with the default-deny auth gate and single submit path. Still relevant to the FF build (surface error string via snackbar there).

@@ -5,7 +5,7 @@ description: End-to-end runbook for any change to the Levels deployed backend �
 
 # Levels backend change runbook
 
-Backend changes here are shared with another client (the FlutterFlow repo). Nothing but this discipline keeps five artifact copies aligned. Follow the phases in order; do not skip the confirmation gate or the verify phase. CLAUDE.md is the source of truth for all canonical numbers — read the relevant section before writing SQL.
+Backend changes here are shared with another client (the FlutterFlow repo). Nothing but this discipline keeps five artifact copies aligned. Follow the phases in order; do not skip the confirmation gate or the verify phase. Ground truth is the live database (read it via MCP before writing SQL — see the levels-dev-loop skill); CLAUDE.md documents the canonical numbers but lags production when stale, so read its relevant section AND verify against the live function body.
 
 ## Phase 0 — Gate
 
