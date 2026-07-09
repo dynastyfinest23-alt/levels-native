@@ -239,7 +239,14 @@ ordered; do them one at a time, each ending in a passing-tests commit.
 ## 6. TASK BREAKDOWN
 
 Every task below implicitly ends with: `flutter analyze` clean,
-`flutter test` green, one commit in CLAUDE.md style. "Done when" lists only
+`flutter test` green, one commit in CLAUDE.md style.
+
+**Review-gate delegation (2026-07-08):** Noah delegated the review gates
+(M2.4, M-DS.3, M4.1, M5.1) to the Fable reviewer session — it judges against
+MASTER.md's anti-pattern list and the writing standards and records a written
+verdict; Noah retains a standing veto on anything shipped. Executor sessions
+still stop at each gate and hand the artifact (screenshots or copy) to the
+reviewer; they never self-approve. "Done when" lists only
 the task-specific checks. When a task says "behavioral copy", options
 describe observable reactions, never emotion labels, matching
 `lib/features/assessment/questions.dart`.
@@ -326,8 +333,8 @@ screens. Read it in full first. Every task ends with `flutter analyze` clean,
    + `breath`, glass reveal panels with locked/tappable/revealed states,
    bridge_question as the invitation layout, and replace the raw zone token
    with the ZoneStyle display name (fixes the "builder" leak observed
-   2026-07-08). Done when: Noah visually approves a screenshot set against
-   the anti-pattern list (this is the M-DS visual gate; blocks M-DS.4+).
+   2026-07-08). Done when: a screenshot set is approved against the
+   anti-pattern list (this is the M-DS visual gate; blocks M-DS.4+).
 4. **M-DS.4 — Home hub restyle.** Aurora backdrop, phase CTA per spec,
    quiet calibration strip. Done when: hub matches spec in a manual run.
 5. **M-DS.5 — Auth + assessment restyle.** Neutral-accent treatment (no
