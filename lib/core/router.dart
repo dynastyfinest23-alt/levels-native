@@ -69,6 +69,20 @@ final GoRouter appRouter = GoRouter(
         loopId: state.pathParameters['loopId']!,
       ),
     ),
+    // Placeholder scaffolds — real screens land in M3-M5 (PRD M1.4). Existing
+    // now so the home hub's phase CTAs resolve and the auth gate covers them.
+    GoRoute(
+      path: '/drill',
+      builder: (context, state) => const _ComingSoonScreen(title: 'Origin drill'),
+    ),
+    GoRoute(
+      path: '/track',
+      builder: (context, state) => const _ComingSoonScreen(title: 'Track'),
+    ),
+    GoRoute(
+      path: '/reassessment',
+      builder: (context, state) => const _ComingSoonScreen(title: 'Reassessment'),
+    ),
   ],
   errorBuilder: (context, state) => Scaffold(
     body: Center(
@@ -85,3 +99,29 @@ final GoRouter appRouter = GoRouter(
     ),
   ),
 );
+
+class _ComingSoonScreen extends StatelessWidget {
+  const _ComingSoonScreen({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('$title coming soon.', style: Theme.of(context).textTheme.bodyLarge),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () => context.go('/'),
+              child: const Text('Back to home'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

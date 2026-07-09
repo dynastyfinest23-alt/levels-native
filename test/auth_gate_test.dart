@@ -16,6 +16,12 @@ void main() {
       expect(authRedirect(signedIn: false, location: '/nonsense'), '/login');
     });
 
+    test('the PRD M1.4 placeholder routes redirect to /login', () {
+      expect(authRedirect(signedIn: false, location: '/drill'), '/login');
+      expect(authRedirect(signedIn: false, location: '/track'), '/login');
+      expect(authRedirect(signedIn: false, location: '/reassessment'), '/login');
+    });
+
     test('login and signup are reachable', () {
       expect(authRedirect(signedIn: false, location: '/login'), isNull);
       expect(authRedirect(signedIn: false, location: '/signup'), isNull);
