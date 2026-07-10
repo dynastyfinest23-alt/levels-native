@@ -38,7 +38,7 @@ export const FALLBACK_COPY: Record<string, DashboardCopy> = {
     reality_tunnel:
       "From here the world reads as scarce and risky — opportunities look like traps, and holding on tightly feels safer than reaching.",
     hidden_benefit:
-      "The gripping has kept you vigilant. Fear of losing has protected what little felt securable, and wanting has at least kept a direction alive.",
+      "The gripping has kept you vigilant. That wariness of losing has protected what little felt securable, and wanting has at least kept a direction alive.",
     illusion:
       "The illusion is that safety comes from contraction — that if you brace hard enough, loss can't reach you. Bracing mostly keeps the good out too.",
     bridge_question:
@@ -48,7 +48,7 @@ export const FALLBACK_COPY: Record<string, DashboardCopy> = {
     reality_tunnel:
       "From here the world reads as a contest — slights land hard, being right matters more than being at ease, and energy comes in hot bursts.",
     hidden_benefit:
-      "The heat is real fuel. Anger got you moving when nothing else did, and pride built a self worth defending. That force brought you this far.",
+      "The heat is real fuel. It got you moving when nothing else did, and the instinct to defend your ground built a self worth protecting. That force brought you this far.",
     illusion:
       "The illusion is that the fire needs an opponent — that without something to push against, the energy disappears. It doesn't; it changes direction.",
     bridge_question:
@@ -58,7 +58,7 @@ export const FALLBACK_COPY: Record<string, DashboardCopy> = {
     reality_tunnel:
       "From here the world reads as workable — things are mostly fine, and there's a quiet awareness that 'fine' is not the same as alive.",
     hidden_benefit:
-      "Contentment has been earned ground. It gave you rest after the climb below it, and courage here doesn't announce itself — it just keeps showing up.",
+      "This calm has been earned ground. It gave you rest after the climb below it, and the steadiness here doesn't announce itself — it just keeps showing up.",
     illusion:
       "The illusion is that comfort is the summit — that wanting more would be ingratitude. The plateau is a resting point, not the top.",
     bridge_question:
@@ -68,7 +68,7 @@ export const FALLBACK_COPY: Record<string, DashboardCopy> = {
     reality_tunnel:
       "From here the world reads as buildable — you see levers where others see walls, and your word to yourself mostly gets kept.",
     hidden_benefit:
-      "Willingness compounds. The neutrality you've reached isn't detachment — it's the steadiness that lets you act without needing the outcome to soothe you.",
+      "That openness compounds. The evenness you've reached isn't detachment — it's the steadiness that lets you act without needing the outcome to soothe you.",
     illusion:
       "The illusion is that building is the destination — that enough output will produce the state you're actually after. The next climb is lighter than it is busy.",
     bridge_question:
