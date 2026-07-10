@@ -79,4 +79,21 @@ final ThemeData _levelsTheme = ThemeData(
       ),
     ),
   ),
+  inputDecorationTheme: InputDecorationTheme(
+    filled: true,
+    fillColor: LevelsColors.surface,
+    labelStyle: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(LevelsSpace.radiusPanel),
+      borderSide: const BorderSide(color: LevelsColors.glassStroke),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(LevelsSpace.radiusPanel),
+      borderSide: const BorderSide(color: LevelsColors.glassStroke),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(LevelsSpace.radiusPanel),
+      borderSide: const BorderSide(color: LevelsColors.neutralAccent, width: 2),
+    ),
+  ),
 );

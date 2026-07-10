@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/design_tokens.dart';
+import '../../core/widgets/aurora_backdrop.dart';
+import '../../core/widgets/breathing_dot.dart';
 import 'assessment_controller.dart';
 import 'questions.dart';
 import 'scoring.dart';
 
 /// Phase 1 flow: one question per page, one tap per answer to advance.
 /// Selecting an answer on the last page triggers the single submit path.
+///
+/// Visual treatment: design-system/MASTER.md §1, §2. No zone is known yet
+/// (that's Phase 2's reveal) — `neutralAccent` throughout, no glow.
 class AssessmentScreen extends StatefulWidget {
   const AssessmentScreen({super.key});
 
@@ -66,59 +72,66 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: _currentPage > 0
             ? IconButton(
                 tooltip: 'Previous question',
-                icon: const Icon(Icons.arrow_back),
+                icon: const Icon(Icons.arrow_back, color: LevelsColors.textSecondary),
                 onPressed: _controller.submitting ? null : _goBackOnePage,
               )
             : IconButton(
                 tooltip: 'Exit assessment',
-                icon: const Icon(Icons.close),
+                icon: const Icon(Icons.close, color: LevelsColors.textSecondary),
                 onPressed: () => context.go('/'),
               ),
         title: Text(
           'Question ${_currentPage + 1} of '
           '${AssessmentController.questionCount}',
+          style: LevelsType.caption,
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: ListenableBuilder(
             listenable: _controller,
             builder: (context, _) => LinearProgressIndicator(
-              value:
-                  (_currentPage + 1) / AssessmentController.questionCount,
+              value: (_currentPage + 1) / AssessmentController.questionCount,
+              color: LevelsColors.neutralAccent,
+              backgroundColor: LevelsColors.glassStroke,
             ),
           ),
         ),
       ),
-      body: ListenableBuilder(
-        listenable: _controller,
-        builder: (context, _) {
-          if (_controller.submitting) {
-            return _SubmittingView(previewScore: _controller.previewScore);
-          }
-          if (_submitError != null) {
-            return _SubmitErrorView(
-              error: _submitError!,
-              onRetry: _submit,
+      body: AuroraBackdrop(
+        child: ListenableBuilder(
+          listenable: _controller,
+          builder: (context, _) {
+            if (_controller.submitting) {
+              return _SubmittingView(previewScore: _controller.previewScore);
+            }
+            if (_submitError != null) {
+              return _SubmitErrorView(
+                error: _submitError!,
+                onRetry: _submit,
+              );
+            }
+            return PageView.builder(
+              controller: _pageController,
+              // Answer taps drive navigation; swiping would let users skip
+              // questions without answering.
+              physics: const NeverScrollableScrollPhysics(),
+              onPageChanged: (page) => setState(() => _currentPage = page),
+              itemCount: assessmentQuestions.length,
+              itemBuilder: (context, index) => _QuestionPage(
+                question: assessmentQuestions[index],
+                selected: _controller.answerFor(index),
+                onTap: (answer) => _onAnswerTap(index, answer),
+              ),
             );
-          }
-          return PageView.builder(
-            controller: _pageController,
-            // Answer taps drive navigation; swiping would let users skip
-            // questions without answering.
-            physics: const NeverScrollableScrollPhysics(),
-            onPageChanged: (page) => setState(() => _currentPage = page),
-            itemCount: assessmentQuestions.length,
-            itemBuilder: (context, index) => _QuestionPage(
-              question: assessmentQuestions[index],
-              selected: _controller.answerFor(index),
-              onTap: (answer) => _onAnswerTap(index, answer),
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -137,25 +150,35 @@ class _QuestionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          Text(question.title, style: theme.textTheme.labelLarge),
-          const SizedBox(height: 8),
-          Text(question.prompt, style: theme.textTheme.headlineSmall),
-          const SizedBox(height: 24),
-          for (final option in question.options)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _AnswerCard(
-                label: option.label,
-                selected: option.answer == selected,
-                onTap: () => onTap(option.answer),
-              ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: LevelsSpace.contentMaxWidth),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: LevelsSpace.screenGutter,
+              vertical: LevelsSpace.space32,
             ),
-        ],
+            children: [
+              Text(
+                question.title,
+                style: LevelsType.panelTitle.copyWith(color: LevelsColors.textSecondary),
+              ),
+              const SizedBox(height: LevelsSpace.space8),
+              Text(question.prompt, style: LevelsType.displayTitle),
+              const SizedBox(height: LevelsSpace.space24),
+              for (final option in question.options)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: LevelsSpace.space12),
+                  child: _AnswerCard(
+                    label: option.label,
+                    selected: option.answer == selected,
+                    onTap: () => onTap(option.answer),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -174,16 +197,28 @@ class _AnswerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Card(
-      margin: EdgeInsets.zero,
-      color: selected ? colors.primaryContainer : null,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(LevelsSpace.radiusPanel),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Text(label, style: Theme.of(context).textTheme.bodyLarge),
+        child: Container(
+          decoration: BoxDecoration(
+            color: LevelsColors.glassFill,
+            border: Border(
+              top: const BorderSide(color: LevelsColors.glassStroke),
+              right: const BorderSide(color: LevelsColors.glassStroke),
+              bottom: const BorderSide(color: LevelsColors.glassStroke),
+              left: BorderSide(
+                color: selected ? LevelsColors.neutralAccent : LevelsColors.glassStroke,
+                width: selected ? 2 : 1,
+              ),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: LevelsSpace.space16,
+            vertical: LevelsSpace.space16,
+          ),
+          child: Text(label, style: LevelsType.body),
         ),
       ),
     );
@@ -197,23 +232,22 @@ class _SubmittingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 24),
+          const BreathingDot(),
+          const SizedBox(height: LevelsSpace.space24),
           Text(
             'Computing your Center of Gravity…',
-            style: theme.textTheme.titleMedium,
+            style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
           ),
           if (previewScore != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: LevelsSpace.space8),
             // Client-mirror preview only; the database result replaces it.
             Text(
               'Provisional: ~${previewScore!.toStringAsFixed(0)}',
-              style: theme.textTheme.bodySmall,
+              style: LevelsType.caption,
             ),
           ],
         ],
@@ -230,28 +264,38 @@ class _SubmitErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(LevelsSpace.space24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
-            const SizedBox(height: 16),
+            const Icon(
+              Icons.error_outline,
+              size: 32,
+              color: LevelsColors.textSecondary,
+            ),
+            const SizedBox(height: LevelsSpace.space16),
             Text(
               'Your answers were not saved.',
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              style: theme.textTheme.bodySmall,
+              style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
-            FilledButton(
+            const SizedBox(height: LevelsSpace.space8),
+            Text(
+              error,
+              style: LevelsType.caption,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: LevelsSpace.space24),
+            OutlinedButton(
               onPressed: onRetry,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: LevelsColors.textPrimary,
+                side: const BorderSide(color: LevelsColors.glassStroke),
+                shape: const StadiumBorder(),
+                textStyle: LevelsType.button,
+              ),
               child: const Text('Retry submission'),
             ),
           ],

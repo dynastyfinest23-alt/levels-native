@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/design_tokens.dart';
+import '../../core/widgets/aurora_backdrop.dart';
+import '../../core/widgets/breathing_dot.dart';
+
+/// Visual treatment: design-system/MASTER.md §1, §2. No zone context yet —
+/// `neutralAccent` throughout, no glow.
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
@@ -58,88 +64,82 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Create your account',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium,
+      body: AuroraBackdrop(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(LevelsSpace.screenGutter),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: LevelsSpace.contentMaxWidth),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Create your account',
+                        textAlign: TextAlign.center,
+                        style: LevelsType.displayTitle,
+                      ),
+                      const SizedBox(height: LevelsSpace.space8),
+                      Text(
+                        'Start tracking your energy state',
+                        textAlign: TextAlign.center,
+                        style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
+                      ),
+                      const SizedBox(height: LevelsSpace.space32),
+                      TextFormField(
+                        controller: _emailController,
+                        style: LevelsType.body,
+                        decoration: const InputDecoration(labelText: 'Email'),
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
+                        validator: (value) {
+                          final email = value?.trim() ?? '';
+                          if (email.isEmpty || !email.contains('@')) {
+                            return 'Enter a valid email address';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: LevelsSpace.space16),
+                      TextFormField(
+                        controller: _passwordController,
+                        style: LevelsType.body,
+                        decoration: const InputDecoration(labelText: 'Password'),
+                        obscureText: true,
+                        autofillHints: const [AutofillHints.newPassword],
+                        validator: (value) => (value == null || value.length < 6)
+                            ? 'Password must be at least 6 characters'
+                            : null,
+                      ),
+                      const SizedBox(height: LevelsSpace.space16),
+                      TextFormField(
+                        controller: _confirmController,
+                        style: LevelsType.body,
+                        decoration: const InputDecoration(labelText: 'Confirm password'),
+                        obscureText: true,
+                        onFieldSubmitted: (_) => _signUp(),
+                        validator: (value) => (value != _passwordController.text)
+                            ? 'Passwords do not match'
+                            : null,
+                      ),
+                      const SizedBox(height: LevelsSpace.space24),
+                      FilledButton(
+                        onPressed: _submitting ? null : _signUp,
+                        child: _submitting
+                            ? const BreathingDot(color: LevelsColors.voidColor)
+                            : const Text('Sign up'),
+                      ),
+                      const SizedBox(height: LevelsSpace.space12),
+                      TextButton(
+                        onPressed: _submitting ? null : () => context.go('/login'),
+                        child: const Text('Already have an account? Log in'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Start tracking your energy state',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 32),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    autofillHints: const [AutofillHints.email],
-                    validator: (value) {
-                      final email = value?.trim() ?? '';
-                      if (email.isEmpty || !email.contains('@')) {
-                        return 'Enter a valid email address';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: const InputDecoration(
-                      labelText: 'Password',
-                      border: OutlineInputBorder(),
-                    ),
-                    obscureText: true,
-                    autofillHints: const [AutofillHints.newPassword],
-                    validator: (value) => (value == null || value.length < 6)
-                        ? 'Password must be at least 6 characters'
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _confirmController,
-                    decoration: const InputDecoration(
-                      labelText: 'Confirm password',
-                      border: OutlineInputBorder(),
-                    ),
-                    obscureText: true,
-                    onFieldSubmitted: (_) => _signUp(),
-                    validator: (value) => (value != _passwordController.text)
-                        ? 'Passwords do not match'
-                        : null,
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _submitting ? null : _signUp,
-                    child: _submitting
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Sign up'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: _submitting ? null : () => context.go('/login'),
-                    child: const Text('Already have an account? Log in'),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
