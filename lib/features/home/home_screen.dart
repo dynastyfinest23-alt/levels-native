@@ -230,8 +230,18 @@ class _HubBody extends StatelessWidget {
   }
 }
 
+/// Loops of accumulated verification needed before Flow-band framing opens
+/// (CLAUDE.md "Flow reachability", FLOW_GATE). Sizes the progress dots below
+/// only — never rendered as a number (CLAUDE.md: copy never mentions
+/// numbers, scores, or zone names as mechanics).
+const _flowGate = 3;
+
 /// design-system/MASTER.md §6 calibration strip: `caption` type on
 /// `surface`, no glass, no glow — an instrument readout, deliberately quiet.
+///
+/// Shows verification progress as dots, not the raw `verified_floor` /
+/// `consecutive_verified_loops` values — those are climb mechanics and must
+/// stay off-screen as numbers (CLAUDE.md tone rule).
 class _CalibrationStrip extends StatelessWidget {
   const _CalibrationStrip({required this.calibration});
 
@@ -239,6 +249,9 @@ class _CalibrationStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loopsVerified = calibration.consecutiveVerifiedLoops < _flowGate
+        ? calibration.consecutiveVerifiedLoops
+        : _flowGate;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(LevelsSpace.space16),
@@ -251,17 +264,42 @@ class _CalibrationStrip extends StatelessWidget {
         children: [
           Text('Calibration', style: LevelsType.panelTitle),
           const SizedBox(height: LevelsSpace.space8),
-          Text(
-            'Verified floor: ${calibration.verifiedFloor.toStringAsFixed(2)}',
-            style: LevelsType.caption,
-          ),
-          const SizedBox(height: LevelsSpace.space4),
-          Text(
-            'Consecutive verified loops: ${calibration.consecutiveVerifiedLoops}',
-            style: LevelsType.caption,
+          Row(
+            children: [
+              Text('Verified climb', style: LevelsType.caption),
+              const SizedBox(width: LevelsSpace.space8),
+              _ProgressDots(filled: loopsVerified, total: _flowGate),
+            ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ProgressDots extends StatelessWidget {
+  const _ProgressDots({required this.filled, required this.total});
+
+  final int filled;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(total, (i) {
+        return Container(
+          margin: const EdgeInsets.only(right: LevelsSpace.space4),
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: i < filled
+                ? LevelsColors.neutralAccent
+                : LevelsColors.textFaint,
+          ),
+        );
+      }),
     );
   }
 }
