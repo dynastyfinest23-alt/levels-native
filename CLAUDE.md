@@ -36,9 +36,12 @@ lib/
   core/
     env.dart                    # compile-time config via --dart-define-from-file
     router.dart                 # go_router + default-deny auth gate (authRedirect)
+    design_tokens.dart          # ALL colors/type/spacing/motion from MASTER.md §1–§5
+    zone_style.dart             # ZoneStyle.of(zone) → display name + color + glow; throws on unknown
+    widgets/                    # aurora_backdrop.dart, breathing_dot.dart (shared design-system widgets)
   features/
     auth/                       # login_screen.dart, signup_screen.dart
-    home/                       # home_screen.dart
+    home/                       # home_screen.dart — journey hub (loop, phase CTA, progress dots)
     assessment/
       questions.dart            # the 7 questions + behavioral answer copy
       scoring.dart              # Dart mirrors of the deployed Postgres scoring fns
@@ -46,6 +49,7 @@ lib/
       assessment_screen.dart
     dashboard/
       dashboard_copy.dart       # typed parser for the four-part reveal schema
+      dashboard_repository.dart # Edge Function invoke + reveal-tracking column updates
       dashboard_controller.dart, dashboard_screen.dart  # Phase 2 tap-to-reveal
     journey/
       loop_state.dart           # pure phase/window model (day 5–7, day 21 gates)
@@ -53,8 +57,13 @@ lib/
 test/
   scoring_mirror_test.dart      # golden-mirror suite (client ↔ deployed DB fns)
   auth_gate_test.dart           # pins the default-deny auth-gate contract
+  router_test.dart
   loop_state_test.dart          # pins phase progression + window boundaries
   dashboard_repository_test.dart
+  zone_style_test.dart          # pins the six zone names/colors to MASTER.md §2
+assets/fonts/                   # Fraunces + Inter variable fonts (OFL; files approved, google_fonts package is not)
+design-system/
+  MASTER.md                     # binding visual system — read before touching any screen
 supabase/
   migrations/                   # the ONLY schema-change path
   functions/generate-dashboard-copy/  # index.ts + fallback.ts
@@ -67,6 +76,7 @@ Dependencies are deliberately minimal: `go_router` and `supabase_flutter` only (
 ## Commands
 
 - Run (dev): `flutter run -d web-server --web-port=8080 --dart-define-from-file=env.json`, then open `localhost:8080` — Chrome auto-launch (`-d chrome`) fails on this machine.
+- Screenshot/visual verification: the debug web-server renders a **blank page** under headless browsers (Playwright etc.) — do not conclude the app is broken. Build release (`flutter build web --release --dart-define-from-file=env.json`), serve `build/web`, screenshot that (verified 2026-07-08).
 - Tests: `flutter test` — must pass before any commit.
 - Static analysis: `flutter analyze` — zero warnings before any commit.
 - New migration: `npx supabase migration new <name>` → paste SQL → `npx supabase db push`
@@ -242,7 +252,8 @@ Work is finished only when all of these hold:
 
 - Google/Apple OAuth wiring (blocked on credentials).
 - Phase 2 Edge Function (generate-dashboard-copy): VERIFIED end-to-end on the fallback path in production (caller auth via user JWT, ownership 403, cache-hit/miss, one_dashboard_per_loop race handling, four-part schema write, bridge_question_shown stored). LLM path is code-complete and verified up to the Anthropic API boundary: request shape and model ID (claude-sonnet-4-6) confirmed valid against the live API reference; the sole blocker is Anthropic credit balance (API returns 400 'credit balance too low'). No code changes needed — the LLM path activates automatically when credits are added; the secret is already set. Root cause history: the multi-session debugging chain was (a) an invalid API key, then (b) zero credits — never an architecture, auth-design, or code defect. NOTE: an abandoned 2-month-old function `generate_phase2_dashboard` (underscores) was deleted 2026-07-08 via `supabase functions delete`; `generate-dashboard-copy` (hyphens) is canonical.
-- Phase 2 dashboard UI: SHIPPED (progressive tap-to-reveal writing the `reality_tunnel_read` / `hidden_benefit_opened` / `illusion_opened` columns; `time_on_screen_secs` and Noah's tone review — PRD task M2.4 — still pending).
+- Phase 2 dashboard UI: SHIPPED and COMPLETE — progressive tap-to-reveal writes all three reveal columns; `time_on_screen_secs` is written on dispose via `recordTimeOnScreen` (verified in code 2026-07-11); M2.4 tone review passed 2026-07-10 (rubric judge pass; two `fallback.ts` fixes — flow + builder_clamped — deployed as Edge Function v8, MCP read-back confirmed).
+- Design system M-DS: M-DS.1–.5 SHIPPED (tokens, ZoneStyle, dashboard/home/auth+assessment restyles; calibration strip replaced with mechanic-free progress dots 2026-07-10). M-DS.6 (placeholders/loading/error states + anti-pattern grep sweep) NOT yet run.
 - Phases 3–5 UI (roadmap in `docs/PRD.md`; journey spine M1 COMPLETE, verified in-browser 2026-07-08 — home hub, LoopState, JourneyRepository, placeholder routes).
 - Framer marketing site with animated score visualization and zone illumination.
 - iOS/Android platform enablement (near-term; web/Chrome is the only enabled platform today — see "This repository").
