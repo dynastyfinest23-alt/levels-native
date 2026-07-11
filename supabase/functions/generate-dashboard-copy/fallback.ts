@@ -82,7 +82,7 @@ export const FALLBACK_COPY: Record<string, DashboardCopy> = {
     illusion:
       "The illusion is that a peak moment equals a resting state — the ceiling you met is the designed doorway to Flow, which opens only through sustained verified loops, never one assessment. That's not a limit on you; it's the shape of the climb.",
     bridge_question:
-      "You're at the edge of what one assessment can measure. What would it look like to live at this level on an ordinary Tuesday?",
+      "What would it look like to live at this level on an ordinary Tuesday?",
   },
   flow: {
     reality_tunnel:
@@ -90,7 +90,7 @@ export const FALLBACK_COPY: Record<string, DashboardCopy> = {
     hidden_benefit:
       "The verified climb behind you is the point: this state rests on repetition, not luck, which is why it holds under load.",
     illusion:
-      "The illusion is arrival — that flow maintains itself. It's a current you keep choosing, loop after loop, not a title you keep.",
+      "The illusion is arrival — that this state now sustains itself on its own. It's a current you keep choosing, loop after loop, not a title you keep.",
     bridge_question:
       "Now that the climb is lighter, who or what climbs with you?",
   },
