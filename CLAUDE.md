@@ -13,6 +13,12 @@ Act as Lead System Architect and Behavioral Designer for Levels. Cross-reference
 - **Verification defaults:** one commit per verified change. Read-only and verification commands (`flutter analyze`/`test`, Supabase MCP reads including `execute_sql` for verification SELECTs) are allowlisted in `.claude/settings.json` (Noah's call, 2026-07-08 — approval fatigue); mutating operations (db push, function deploys, secrets, deletes) still prompt per-command. "Pushed" is not "verified" — a backend change is done only after an MCP read-back (the full loop lives in the `levels-dev-loop` skill).
 - **Session boundaries:** end every session with the five-section handoff block (SHIPPED & VERIFIED / IN FLIGHT / NOT STARTED / LANDMINES / NEXT SESSION PROMPT — see the `session-handoff` skill). Start every session by re-verifying the one claim the new work depends on.
 - **Writing standards:** run any user-facing or LLM-generated copy through the delete-ai-words rules. Reveal copy tone scales with zone — compressed and stark at low zones, expansive and warm at high zones. Copy never mentions numbers, scores, or zone names as mechanics.
+- **Four mechanic-leak classes — every one has been caught in review once already; check all four before any copy or UI ships (mined 2026-07-11):**
+  1. Raw zone tokens in UI. Wrong: showing `builder` from the DB row. Right: `ZoneStyle.of(zone).displayName` (caught 2026-07-08).
+  2. Zone names as nouns in copy. Wrong: "that flow maintains itself". Right: "that this state now sustains itself on its own" (caught in M2.4 rubric pass).
+  3. Book/calibration vocabulary in user-facing copy. Wrong: Dodson scale terms in fallback copy (caught 2026-07-09, commit `5730554`). Right: plain behavioral language.
+  4. Raw mechanic numbers or instrument meta-commentary. Wrong: verified-floor numbers on the hub; "You're at the edge of what one assessment can measure." Right: mechanic-free progress dots; lead with the question (both caught 2026-07-10).
+- **Copy review gates run as a cold-context rubric judge pass** (a fresh model judging against a written rubric with no authorship memory — the M2.4 method, 2026-07-10). Self-review by the authoring session doesn't count.
 
 ## What this project is
 
@@ -77,6 +83,7 @@ Dependencies are deliberately minimal: `go_router` and `supabase_flutter` only (
 
 - Run (dev): `flutter run -d web-server --web-port=8080 --dart-define-from-file=env.json`, then open `localhost:8080` — Chrome auto-launch (`-d chrome`) fails on this machine.
 - Screenshot/visual verification: the debug web-server renders a **blank page** under headless browsers (Playwright etc.) — do not conclude the app is broken. Build release (`flutter build web --release --dart-define-from-file=env.json`), serve `build/web`, screenshot that (verified 2026-07-08).
+- When Noah supplies screenshots for a review gate, they land in `Screenshots/` at the repo root — check there before saying you can't see the UI. (Folder is transient; absent when empty.)
 - Tests: `flutter test` — must pass before any commit.
 - Static analysis: `flutter analyze` — zero warnings before any commit.
 - New migration: `npx supabase migration new <name>` → paste SQL → `npx supabase db push`
@@ -100,7 +107,7 @@ Dependencies are deliberately minimal: `go_router` and `supabase_flutter` only (
 
 ### Answer enum → raw score (p1_answer)
 
-**Book canon hierarchy (approved by Noah 2026-07-11):** Dodson's *Levels of Energy* 2nd edition is the sole canon for mechanics (anchors, zones, climb model); *The Law of One* and Abke's *Three Beliefs of Ego* enter at the presentation/protocol layer only (copy voice, drill framing, track content) and may never introduce numbers, scales, or classifications — same side of the line as LLM copy.
+**Book canon hierarchy (approved by Noah 2026-07-11):** Dodson's *Levels of Energy* 2nd edition is the sole canon for mechanics (anchors, zones, climb model); *The Law of One* and Abke's *Three Beliefs of Ego* enter at the presentation/protocol layer only (copy voice, drill framing, track content) and may never introduce numbers, scales, or classifications — same side of the line as LLM copy. Verify any book-derived value against the master scan (`H:\My Drive\Levels of energy\Levels-of-Energy-2e-master.pdf`), never against web summaries — a 2026-07-10 web check disagreed with the book on at least one anchor (anger).
 
 Calibration source: Frederick Dodson's *Levels of Energy* scale (shame 30, apathy 50, grief 80, fear 100, desire 120, anger 160, pride 190, contentment 200, courage 275, willingness 320, neutrality 400, love 530). Composite tokens use the anchor of their range. These values match the deployed `answer_to_raw_score` function body (verified against production 2026-07-03); earlier drafts of this table carried stale Hawkins-derived numbers. `shame_apathy` = 30 intentionally anchors on Shame (30), not the shame–apathy band midpoint.
 
