@@ -161,8 +161,10 @@ The project is done when every box checks:
       screen was read back from a DB row or RPC result — grep-level check:
       no screen constructs an outcome from client math (mirrors are
       display-only previews, labeled as such in code).
-- [ ] Phase 2 screen writes `reality_tunnel_read`, `hidden_benefit_opened`,
-      `illusion_opened`, and `time_on_screen_secs` as the user progresses.
+- [x] Phase 2 screen writes `reality_tunnel_read`, `hidden_benefit_opened`,
+      `illusion_opened`, and `time_on_screen_secs` as the user progresses
+      (production SELECT 2026-07-11: newest row all-true + 24s; older null
+      `time_on_screen_secs` rows predate the dispose-write fix).
 - [ ] Phase 3 writes a complete `phase3_origin_drills` row whose
       `assigned_protocol` came from `assign_phase4_track`, and
       `ascension_loops.assigned_track` matches it.
@@ -251,6 +253,16 @@ the task-specific checks. When a task says "behavioral copy", options
 describe observable reactions, never emotion labels, matching
 `lib/features/assessment/questions.dart`.
 
+**Book canon for content tasks (added 2026-07-11, Noah-approved):** all
+M3.2/M4.1/M5.1 content follows the CLAUDE.md book canon hierarchy — Dodson's
+*Levels of Energy* 2e is the sole canon for mechanics; *The Law of One* and
+Abke's *Three Beliefs of Ego* inform framing/voice only and may never
+introduce numbers, scales, or classifications. Noah plans a Dodson 2e
+extraction doc (`docs/dodson-2e-reference.md`); if it exists when a content
+task starts, treat it as the content source of truth under that hierarchy —
+if it doesn't, log that to ACTION-FOR-NOAH before drafting drill/track copy
+that leans on book material.
+
 ### M1 — Journey spine
 
 **Status: COMPLETE — verified 2026-07-08.** M1.1–M1.4 shipped (`2067e8c`, `a71d710`, `b67cdb5`, `bf9c424`, `e1fc094`). Manual done-when observed by Noah in Chrome on his machine: mid-loop user (Loop 1, Day 5) showed "Day 5–7 check-in open" with the correct CTA resolving to the reassessment placeholder; a fresh account showed "Begin assessment" (null-loop branch); calibration strip rendered a real `user_calibration` row (verified floor 343.57).
@@ -285,6 +297,12 @@ describe observable reactions, never emotion labels, matching
 
 ### M2 — Phase 2 dashboard
 
+**Status: COMPLETE — 2026-07-11.** M2.1–M2.3 shipped and verified (reveal
+columns confirmed by production SELECT 2026-07-11: booleans true +
+`time_on_screen_secs` written on the newest row). M2.4 tone review passed
+2026-07-10 via the delegated rubric judge (two `fallback.ts` fixes — flow +
+builder_clamped — deployed as Edge Function v8, MCP read-back confirmed).
+
 1. **M2.1 — Dashboard repository.** Create
    `lib/features/dashboard/dashboard_repository.dart`: invokes the
    `generate-dashboard-copy` Edge Function with the user's JWT (via
@@ -314,6 +332,11 @@ describe observable reactions, never emotion labels, matching
    Done when: Noah approves in writing; blockers become follow-up tasks.
 
 ### M-DS — Design system application (added 2026-07-08; runs before M3)
+
+**Status: M-DS.1–M-DS.5 COMPLETE (commits `9c4190f`…`d77762d`; the
+calibration strip was replaced with mechanic-free progress dots, `e7d4c6e`,
+2026-07-10 — read "calibration strip" in older task text as those dots,
+never raw numbers). M-DS.6 NOT STARTED.**
 
 `design-system/MASTER.md` is binding for every task below and for all M3–M5
 screens. Read it in full first. Every task ends with `flutter analyze` clean,
@@ -451,7 +474,8 @@ screens. Read it in full first. Every task ends with `flutter analyze` clean,
    verified loops, flow_resident) as the loop's closing screen. Copy must
    frame Flow as earned across loops (CLAUDE.md Flow reachability). Done
    when: manual run on a day-21 test loop updates the hub's calibration
-   strip.
+   display (the mechanic-free progress dots that replaced the raw-number
+   strip in `e7d4c6e` — never reintroduce raw numbers there).
 
 ### M6 — Full-loop hardening
 
