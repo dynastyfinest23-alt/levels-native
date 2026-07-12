@@ -73,6 +73,7 @@ design-system/
 supabase/
   migrations/                   # the ONLY schema-change path
   functions/generate-dashboard-copy/  # index.ts + fallback.ts
+marketing-site/                 # separate React/Vite/Three.js app (Kimi-built) — not Dart, not this repo's standards
 docs/
   PRD.md                        # standing PRD + task roadmap (Phases 2–5)
 ```
@@ -101,7 +102,7 @@ Dependencies are deliberately minimal: `go_router` and `supabase_flutter` only (
 - **Frontend (current production track):** FlutterFlow with custom Dart actions — lives in a separate repo (`C:\Users\Administrator\levels-app`), not here.
 - **Frontend (this repo):** Native Flutter client against the same Supabase project. Do not modify shared schema or functions without explicit approval — other clients depend on them.
 - **Migrations:** Supabase CLI, run from this repo's `supabase/` dir — **this repo is the sole authority for migrations.** The `levels-app` repo also has a `supabase/` dir linked to the same production project, but it is stale (frozen at the 2026-06-26 migration, missing everything since). Never create or push migrations from `levels-app` — doing so would fork the migration history against production.
-- **Marketing site (separate workstream):** Framer.
+- **Marketing site (separate workstream):** lives in this repo at `marketing-site/` — a React/Vite/Three.js site Noah built via Kimi (see `marketing-site/KIMI.md`, `marketing-site/README.md`). Not a Flutter/Dart workstream and not built or reviewed by this project's standards; treat it as a separate app that happens to share the repo. `node_modules/` and `dist/` are gitignored. (Framer was an earlier, now-superseded plan — do not resurrect it.)
 
 ## Scoring model (canonical numbers)
 
