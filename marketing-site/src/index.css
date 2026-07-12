@@ -1,0 +1,468 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 228 24% 7%;
+    --foreground: 230 29% 94%;
+    --card: 228 24% 7%;
+    --card-foreground: 230 29% 94%;
+    --popover: 228 24% 7%;
+    --popover-foreground: 230 29% 94%;
+    --primary: 350 51% 67%;
+    --primary-foreground: 228 24% 7%;
+    --secondary: 228 22% 11%;
+    --secondary-foreground: 230 29% 94%;
+    --muted: 228 22% 11%;
+    --muted-foreground: 232 15% 55%;
+    --accent: 228 22% 11%;
+    --accent-foreground: 230 29% 94%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 228 18% 15%;
+    --input: 228 18% 15%;
+    --ring: 350 51% 67%;
+    --radius: 0.625rem;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    background-color: #0B0C15;
+    color: #ECEDF4;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-weight: 400;
+    font-size: clamp(14px, 0.9vw + 0.4rem, 17px);
+    line-height: 1.55;
+    letter-spacing: 0.02em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fraunces', Georgia, serif;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+}
+
+@layer components {
+  .font-serif-display {
+    font-family: 'Fraunces', Georgia, serif;
+  }
+
+  .font-sans-body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  /* PhilosophyCarousel responsive */
+  .philosophy-layout {
+    width: 100%;
+    min-height: 100vh;
+    background: transparent;
+    display: flex;
+  }
+
+  .philosophy-left {
+    flex: 0 0 30%;
+    position: relative;
+  }
+
+  .philosophy-right {
+    flex: 0 0 70%;
+    position: relative;
+  }
+
+  .philosophy-sticky-text {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 5vw 0 4vw;
+  }
+
+  .philosophy-ring-wrap {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 6vh;
+    perspective: 1000px;
+    perspective-origin: 50% 55%;
+  }
+
+  /* MediumsGlossary responsive */
+  .mediums-layout {
+    position: relative;
+    width: 100%;
+    min-height: 80vh;
+    background: #0B0C15;
+    z-index: 4;
+    display: flex;
+    padding: 16vh 8vw;
+    gap: 8vw;
+  }
+
+  .mediums-left {
+    flex: 0 0 50%;
+  }
+
+  .mediums-right {
+    flex: 1 1 50%;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+}
+
+/* ── Mobile responsiveness (below 768px) ─────────────────────────────── */
+@media (max-width: 768px) {
+  /* Global readability */
+  h1, h2, h3, h4, h5, h6 {
+    word-break: normal !important;
+    overflow-wrap: break-word;
+  }
+
+  /* Navigation */
+  nav {
+    padding: 16px 24px !important;
+  }
+
+  nav > div:last-child {
+    gap: 20px !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+  }
+
+  nav button {
+    font-size: 12px !important;
+  }
+
+  /* HeroField – stack vertically */
+  #hero-section {
+    height: auto !important;
+    min-height: 100dvh;
+  }
+
+  #hero-section section > div {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    padding: 100px 24px 60px !important;
+    gap: 40px !important;
+  }
+
+  #hero-section h2 {
+    font-size: clamp(36px, 14vw, 72px) !important;
+    text-align: center;
+    letter-spacing: 0.08em !important;
+  }
+
+  #hero-section h1 {
+    margin-left: 0 !important;
+    font-size: clamp(22px, 6vw, 32px) !important;
+    text-align: center;
+  }
+
+  #hero-section p {
+    margin-left: 0 !important;
+    text-align: center;
+  }
+
+  #hero-section button {
+    margin-left: 0 !important;
+    align-self: center;
+  }
+
+  /* PhilosophyCarousel – stack vertically */
+  #philosophy > section > div {
+    flex-direction: column !important;
+    min-height: auto !important;
+  }
+
+  #philosophy > section > div > div:first-child {
+    flex: 1 1 auto !important;
+  }
+
+  #philosophy > section > div > div:first-child > div {
+    position: relative !important;
+    height: auto !important;
+    padding: 80px 24px !important;
+  }
+
+  #philosophy > section > div > div:last-child {
+    flex: 1 1 auto !important;
+  }
+
+  #philosophy > section > div > div:last-child > div {
+    position: relative !important;
+    height: auto !important;
+    padding: 40px 24px 80px !important;
+    perspective: none !important;
+  }
+
+  /* VisionSection */
+  #vision {
+    padding: 80px 24px !important;
+    min-height: auto !important;
+  }
+
+  #vision h2 {
+    font-size: clamp(26px, 7vw, 40px) !important;
+  }
+
+  #vision p {
+    font-size: clamp(14px, 4vw, 17px) !important;
+  }
+
+  /* ImmersiveGallery – single column, remove overlaps */
+  #gallery {
+    padding-top: 60px !important;
+    padding-bottom: 60px !important;
+  }
+
+  #gallery > section > div:first-child {
+    padding: 0 24px !important;
+    margin-bottom: 48px !important;
+  }
+
+  #gallery > section > div:last-child {
+    padding: 0 16px !important;
+  }
+
+  #gallery > section > div:last-child > div {
+    margin-top: 0 !important;
+    margin-bottom: 48px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    justify-content: center !important;
+  }
+
+  #gallery > section > div:last-child > div:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  #gallery > section > div:last-child > div > div {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #gallery > section > div:last-child > div > div > div:last-child {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  /* Testimonials */
+  #testimonials {
+    padding: 80px 24px !important;
+  }
+
+  #testimonials > div > div:last-child {
+    grid-template-columns: 1fr !important;
+  }
+
+  #testimonials h2 {
+    font-size: clamp(24px, 6vw, 36px) !important;
+  }
+
+  /* Class-based responsive helpers */
+  .gallery-item {
+    display: block !important;
+    margin-top: 48px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .gallery-item:first-child {
+    margin-top: 0 !important;
+  }
+
+  .gallery-card {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .gallery-meta {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .gallery-meta-right {
+    text-align: left !important;
+  }
+
+  .testimonials-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .testimonial-card {
+    padding: clamp(24px, 3vw, 40px) clamp(20px, 2.5vw, 36px) !important;
+  }
+
+  /* MediumsGlossary – stack vertically */
+  #mediums {
+    flex-direction: column !important;
+    padding: 80px 24px !important;
+    gap: 24px !important;
+    min-height: auto !important;
+  }
+
+  #mediums > div:first-child {
+    flex: 1 1 auto !important;
+  }
+
+  #mediums > div:last-child {
+    flex: 1 1 auto !important;
+    justify-content: flex-start !important;
+  }
+
+  #mediums svg {
+    max-width: 100% !important;
+  }
+
+  /* Waitlist */
+  #waitlist {
+    padding: 80px 24px !important;
+  }
+
+  .waitlist-form-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .waitlist-form-row input,
+  .waitlist-form-row button {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+
+  #waitlist h2 {
+    font-size: clamp(24px, 6vw, 36px) !important;
+  }
+
+  /* Footer */
+  .footer-inner {
+    padding: 80px 24px 40px !important;
+  }
+
+  .footer-vision {
+    margin-bottom: 60px !important;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+
+  .footer-inner > div:last-child {
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  /* PhilosophyCarousel class-based overrides */
+  .philosophy-layout {
+    flex-direction: column;
+  }
+
+  .philosophy-left,
+  .philosophy-right {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .philosophy-sticky-text {
+    position: relative;
+    height: auto;
+    padding: 8vh 6vw 4vh;
+    text-align: center;
+  }
+
+  .philosophy-ring-wrap {
+    position: relative;
+    height: auto;
+    min-height: 560px;
+    padding-top: 2vh;
+    padding-bottom: 6vh;
+  }
+
+  /* MediumsGlossary class-based overrides */
+  .mediums-layout {
+    flex-direction: column;
+    padding: 10vh 6vw;
+    gap: 6vh;
+  }
+
+  .mediums-left,
+  .mediums-right {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .mediums-right {
+    justify-content: center;
+  }
+}
+
+.hero-grid {
+  flex: 1 1 auto;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  align-items: center;
+  padding: 0 6vw;
+  gap: 6vw;
+}
+
+.hero-content-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+  max-width: 440px;
+}
+
+.hero-margin {
+  margin-left: 60px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 36px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    padding: 24px 6vw;
+    gap: 32px;
+  }
+
+  .hero-content-col {
+    align-items: center;
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .hero-margin {
+    margin-left: 0;
+  }
+
+  .nav-links {
+    gap: 18px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

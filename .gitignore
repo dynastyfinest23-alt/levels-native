@@ -43,3 +43,10 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+
+# Marketing site (Vite/React/Three.js) — dependencies and build output
+marketing-site/node_modules/
+marketing-site/dist/
+
+# Claude Code tooling state (worktrees, not project source)
+.claude/worktrees/
