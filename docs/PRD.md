@@ -11,13 +11,17 @@ were read from production (project `dnqwsgpkinieitiiikij`) on 2026-07-08.
 
 ## 0. NOW (next ~2 weeks)
 
-- **Current milestone:** M-DS complete; M3 (Phase 3 origin drill) starts next
-  session, beginning with M3.1 token mirrors.
-- **In flight:** nothing — M2.4 gate closure and M-DS.6 sweep both closed
-  2026-07-15 (see §6 for artifacts/commits).
-- **Parked on purpose:** Dodson extraction doc (own session, not this one); OAuth
-  (blocked on credentials); test-account deletion (needs Noah's ID list); marketing
-  site (separate workstream, own standards).
+- **Current milestone:** M3 (Phase 3 origin drill) — M3.1 done, M3.2 content
+  staged for the reviewer gate; M3.3 (persistence migration) is next once
+  M3.2 is approved.
+- **In flight:** M3.2 copy awaiting the delegated cold-context judge pass +
+  Noah's written approval (`lib/features/drill/drill_questions.dart`). love_flow
+  530-vs-550 decision brief is in `ACTION-FOR-NOAH.md`, awaiting Noah's call —
+  no scoring artifact touched.
+- **Parked on purpose:** Dodson extraction doc (done — see
+  `docs/dodson-2e-reference.md`); OAuth (blocked on credentials); test-account
+  deletion (needs Noah's ID list); marketing site (separate workstream, own
+  standards).
 - This section is refreshed at every gate close and session handoff.
 
 ## 1. OBJECTIVE
@@ -404,6 +408,13 @@ screens. Read it in full first. Every task ends with `flutter analyze` clean,
    zero or fixed in the same commit.
 
 ### M3 — Phase 3 origin drill
+
+**Status: M3.1 COMPLETE (`054b91e`, live-verified against production
+2026-07-15). M3.2 content drafted (`lib/features/drill/drill_questions.dart`)
+and self-checked against `docs/copy-tone-rubric.md` — staged for the
+delegated reviewer's cold-context judge pass per the Content gates protocol;
+NOT yet approved. Do not build M3.3/M3.4 on top of this until the written
+verdict + Noah's approval land.**
 
 1. **M3.1 — Token mirrors.** Create `lib/features/drill/drill_tokens.dart`:
    Dart enums mirroring `origin_type`, `origin_domain`, `coping_mechanism`,
