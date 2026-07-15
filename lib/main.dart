@@ -79,6 +79,15 @@ final ThemeData _levelsTheme = ThemeData(
       ),
     ),
   ),
+  snackBarTheme: SnackBarThemeData(
+    backgroundColor: LevelsColors.surface,
+    contentTextStyle: LevelsType.body.copyWith(color: LevelsColors.textPrimary),
+    behavior: SnackBarBehavior.floating,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(LevelsSpace.radiusPanel),
+      side: const BorderSide(color: LevelsColors.glassStroke),
+    ),
+  ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
     fillColor: LevelsColors.surface,

@@ -9,6 +9,7 @@ import '../features/auth/login_screen.dart';
 import '../features/auth/signup_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/home/home_screen.dart';
+import 'design_tokens.dart';
 
 /// The only locations reachable without a session.
 const Set<String> publicPaths = {'/login', '/signup'};
@@ -99,7 +100,11 @@ final GoRouter appRouter = GoRouter(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Page not found: ${state.uri.path}'),
+          Text(
+            'Page not found: ${state.uri.path}',
+            style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
+          ),
+          const SizedBox(height: 16),
           TextButton(
             onPressed: () => context.go('/'),
             child: const Text('Go home'),
@@ -110,6 +115,8 @@ final GoRouter appRouter = GoRouter(
   ),
 );
 
+/// Coming-soon placeholder per MASTER.md §6: displayTitle + one body line +
+/// text button home. No glass, no glow — placeholders stay humble.
 class _ComingSoonScreen extends StatelessWidget {
   const _ComingSoonScreen({required this.title});
 
@@ -118,14 +125,18 @@ class _ComingSoonScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('$title coming soon.', style: Theme.of(context).textTheme.bodyLarge),
+            Text(title, style: LevelsType.displayTitle),
+            const SizedBox(height: 8),
+            Text(
+              'Coming soon.',
+              style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
+            ),
             const SizedBox(height: 16),
-            FilledButton(
+            TextButton(
               onPressed: () => context.go('/'),
               child: const Text('Back to home'),
             ),
