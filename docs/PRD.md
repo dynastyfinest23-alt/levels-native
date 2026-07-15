@@ -11,9 +11,10 @@ were read from production (project `dnqwsgpkinieitiiikij`) on 2026-07-08.
 
 ## 0. NOW (next ~2 weeks)
 
-- **Current milestone:** M-DS.6 (placeholders/loading/error sweep), then M3 prep.
-- **In flight:** M-DS.6 anti-pattern sweep; M2.4 gate closure artifacts (rubric doc,
-  written-approval line, follow-up tone-gate task).
+- **Current milestone:** M-DS complete; M3 (Phase 3 origin drill) starts next
+  session, beginning with M3.1 token mirrors.
+- **In flight:** nothing — M2.4 gate closure and M-DS.6 sweep both closed
+  2026-07-15 (see §6 for artifacts/commits).
 - **Parked on purpose:** Dodson extraction doc (own session, not this one); OAuth
   (blocked on credentials); test-account deletion (needs Noah's ID list); marketing
   site (separate workstream, own standards).
@@ -358,10 +359,19 @@ of 2026-07-15; see ACTION-FOR-NOAH.md), not re-shot for this closure.
 
 ### M-DS — Design system application (added 2026-07-08; runs before M3)
 
-**Status: M-DS.1–M-DS.5 COMPLETE (commits `9c4190f`…`d77762d`; the
+**Status: M-DS.1–M-DS.6 COMPLETE (commits `9c4190f`…`d77762d`; the
 calibration strip was replaced with mechanic-free progress dots, `e7d4c6e`,
 2026-07-10 — read "calibration strip" in older task text as those dots,
-never raw numbers). M-DS.6 NOT STARTED.**
+never raw numbers). M-DS.6 swept 2026-07-15 (commit `2624fcb`): found 2 —
+`_ComingSoonScreen`/`errorBuilder` in `lib/core/router.dart` used untokenized
+`Text` + a `FilledButton` instead of the §6 displayTitle/body/text-button
+placeholder spec, and all 4 `SnackBar` call sites (login/signup/home/
+assessment) rendered with Material defaults (no theme). Both fixed — router
+placeholders now use `LevelsType`/`LevelsColors` and a plain `TextButton`;
+`main.dart` gained a tokenized `SnackBarThemeData`. Clean elsewhere: no
+inline hex, no ad-hoc `TextStyle`, no raw zone tokens in UI text, no
+spinners (loading already uses `BreathingDot` everywhere), no fixed-height
+reveal-panel containers (`minHeight` only).**
 
 `design-system/MASTER.md` is binding for every task below and for all M3–M5
 screens. Read it in full first. Every task ends with `flutter analyze` clean,
