@@ -17,7 +17,7 @@ enum P1Answer {
   shameApathy('shame_apathy', 30),
   apathyGrief('apathy_grief', 65),
   fear('fear', 100),
-  desire('desire', 120),
+  desire('desire', 125),
   anger('anger', 160),
   pride('pride', 190),
   contentment('contentment', 200),

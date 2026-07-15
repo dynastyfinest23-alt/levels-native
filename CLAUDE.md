@@ -110,14 +110,14 @@ Dependencies are deliberately minimal: `go_router` and `supabase_flutter` only (
 
 **Book canon hierarchy (approved by Noah 2026-07-11):** Dodson's *Levels of Energy* 2nd edition is the sole canon for mechanics (anchors, zones, climb model); *The Law of One* and Abke's *Three Beliefs of Ego* enter at the presentation/protocol layer only (copy voice, drill framing, track content) and may never introduce numbers, scales, or classifications — same side of the line as LLM copy. Verify any book-derived value against the master scan (`H:\My Drive\Levels of energy\Levels-of-Energy-2e-master.pdf`), never against web summaries — a 2026-07-10 web check disagreed with the book on at least one anchor (anger).
 
-Calibration source: Frederick Dodson's *Levels of Energy* scale (shame 30, apathy 50, grief 80, fear 100, desire 120, anger 160, pride 190, contentment 200, courage 275, willingness 320, neutrality 400, love 530). Composite tokens use the anchor of their range. These values match the deployed `answer_to_raw_score` function body (verified against production 2026-07-03); earlier drafts of this table carried stale Hawkins-derived numbers. `shame_apathy` = 30 intentionally anchors on Shame (30), not the shame–apathy band midpoint.
+Calibration source: Frederick Dodson's *Levels of Energy* scale (shame 30, apathy 50, grief 80, fear 100, desire 125, anger 160, pride 190, contentment 200, courage 275, willingness 320, neutrality 400, love 530). Composite tokens use the anchor of their range. These values match the deployed `answer_to_raw_score` function body (verified against production 2026-07-03), **except `desire`, recalibrated 120→125 to match Dodson 2e p.150 — migration `20260712150300_recalibrate_desire_to_125.sql` is drafted but NOT yet pushed; production still returns 120 until that migration lands** (book verification: `docs/dodson-2e-reference.md`). Earlier drafts of this table carried stale Hawkins-derived numbers. `shame_apathy` = 30 intentionally anchors on Shame (30), not the shame–apathy band midpoint.
 
 | Token | Raw score |
 |---|---|
 | shame_apathy | 30 |
 | apathy_grief | 65 |
 | fear | 100 |
-| desire | 120 |
+| desire | 125 |
 | anger | 160 |
 | pride | 190 |
 | contentment | 200 |

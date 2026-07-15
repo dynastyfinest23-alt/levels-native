@@ -16,7 +16,7 @@ void main() {
       P1Answer.shameApathy: 30,
       P1Answer.apathyGrief: 65,
       P1Answer.fear: 100,
-      P1Answer.desire: 120,
+      P1Answer.desire: 125,
       P1Answer.anger: 160,
       P1Answer.pride: 190,
       P1Answer.contentment: 200,
