@@ -9,6 +9,16 @@ were read from production (project `dnqwsgpkinieitiiikij`) on 2026-07-08.
 
 ---
 
+## 0. NOW (next ~2 weeks)
+
+- **Current milestone:** M-DS.6 (placeholders/loading/error sweep), then M3 prep.
+- **In flight:** M-DS.6 anti-pattern sweep; M2.4 gate closure artifacts (rubric doc,
+  written-approval line, follow-up tone-gate task).
+- **Parked on purpose:** Dodson extraction doc (own session, not this one); OAuth
+  (blocked on credentials); test-account deletion (needs Noah's ID list); marketing
+  site (separate workstream, own standards).
+- This section is refreshed at every gate close and session handoff.
+
 ## 1. OBJECTIVE
 
 Build the remaining client journey of Levels, a consciousness-tracking app.
