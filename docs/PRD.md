@@ -255,13 +255,18 @@ Every task below implicitly ends with: `flutter analyze` clean,
 
 **Review-gate delegation (2026-07-08):** Noah delegated the review gates
 (M2.4, M-DS.3, M4.1, M5.1) to the Fable reviewer session — it judges against
-MASTER.md's anti-pattern list and the writing standards and records a written
-verdict; Noah retains a standing veto on anything shipped. Executor sessions
+the committed rubric (`docs/copy-tone-rubric.md` for copy gates, MASTER.md's
+anti-pattern list for visual gates) and the writing standards, and records a
+written verdict; Noah's written line then closes the gate. Executor sessions
 still stop at each gate and hand the artifact (screenshots or copy) to the
 reviewer; they never self-approve. "Done when" lists only
 the task-specific checks. When a task says "behavioral copy", options
 describe observable reactions, never emotion labels, matching
 `lib/features/assessment/questions.dart`.
+
+**A review gate is closed only by a committed artifact — rubric, verdict,
+and approver line. A chat message or session summary is evidence, not
+closure.**
 
 **Book canon for content tasks (added 2026-07-11, Noah-approved):** all
 M3.2/M4.1/M5.1 content follows the CLAUDE.md book canon hierarchy — Dodson's
@@ -310,8 +315,12 @@ that leans on book material.
 **Status: COMPLETE — 2026-07-11.** M2.1–M2.3 shipped and verified (reveal
 columns confirmed by production SELECT 2026-07-11: booleans true +
 `time_on_screen_secs` written on the newest row). M2.4 tone review passed
-2026-07-10 via the delegated rubric judge (two `fallback.ts` fixes — flow +
-builder_clamped — deployed as Edge Function v8, MCP read-back confirmed).
+2026-07-10 via the delegated rubric judge against `docs/copy-tone-rubric.md`
+(two `fallback.ts` fixes — flow + builder_clamped — deployed as Edge Function
+v8, MCP read-back confirmed). Approved in writing — Noah, 2026-07-15 (via
+reviewer-relayed prompt). Full-flow artifact: the M-DS.3 reveal-flow
+screenshot set — artifact path unavailable (`Screenshots/` is empty/absent as
+of 2026-07-15; see ACTION-FOR-NOAH.md), not re-shot for this closure.
 
 1. **M2.1 — Dashboard repository.** Create
    `lib/features/dashboard/dashboard_repository.dart`: invokes the
@@ -340,6 +349,12 @@ builder_clamped — deployed as Edge Function v8, MCP read-back confirmed).
 4. **M2.4 — Tone pass (review gate).** Present the full reveal flow
    (screenshots or run) to Noah against the Tone and product ethics section.
    Done when: Noah approves in writing; blockers become follow-up tasks.
+5. **M2.5 — LLM-copy tone gate (follow-up, blocks LLM path activation).**
+   Before enabling the funded LLM path in production, run 5 generated
+   outputs per zone through `docs/copy-tone-rubric.md` via a cold judge;
+   failures fall back or fix the prompt. Done when: 30 outputs (5 × 6
+   zones) are scored against all 10 rubric criteria and every failure is
+   resolved (fallback or prompt fix) before the path goes live.
 
 ### M-DS — Design system application (added 2026-07-08; runs before M3)
 
@@ -537,11 +552,18 @@ assume. Enum checks go through `pg_enum`, not `information_schema`.
 **Secrets.** The secrets-and-debug-discipline skill is binding. No literal
 key values in commands, ever. The client uses only the publishable key.
 
-**Content gates.** Tasks M2.4, M3.2, M4.1, M5.1 stop for Noah's written
-approval. Draft the content, present it, and wait — do not mark the task
-done or build screens that ship unreviewed copy to users. Copy register:
-match `fallback.ts` — warm, direct, second person, zero numbers, zones as
-positions in a climb.
+**Content gates.** Tasks M2.4, M3.2, M4.1, M5.1 stop at the delegated
+reviewer: the reviewer judges the drafted content against the committed
+rubric (`docs/copy-tone-rubric.md` and MASTER.md's anti-pattern list) and
+records a written verdict; Noah's written line then closes the gate.
+Executors draft and present — they never self-approve, and never mark the
+task done or build screens that ship unreviewed copy to users. Copy
+register: match `fallback.ts` — warm, direct, second person, zero numbers,
+zones as positions in a climb.
+
+**A review gate is closed only by a committed artifact — rubric, verdict,
+and approver line. A chat message or session summary is evidence, not
+closure.**
 
 **Gotchas already paid for (don't rediscover):**
 - `ascension_loops.started_at` is the only clock; windows are day 5–7 and
