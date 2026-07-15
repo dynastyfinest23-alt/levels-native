@@ -145,6 +145,42 @@ float fbm(vec2 p) {
   return sum;
 }
 
+// Layered sine/cosine waves for organic flowing motion
+float waveLayer(vec2 uv, float t) {
+  float w = 0.0;
+  w += sin(uv.x * 3.0 + uv.y * 2.0 + t * 0.7) * 0.25;
+  w += cos(uv.x * 5.0 - uv.y * 3.0 + t * 0.5) * 0.18;
+  w += sin(uv.x * 1.5 + uv.y * 4.5 - t * 0.4) * 0.20;
+  w += cos(uv.x * 8.0 + uv.y * 1.2 + t * 0.9) * 0.12;
+  w += sin(uv.y * 6.0 - uv.x * 2.5 + t * 0.6) * 0.15;
+  // Add nested wave interference for organic feel
+  w += sin(uv.x * 2.0 + sin(uv.y * 3.0 + t * 0.3) * 1.5) * 0.10;
+  return w;
+}
+
+// Flowing ripple patterns emanating from moving centers
+float ripplePattern(vec2 uv, float t) {
+  // Slowly drifting ripple centers
+  vec2 c1 = vec2(sin(t * 0.11) * 0.4, cos(t * 0.13) * 0.35);
+  vec2 c2 = vec2(cos(t * 0.09) * 0.3, sin(t * 0.15) * 0.4);
+  vec2 c3 = vec2(sin(t * 0.07 + 1.0) * 0.5, cos(t * 0.10 + 2.0) * 0.3);
+
+  float d1 = length(uv - c1);
+  float d2 = length(uv - c2);
+  float d3 = length(uv - c3);
+
+  float r = 0.0;
+  r += sin(d1 * 12.0 - t * 1.2) * exp(-d1 * d1 * 1.5) * 0.30;
+  r += cos(d2 * 16.0 + t * 0.9) * exp(-d2 * d2 * 2.0) * 0.25;
+  r += sin(d3 * 9.0 - t * 0.8) * exp(-d3 * d3 * 1.2) * 0.20;
+
+  // Horizontal traveling ripples
+  r += sin(uv.x * 10.0 + uv.y * 2.0 + t * 0.8) * 0.08;
+  r += cos(uv.x * 7.0 - uv.y * 4.0 - t * 0.6) * 0.06;
+
+  return r;
+}
+
 vec3 sampleFluidState(vec2 uv) {
   vec3 raw = texture2D(u_fluid, uv).rgb;
   return (raw - 0.5) * 0.8;
@@ -157,21 +193,39 @@ void main() {
   vec2 fluidVel = fluidState.rg;
   float fluidInk = fluidState.b;
 
+  // Distort UVs by fluid simulation (mouse-reactive)
   uv += fluidVel * (0.038 + 0.18 * fluidInk);
 
-  uv = uv * 2.0 - 1.0;
-
+  // Aspect-corrected coordinates for wave math
   vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
-  uv *= aspect;
+  vec2 wavUV = uv * 2.0 - 1.0;
+  wavUV *= aspect;
 
-  float t = u_time * 0.15;
+  float t = u_time * 0.2;
 
+  // Combine FBM-driven movement with explicit wave layers
   vec2 movement;
-  movement.x = fbm(uv * 0.4 + t);
-  movement.y = fbm(uv * 0.4 + t + 2.0);
+  movement.x = fbm(wavUV * 0.4 + t);
+  movement.y = fbm(wavUV * 0.4 + t + 2.0);
 
-  float pattern = fbm(uv + movement);
-  pattern = smoothstep(0.0, 1.0, pattern);
+  float fbmPattern = fbm(wavUV + movement);
+  fbmPattern = smoothstep(0.0, 1.0, fbmPattern);
+
+  // Add flowing sine/cosine wave layers
+  float wavePattern = waveLayer(wavUV, t);
+  // Normalize roughly to 0..1
+  wavePattern = wavePattern * 0.6 + 0.5;
+  wavePattern = clamp(wavePattern, 0.0, 1.0);
+
+  // Add ripple patterns
+  float rippleValue = ripplePattern(wavUV, t);
+  rippleValue = rippleValue * 0.5 + 0.5;
+  rippleValue = clamp(rippleValue, 0.0, 1.0);
+
+  // Blend patterns: FBM provides base organic texture,
+  // waves provide flowing structure, ripples add luminous accents
+  float pattern = fbmPattern * 0.35 + wavePattern * 0.45 + rippleValue * 0.20;
+  pattern = clamp(pattern, 0.0, 1.0);
 
   // Levels aurora palette, extremely low contrast against void
   vec3 color1 = vec3(0.043, 0.047, 0.082);   // #0B0C15 void
