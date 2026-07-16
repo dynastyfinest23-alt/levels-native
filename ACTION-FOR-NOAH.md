@@ -72,3 +72,28 @@ M4.3-M4.6; implement each as a pure Dart function with a pinned test.
 Cleanup to take in passing during M4.3: doc comments in
 `lib/features/track/track_content.dart` (around line 25) still say
 `prep_duration`; the live column is `preparation_duration`.
+
+## M4.3 manual-verification test accounts (2026-07-16)
+
+Verified the M4.3 completion and commitment screens end-to-end in a real
+browser (release build, headless Chromium), same method as M3.4. Two fresh
+test accounts, each driven through signup -> Phase 1 -> Phase 2 reveal ->
+Phase 3 drill (deliberately picking the Q1 origin-type answer that routes
+to the track under test) -> the new track screen:
+
+- `m43-completion-verify@example.com` (loop
+  `224c2273-2b0c-4d6e-a6f9-8edeb01227fe`) -- routed to `completion`.
+  Verified the `over_3yr` duration correctly auto-triggers
+  `integrity_check_triggered`, the reflection stage renders, and finishing
+  writes `completed_at`/`success_state_reached = true`.
+- `m43-commitment-verify@example.com` (loop
+  `42c36712-7f5a-40ed-886c-d9d57818fcc0`) -- routed to `commitment`.
+  Verified the declaration stage saves and returns home with the session
+  still open (`completed_at` null), re-entering resumes straight to the
+  check-in stage (never a second session), and a `partially` check-in with
+  blocker text correctly writes `success_state_reached = false`.
+
+Left both test accounts in place for the same reason as M3.4's
+`m34-drill-verify@example.com`: deleting the `public.users`/loop rows would
+orphan the linked `auth.users` row without the admin/service-role API. Add
+both to the existing test-account cleanup pass.

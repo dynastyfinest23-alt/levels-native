@@ -22,7 +22,7 @@ import 'track_tokens.dart';
 // ---------------------------------------------------------------------------
 
 /// Single stage: name the unfinished thing, then size how long it's been
-/// sitting. Fills `completion_statement` and `prep_duration`.
+/// sitting. Fills `completion_statement` and `preparation_duration`.
 const String completionStatementTitle = 'Name it';
 const String completionStatementPrompt =
     "Something has been sitting half-finished, or perpetually 'almost "
@@ -50,10 +50,11 @@ const List<PrepDurationOption> completionDurationOptions = [
   ),
 ];
 
-/// Shown when the controller detects a mismatch worth naming (statement
-/// implies imminent action, duration says otherwise). Sets
-/// `integrity_check_triggered = true`; this copy is display-only, no
-/// separate answer is captured.
+/// Shown when the stated `preparation_duration` is a year or more
+/// (`completionIntegrityCheckTriggered` in `track_session_controller.dart`,
+/// approved by Noah 2026-07-16) — the duration enum is the only structured
+/// input the rule uses, since the statement itself is free text. This copy
+/// is display-only; no separate answer is captured.
 const String completionIntegrityCheckTitle = 'One more look';
 const String completionIntegrityCheckCopy =
     "If nothing about your approach changes, is this still sitting here a "

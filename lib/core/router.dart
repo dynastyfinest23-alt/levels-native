@@ -10,6 +10,7 @@ import '../features/auth/signup_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/drill/drill_screen.dart';
 import '../features/home/home_screen.dart';
+import '../features/track/track_screen.dart';
 import 'design_tokens.dart';
 
 /// The only locations reachable without a session.
@@ -56,10 +57,10 @@ Widget _buildDashboard(BuildContext context, GoRouterState state) =>
     DashboardScreen(loopId: state.pathParameters['loopId']!);
 Widget _buildDrill(BuildContext context, GoRouterState state) =>
     DrillScreen(loopId: state.pathParameters['loopId']!);
-// Placeholder scaffolds — real screens land in M4-M5 (PRD M1.4). Existing now
-// so the home hub's phase CTAs resolve and the auth gate covers them.
 Widget _buildTrack(BuildContext context, GoRouterState state) =>
-    const _ComingSoonScreen(title: 'Track');
+    TrackScreen(loopId: state.pathParameters['loopId']!);
+// Placeholder scaffold — real screen lands in M5 (PRD M1.4). Existing now so
+// the home hub's phase CTA resolves and the auth gate covers it.
 Widget _buildReassessment(BuildContext context, GoRouterState state) =>
     const _ComingSoonScreen(title: 'Reassessment');
 
@@ -76,7 +77,7 @@ const Map<String, _RouteBuilder> _routeTable = {
   '/assessment': _buildAssessment,
   '/dashboard/:loopId': _buildDashboard,
   '/drill/:loopId': _buildDrill,
-  '/track': _buildTrack,
+  '/track/:loopId': _buildTrack,
   '/reassessment': _buildReassessment,
 };
 

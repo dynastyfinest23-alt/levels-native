@@ -84,6 +84,20 @@ class SupabaseTrackSessionDataSource implements TrackSessionDataSource {
       _client.from('phase4_track_sessions').update(patch).eq('id', sessionId);
 }
 
+/// completion track's integrity-check rule (`ACTION-FOR-NOAH.md`, "Resolved
+/// — M4.2 open product decisions", approved by Noah 2026-07-16): fires once
+/// the stated `preparation_duration` is a year or more. The statement itself
+/// is free text, so the duration enum is the only structured input a
+/// deterministic rule may use — no language classification.
+bool completionIntegrityCheckTriggered(PrepDuration duration) =>
+    duration == PrepDuration.years1to3 || duration == PrepDuration.over3yr;
+
+/// commitment track's success rule (same approval): only a full "yes"
+/// counts as success — behavior tells the truth over self-report, mirroring
+/// the Phase 5 classification stance (CLAUDE.md).
+bool commitmentCheckedInSuccessfully(CheckinResponse response) =>
+    response == CheckinResponse.yes;
+
 /// Starts or resumes the loop's `phase4_track_sessions` row for one
 /// `AscensionTrack` and exposes typed setters + one save path per stage.
 ///
@@ -95,12 +109,11 @@ class SupabaseTrackSessionDataSource implements TrackSessionDataSource {
 ///
 /// `success_state_reached` has no deployed decision function (verified
 /// against production 2026-07-16 — no function body references
-/// `phase4_track_sessions`), so [finish] takes the value explicitly rather
-/// than computing it; the per-track success criterion is a product
-/// decision for whichever screen (M4.3-M4.6) calls it, logged as open in
-/// `ACTION-FOR-NOAH.md`. Likewise `integrity_check_triggered` (completion
-/// track) is exposed as a plain setter — the trigger condition itself is
-/// undefined pending that same decision.
+/// `phase4_track_sessions`), so success is computed by the pure functions
+/// above and applied via the per-track `finishX` methods below, never left
+/// for a screen to decide ad hoc (`ACTION-FOR-NOAH.md`, approved
+/// 2026-07-16). [finish] itself stays as the low-level primitive those
+/// methods call.
 class TrackSessionController extends ChangeNotifier {
   TrackSessionController({
     required this.loopId,
@@ -268,13 +281,11 @@ class TrackSessionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Also recomputes [integrityCheckTriggered] via the deterministic rule —
+  /// never set directly (ACTION-FOR-NOAH.md, approved 2026-07-16).
   void selectPrepDuration(PrepDuration value) {
     _prepDuration = value;
-    notifyListeners();
-  }
-
-  void setIntegrityCheckTriggered(bool value) {
-    _integrityCheckTriggered = value;
+    _integrityCheckTriggered = completionIntegrityCheckTriggered(value);
     notifyListeners();
   }
 
@@ -438,10 +449,28 @@ class TrackSessionController extends ChangeNotifier {
     });
   }
 
-  /// Marks the session done. `success` is the caller's decision (see class
-  /// doc) — this layer only persists it.
+  /// Low-level primitive: marks the session done with an explicit
+  /// `success` value. Prefer the per-track `finishX` methods below, which
+  /// compute `success` via the approved pure rules instead of leaving it to
+  /// the caller.
   Future<void> finish({required bool success}) => _save({
         'completed_at': DateTime.now().toUtc().toIso8601String(),
         'success_state_reached': success,
       });
+
+  /// completion track: reaching the end of the flow is success — the
+  /// integrity-check moment is reflective, not a fail state.
+  Future<void> finishCompletion() => finish(success: true);
+
+  /// belief_audit track: reaching the end of the flow is success.
+  Future<void> finishBeliefAudit() => finish(success: true);
+
+  /// commitment track: success iff the check-in answer is a full "yes".
+  /// Requires [saveCheckinStage] to have been called first.
+  Future<void> finishCommitmentCheckin() async {
+    if (_checkinResponse == null) {
+      throw StateError('Cannot finish before the check-in is recorded.');
+    }
+    await finish(success: commitmentCheckedInSuccessfully(_checkinResponse!));
+  }
 }

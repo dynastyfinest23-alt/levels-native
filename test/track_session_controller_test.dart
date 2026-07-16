@@ -351,4 +351,131 @@ void main() {
       expect(row['success_state_reached'], isFalse);
     });
   });
+
+  group('completionIntegrityCheckTriggered (pure rule)', () {
+    test('fires at a year or more, not before', () {
+      expect(completionIntegrityCheckTriggered(PrepDuration.under3mo), isFalse);
+      expect(
+          completionIntegrityCheckTriggered(PrepDuration.months3to12), isFalse);
+      expect(completionIntegrityCheckTriggered(PrepDuration.years1to3), isTrue);
+      expect(completionIntegrityCheckTriggered(PrepDuration.over3yr), isTrue);
+    });
+  });
+
+  group('commitmentCheckedInSuccessfully (pure rule)', () {
+    test('only a full yes counts as success', () {
+      expect(commitmentCheckedInSuccessfully(CheckinResponse.yes), isTrue);
+      expect(commitmentCheckedInSuccessfully(CheckinResponse.partially), isFalse);
+      expect(commitmentCheckedInSuccessfully(CheckinResponse.no), isFalse);
+    });
+  });
+
+  group('TrackSessionController — selectPrepDuration auto-computes '
+      'integrityCheckTriggered', () {
+    test('flips true/false as duration crosses the one-year rule', () async {
+      final fake = _FakeTrackSessionDataSource();
+      final controller = TrackSessionController(
+        loopId: 'loop-1',
+        track: AscensionTrack.completion,
+        dataSource: fake,
+      );
+      await controller.load();
+
+      controller.selectPrepDuration(PrepDuration.under3mo);
+      expect(controller.integrityCheckTriggered, isFalse);
+
+      controller.selectPrepDuration(PrepDuration.over3yr);
+      expect(controller.integrityCheckTriggered, isTrue);
+    });
+
+    test('saveCompletionStage persists the auto-computed flag', () async {
+      final fake = _FakeTrackSessionDataSource();
+      final controller = TrackSessionController(
+        loopId: 'loop-1',
+        track: AscensionTrack.completion,
+        dataSource: fake,
+      );
+      await controller.load();
+      controller
+        ..setCompletionStatement('Finish the deck')
+        ..selectPrepDuration(PrepDuration.years1to3);
+
+      await controller.saveCompletionStage();
+
+      final row = fake.sessions[controller.sessionId]!;
+      expect(row['integrity_check_triggered'], isTrue);
+    });
+  });
+
+  group('TrackSessionController — per-track finish convenience methods', () {
+    test('finishCompletion always succeeds', () async {
+      final fake = _FakeTrackSessionDataSource();
+      final controller = TrackSessionController(
+        loopId: 'loop-1',
+        track: AscensionTrack.completion,
+        dataSource: fake,
+      );
+      await controller.load();
+
+      await controller.finishCompletion();
+
+      expect(fake.sessions[controller.sessionId]!['success_state_reached'], isTrue);
+    });
+
+    test('finishBeliefAudit always succeeds', () async {
+      final fake = _FakeTrackSessionDataSource();
+      final controller = TrackSessionController(
+        loopId: 'loop-1',
+        track: AscensionTrack.beliefAudit,
+        dataSource: fake,
+      );
+      await controller.load();
+
+      await controller.finishBeliefAudit();
+
+      expect(fake.sessions[controller.sessionId]!['success_state_reached'], isTrue);
+    });
+
+    test('finishCommitmentCheckin succeeds only on a full yes', () async {
+      final fake = _FakeTrackSessionDataSource();
+      final yesController = TrackSessionController(
+        loopId: 'loop-1',
+        track: AscensionTrack.commitment,
+        dataSource: fake,
+      );
+      await yesController.load();
+      yesController.selectCheckinResponse(CheckinResponse.yes);
+      await yesController.finishCommitmentCheckin();
+      expect(
+        fake.sessions[yesController.sessionId]!['success_state_reached'],
+        isTrue,
+      );
+
+      final noController = TrackSessionController(
+        loopId: 'loop-2',
+        track: AscensionTrack.commitment,
+        dataSource: fake,
+      );
+      await noController.load();
+      noController.selectCheckinResponse(CheckinResponse.no);
+      await noController.finishCommitmentCheckin();
+      expect(
+        fake.sessions[noController.sessionId]!['success_state_reached'],
+        isFalse,
+      );
+    });
+
+    test('finishCommitmentCheckin throws before a check-in is recorded',
+        () async {
+      final fake = _FakeTrackSessionDataSource();
+      final controller = TrackSessionController(
+        loopId: 'loop-1',
+        track: AscensionTrack.commitment,
+        dataSource: fake,
+      );
+      await controller.load();
+
+      await expectLater(controller.finishCommitmentCheckin(), throwsStateError);
+    });
+  });
 }

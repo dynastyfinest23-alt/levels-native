@@ -11,13 +11,11 @@ were read from production (project `dnqwsgpkinieitiiikij`) on 2026-07-08.
 
 ## 0. NOW (next ~2 weeks)
 
-- **Current milestone:** M3 COMPLETE. M4.1 (track content pack) — COMPLETE,
-  approved by Noah 2026-07-16. M4.2 (track session controller) — COMPLETE
-  2026-07-16 (`lib/features/track/track_session_controller.dart`, 138/138
-  tests green). M4.3 (completion + commitment screens) is next, but two
-  product decisions are open first — see `ACTION-FOR-NOAH.md`'s "M4.2 open
-  product decisions" (per-track `success_state_reached` criteria;
-  completion's `integrity_check_triggered` rule).
+- **Current milestone:** M3 COMPLETE. M4.1 COMPLETE (approved 2026-07-16).
+  M4.2 COMPLETE (2026-07-16, `track_session_controller.dart`). M4.3
+  COMPLETE (2026-07-16, completion + commitment screens; both manually
+  verified end-to-end in a release build). M4.4 (belief-audit screen) is
+  next.
 - **Resolved:** love_flow 530-vs-550 — Noah decided to defer, keep 530
   (`ACTION-FOR-NOAH.md`, 2026-07-16). No scoring artifact touched.
 - **Flagged for cleanup:** a real test account created during M3.4's manual
@@ -510,12 +508,29 @@ record. M3 is done; M4 is next.**
    `success_state_reached` criteria; completion's
    `integrity_check_triggered` rule) — needed before M4.3 wires up real
    screens against this controller.
-3. **M4.3 — Completion + commitment screens.** Build the two simpler
-   track flows at `/track` (branching on `assigned_track`): completion
-   (statement + `prep_duration` + integrity check), commitment
-   (declaration, `constraint_chosen`, `checkin_scheduled_at` = now + 72h,
-   later check-in capture of `checkin_response`/`checkin_blocker_text`).
-   Done when: manual run writes each track's columns for a test user.
+3. **M4.3 — Completion + commitment screens. COMPLETE (2026-07-16).**
+   Built the two simpler track flows at `/track/:loopId` (branching on
+   `assigned_track`): completion (statement + `preparation_duration` +
+   integrity check), commitment (declaration, `constraint_chosen`,
+   `checkin_scheduled_at` = now + 72h, later check-in capture of
+   `checkin_response`/`checkin_blocker_text`). Built `lib/features/track/track_screen.dart`
+   (`/track/:loopId`, reads `ascension_loops.assigned_track` and branches;
+   `belief_audit`/`embodiment` still show the coming-soon placeholder
+   pending M4.4/M4.5), `completion_screen.dart` (statement → duration →
+   conditional integrity-check reflection via `AnimatedSwitcher`, per
+   `docs/m4-ui-pattern-notes.md` finding 1 → `finishCompletion()`),
+   `commitment_screen.dart` (declaration+constraint stage, saved and
+   returns home with the session left open; a later visit resumes
+   straight into the check-in stage → `finishCommitmentCheckin()`), and
+   shared presentational widgets in `track_widgets.dart`. Router/home hub
+   updated to `/track/:loopId` (was `/track`). Verified: `flutter analyze`
+   clean, `flutter test` green (146/146, +8 new controller tests pinning
+   the two approved pure rules and the per-track `finishX` methods); a
+   full manual run in a release build (two fresh test accounts, each
+   routed to a different track via the drill's Q1 answer) confirmed both
+   tracks write every documented column, including the `over_3yr` ->
+   `integrity_check_triggered` auto-trigger and the `partially` ->
+   `success_state_reached = false` commitment rule (`ACTION-FOR-NOAH.md`).
 4. **M4.4 — Belief-audit screen.** Flow: flag beliefs (`flagged_beliefs`),
    authorship per belief (`belief_authorship_age`/`_source`), cross-exam
    verdict per belief (`fact`/`conclusion` → `cross_exam_verdict`). Arrays
