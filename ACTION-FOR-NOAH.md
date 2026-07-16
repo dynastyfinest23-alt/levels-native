@@ -36,7 +36,7 @@ full-`love_flow` case. No scoring artifact touched — `answer_to_raw_score`,
 deployed/verified 2026-07-15. Removed from the open list; no further action
 needed unless Noah revisits the citation later.
 
-## M4.2 open product decisions (2026-07-16)
+## Resolved — M4.2 open product decisions (2026-07-16)
 
 Built `lib/features/track/track_session_controller.dart` (start/resume +
 per-stage save for all four `phase4_track_sessions` tracks). Verified live
@@ -44,25 +44,31 @@ against production first — two docs corrections came out of that (column is
 `preparation_duration` not `prep_duration`; `belief_authorship_age` is
 `int[]` not `text[]`, both now fixed in `docs/PRD.md` §2). No deployed
 function references `phase4_track_sessions` at all (confirmed via
-`pg_proc.prosrc` search), so two things are deliberately left as caller
-decisions rather than invented here:
+`pg_proc.prosrc` search), so the decision layer for the rules below is the
+client for now; if any deployed function ever reads `success_state_reached`,
+promote the rule to a Postgres function.
 
-1. **`success_state_reached` criteria per track.** `TrackSessionController.finish()`
-   takes an explicit `required bool success` — it persists whatever the
-   caller decides, it doesn't compute it. Completion/belief_audit probably
-   just mean "the user finished the flow," but commitment plausibly should
-   depend on `checkin_response` (a `no` doesn't feel like success), and
-   embodiment's true success condition (`day7_action_confirmed`) lives in
-   the M4.5 daily-log table, not this session row. Needs a decision — or an
-   explicit "finishing counts as success regardless" call — before M4.3-M4.6
-   wire up their `finish()` calls.
-2. **`completion` track's `integrity_check_triggered` rule.** Exposed as a
-   plain `setIntegrityCheckTriggered(bool)` setter; the actual trigger
-   condition (presumably some mismatch between `completion_statement` and
-   `preparation_duration`, per the M4.1 copy's framing) isn't specified
-   anywhere and isn't invented here. Needs a rule before the M4.3 completion
-   screen is built.
+**All three decisions approved by Noah 2026-07-16.** These are binding for
+M4.3-M4.6; implement each as a pure Dart function with a pinned test.
 
-Also carried over from the M4-UI-pattern-notes research pass: M4.4's
-belief-count cap (2-3, unbounded?) isn't specified — affects whether the
-tab-navigation UI pattern noted there still fits.
+1. **`success_state_reached` per track:**
+   - `completion`, `belief_audit`: finishing the flow = success. The
+     integrity-check moment is reflective, not a fail state.
+   - `commitment`: `finish()` is NOT called at declaration time — the
+     session stays open until the ~72h check-in (the one-open-session-per-
+     loop invariant tolerates this). Success = `checkin_response == yes`
+     only; `partially`/`no` = not success (behavior tells the truth over
+     self-report, mirroring the Phase 5 stance).
+   - `embodiment`: success = `day7_action_confirmed` in
+     `embodiment_daily_logs`, written back to the session row when the
+     day-7 log completes. Never reaching day 7 leaves it false.
+2. **`completion` track's `integrity_check_triggered` rule:** fires when
+   `preparation_duration` is a year or more (`years1to3` or `over3yr`).
+   The statement is free text, so the duration enum is the only structured
+   input a deterministic rule may use — no language classification.
+3. **M4.4 belief-count cap: fixed at 3 (min 1, max 3).** Matches the
+   3-belief done-when in PRD M4.4 and the tab-navigation UI pattern.
+
+Cleanup to take in passing during M4.3: doc comments in
+`lib/features/track/track_content.dart` (around line 25) still say
+`prep_duration`; the live column is `preparation_duration`.
