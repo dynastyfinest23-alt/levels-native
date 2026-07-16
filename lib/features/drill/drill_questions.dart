@@ -87,8 +87,8 @@ const List<OriginTypeOption> originTypeOptions = [
     OriginType.betrayalWound,
   ),
   OriginTypeOption(
-    'I stay in preparation mode — always getting ready, never actually '
-    'starting',
+    'At some point, getting ready became safer than being judged on the '
+    'result — and I never left that mode',
     OriginType.preparationLoop,
   ),
   OriginTypeOption(
@@ -96,7 +96,8 @@ const List<OriginTypeOption> originTypeOptions = [
     OriginType.pastFailureImprint,
   ),
   OriginTypeOption(
-    'I keep every option open on purpose, so nothing is ever fully decided',
+    'Somewhere along the way, keeping every option open started to feel '
+    'safer than committing to one',
     OriginType.optionalityPreservation,
   ),
   OriginTypeOption(
@@ -138,8 +139,8 @@ const List<OriginDomainOption> originDomainOptions = [
     OriginDomain.relationalReciprocity,
   ),
   OriginDomainOption(
-    'How I see systems and institutions — rigged, unfair, not built for '
-    'people like me',
+    'How I see systems and institutions — rigged, not built for people '
+    'like me',
     OriginDomain.ideologicalSystemic,
   ),
   OriginDomainOption(
@@ -171,7 +172,7 @@ const String copingMechanismTitle = 'How you cope with it';
 const String copingMechanismPrompt =
     'When that pattern gets triggered, what do you actually do about it?';
 const String copingMechanismFreeTextPrompt =
-    'Say more about how you actually handle it, in your own words.';
+    'Say more about how you handle it, in your own words.';
 const List<CopingMechanismOption> copingMechanismOptions = [
   CopingMechanismOption(
     'I distract myself until the feeling passes',
@@ -182,7 +183,7 @@ const List<CopingMechanismOption> copingMechanismOptions = [
     CopingMechanism.externalRegulation,
   ),
   CopingMechanismOption(
-    'I shut down — go quiet, go flat, wait it out',
+    'I shut down — go quiet and wait it out',
     CopingMechanism.collapseShutdown,
   ),
   CopingMechanismOption(
