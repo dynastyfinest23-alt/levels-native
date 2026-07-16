@@ -11,10 +11,13 @@ were read from production (project `dnqwsgpkinieitiiikij`) on 2026-07-08.
 
 ## 0. NOW (next ~2 weeks)
 
-- **Current milestone:** M3 (Phase 3 origin drill) — COMPLETE (M3.1-M3.4
-  shipped and verified 2026-07-16). M4.1 (track content pack) — COMPLETE,
-  approved by Noah 2026-07-16 (`docs/m4.1-track-content-review-verdict.md`).
-  M4.2 (track session controller) is next.
+- **Current milestone:** M3 COMPLETE. M4.1 (track content pack) — COMPLETE,
+  approved by Noah 2026-07-16. M4.2 (track session controller) — COMPLETE
+  2026-07-16 (`lib/features/track/track_session_controller.dart`, 138/138
+  tests green). M4.3 (completion + commitment screens) is next, but two
+  product decisions are open first — see `ACTION-FOR-NOAH.md`'s "M4.2 open
+  product decisions" (per-track `success_state_reached` criteria;
+  completion's `integrity_check_triggered` rule).
 - **Resolved:** love_flow 530-vs-550 — Noah decided to defer, keep 530
   (`ACTION-FOR-NOAH.md`, 2026-07-16). No scoring artifact touched.
 - **Flagged for cleanup:** a real test account created during M3.4's manual
@@ -88,15 +91,19 @@ Only the columns the client touches are listed; all tables also carry
   `q3_mechanism coping_mechanism`, `q1_free_text`, `q2_free_text`,
   `q3_free_text`, `assigned_protocol` (ascension_track), `protocol_rationale
   text`, `deepening_layer int default 1`.
-- **`phase4_track_sessions`**: `loop_id`, `track_type ascension_track`,
-  `started_at`, `completed_at`, `success_state_reached bool`,
-  `integrity_check_triggered bool`, plus per-track columns —
+- **`phase4_track_sessions`**: `loop_id`, `user_id`, `track_type
+  ascension_track`, `started_at`, `completed_at`, `success_state_reached
+  bool`, `integrity_check_triggered bool`, plus per-track columns —
   embodiment: `body_location_tapped`, `sensation_words text[]`,
   `stage4_response stage4_response` (`shifted`/`intensified`/`same`);
-  completion: `completion_statement`, `prep_duration prep_duration`;
-  belief_audit: `flagged_beliefs text[]`, `belief_authorship_age text[]`,
-  `belief_authorship_source text[]`, `cross_exam_verdict text[]`
-  (values from `belief_verdict`: `fact`/`conclusion`);
+  completion: `completion_statement`, `preparation_duration prep_duration`
+  (**column name corrected 2026-07-16 — verified live via
+  `information_schema.columns`; the enum type is `prep_duration` but the
+  column is `preparation_duration`, not `prep_duration`**);
+  belief_audit: `flagged_beliefs text[]`, `belief_authorship_age int[]`
+  (**corrected 2026-07-16 — verified live; age is stored as an integer
+  array, not `text[]`**), `belief_authorship_source text[]`,
+  `cross_exam_verdict belief_verdict[]` (`fact`/`conclusion`);
   commitment: `declaration_text`, `constraint_chosen constraint_type`
   (`time`/`resource`/`audience`), `checkin_scheduled_at`,
   `checkin_response checkin_response` (`yes`/`partially`/`no`),
@@ -480,13 +487,29 @@ record. M3 is done; M4 is next.**
    `docs/m4.1-track-content-review-verdict.md`). `flutter analyze` clean,
    `flutter test` green (125/125). Noah's written approval recorded in
    that verdict doc 2026-07-16 — gate closed.
-2. **M4.2 — Track session controller.** Create
-   `lib/features/track/track_session_controller.dart`: starts (or resumes
-   the open) `phase4_track_sessions` row for the loop's `assigned_track`,
-   exposes typed setters per stage, one save path per stage completion,
-   `completed_at` + `success_state_reached` on finish. Done when: a fake-
-   client test pins start-resume behavior (never two open sessions per
-   loop) and the column mapping per track.
+2. **M4.2 — Track session controller. COMPLETE (2026-07-16).** Created
+   `lib/features/track/track_session_controller.dart`
+   (`TrackSessionDataSource` seam + `SupabaseTrackSessionDataSource`,
+   mirroring `DrillController`'s pattern): `load()` starts a new
+   `phase4_track_sessions` row or resumes the loop's already-open one for
+   `track` (never both); typed setters + one `saveXStage()` per stage per
+   track (completion; belief_audit, with all four arrays kept
+   index-aligned by construction); `finish({required bool success})`
+   writes `completed_at` — `success_state_reached` is the caller's
+   decision, not computed here (no deployed function references this
+   table; see `ACTION-FOR-NOAH.md`). Live-verified against production
+   first, surfacing two doc corrections (column is `preparation_duration`,
+   not `prep_duration`; `belief_authorship_age` is `int[]`, not `text[]`
+   — both fixed in §2 above). No migration needed (table/RLS already
+   deployed). Verified: `test/track_session_controller_test.dart` pins
+   start-vs-resume (never two open sessions per loop; a finished session
+   doesn't block a new loop's), and the column mapping for all four
+   tracks, with a fake `TrackSessionDataSource` (17 tests). `flutter
+   analyze` clean, `flutter test` green (138/138). Two open product
+   decisions logged to `ACTION-FOR-NOAH.md` (per-track
+   `success_state_reached` criteria; completion's
+   `integrity_check_triggered` rule) — needed before M4.3 wires up real
+   screens against this controller.
 3. **M4.3 — Completion + commitment screens.** Build the two simpler
    track flows at `/track` (branching on `assigned_track`): completion
    (statement + `prep_duration` + integrity check), commitment

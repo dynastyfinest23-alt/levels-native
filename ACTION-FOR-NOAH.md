@@ -35,3 +35,34 @@ full-`love_flow` case. No scoring artifact touched — `answer_to_raw_score`,
 `scoring.dart`, golden tests, and CLAUDE.md's scoring table all remain as
 deployed/verified 2026-07-15. Removed from the open list; no further action
 needed unless Noah revisits the citation later.
+
+## M4.2 open product decisions (2026-07-16)
+
+Built `lib/features/track/track_session_controller.dart` (start/resume +
+per-stage save for all four `phase4_track_sessions` tracks). Verified live
+against production first — two docs corrections came out of that (column is
+`preparation_duration` not `prep_duration`; `belief_authorship_age` is
+`int[]` not `text[]`, both now fixed in `docs/PRD.md` §2). No deployed
+function references `phase4_track_sessions` at all (confirmed via
+`pg_proc.prosrc` search), so two things are deliberately left as caller
+decisions rather than invented here:
+
+1. **`success_state_reached` criteria per track.** `TrackSessionController.finish()`
+   takes an explicit `required bool success` — it persists whatever the
+   caller decides, it doesn't compute it. Completion/belief_audit probably
+   just mean "the user finished the flow," but commitment plausibly should
+   depend on `checkin_response` (a `no` doesn't feel like success), and
+   embodiment's true success condition (`day7_action_confirmed`) lives in
+   the M4.5 daily-log table, not this session row. Needs a decision — or an
+   explicit "finishing counts as success regardless" call — before M4.3-M4.6
+   wire up their `finish()` calls.
+2. **`completion` track's `integrity_check_triggered` rule.** Exposed as a
+   plain `setIntegrityCheckTriggered(bool)` setter; the actual trigger
+   condition (presumably some mismatch between `completion_statement` and
+   `preparation_duration`, per the M4.1 copy's framing) isn't specified
+   anywhere and isn't invented here. Needs a rule before the M4.3 completion
+   screen is built.
+
+Also carried over from the M4-UI-pattern-notes research pass: M4.4's
+belief-count cap (2-3, unbounded?) isn't specified — affects whether the
+tab-navigation UI pattern noted there still fits.
