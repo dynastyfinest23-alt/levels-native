@@ -50,3 +50,6 @@ marketing-site/dist/
 
 # Claude Code tooling state (worktrees, not project source)
 .claude/worktrees/
+
+# Local reference-only clones (see CLAUDE.md) — not part of the project tree
+reference-flutteropen/

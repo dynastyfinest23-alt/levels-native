@@ -12,8 +12,10 @@ were read from production (project `dnqwsgpkinieitiiikij`) on 2026-07-08.
 ## 0. NOW (next ~2 weeks)
 
 - **Current milestone:** M3 (Phase 3 origin drill) — COMPLETE (M3.1-M3.4 all
-  shipped and verified 2026-07-16). M4 (Phase 4 tracks) is next, starting
-  with M4.1 (track content pack, a review-gate task).
+  shipped and verified 2026-07-16). M4 (Phase 4 tracks) is next; M4.1
+  (track content pack) is drafted and staged for Noah's written approval —
+  see `docs/m4.1-track-content-review-verdict.md`. **M4.2 should not start
+  until that approval lands.**
 - **Resolved:** love_flow 530-vs-550 — Noah decided to defer, keep 530
   (`ACTION-FOR-NOAH.md`, 2026-07-16). No scoring artifact touched.
 - **Flagged for cleanup:** a real test account created during M3.4's manual
@@ -463,12 +465,22 @@ record. M3 is done; M4 is next.**
 
 ### M4 — Phase 4 tracks
 
-1. **M4.1 — Track content pack (review gate).** Create
-   `lib/features/track/track_content.dart`: static stage-by-stage copy for
-   all four tracks (completion, belief_audit, embodiment, commitment),
-   each stage keyed to the columns it fills (see §2 schema). Embodiment
-   includes the 7 daily identity statements. Done when: Noah approves in
-   writing.
+1. **M4.1 — Track content pack (review gate). STAGED, awaiting Noah's
+   approval (2026-07-16).** Created `lib/features/track/track_tokens.dart`
+   (Dart mirrors of the 7 smaller Phase 4 enums: `prep_duration`,
+   `belief_verdict`, `stage4_response`, `body_response`,
+   `embodiment_delta`, `constraint_type`, `checkin_response`, verified
+   against production via MCP) and `lib/features/track/track_content.dart`
+   (static stage-by-stage copy for all four tracks — completion,
+   belief_audit, embodiment, commitment — each stage keyed to the
+   `phase4_track_sessions`/`embodiment_daily_logs` columns it fills;
+   embodiment includes the 7 daily identity statements). Cold-context
+   rubric judge pass run via a fresh Agent (model: fable) against
+   `docs/copy-tone-rubric.md`: **PASS WITH MINOR NOTES**, no blocking
+   findings, all 3 suggested optional fixes applied (see
+   `docs/m4.1-track-content-review-verdict.md`). `flutter analyze` clean,
+   `flutter test` green (125/125). Done when: Noah approves in writing —
+   gate not yet closed, M4.2 should not start until it is.
 2. **M4.2 — Track session controller.** Create
    `lib/features/track/track_session_controller.dart`: starts (or resumes
    the open) `phase4_track_sessions` row for the loop's `assigned_track`,
