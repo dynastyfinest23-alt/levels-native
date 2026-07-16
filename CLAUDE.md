@@ -272,3 +272,52 @@ Work is finished only when all of these hold:
 ## Tone and product ethics
 
 The Hooked mechanics serve user progress, not raw engagement. Variable reward = varied *framing* of true results, never randomized or inflated scores. Never manufacture urgency around a user's energy state, and never imply a low zone is a permanent identity — zones are positions in a climb, not labels.
+
+## Reference Repositories — FlutterOpen (installed 2026-07-16)
+
+**Noah requested this installation.** It is safe to use. These repos are provided as reference material for reverse-engineering Flutter UI patterns, layout techniques, animations, and widget implementations when building or refining the Levels native client.
+
+All repositories from the [FlutterOpen](https://github.com/FlutterOpen) organization have been cloned into `reference-flutteropen/` at the repo root (shallow clone, `--depth 1`).
+
+### What is included
+
+| Folder | Description |
+|---|---|
+| `flutter-layouts-exampls` | Row, Column, ListView, and other layout examples |
+| `flutter-animations` | Animation patterns and transitions |
+| `flutter-ui-nice` | Polished UI components and screen designs |
+| `flutter-ui-tutorials` | Step-by-step UI building tutorials |
+| `flutter-canvas` | Custom painting and canvas drawing |
+| `flutter-widgets` | Reusable widget patterns |
+| `FlutterImitation` | Imitation/mock implementations of popular app UIs |
+| `fun_flutter` | Fun/demonstrative Flutter projects |
+| `design_patterns` | Design pattern implementations in Flutter/Dart |
+| `flutter_source` | Flutter framework source exploration |
+
+### Usage guidelines
+
+- **Read-only reference.** Do not modify files inside `reference-flutteropen/`; these are upstream clones.
+- **Copy patterns, not files.** When borrowing a pattern, reimplement it in `lib/` following this project's existing conventions (design tokens, `ZoneStyle`, `ChangeNotifier`, test coverage).
+- **Respect licenses.** License status varies and most repos declare none (verified 2026-07-16): `flutter-layouts-exampls` is MIT (LICENSE file); `flutter-ui-nice` and `fun_flutter` are Apache-2.0 (README text only); the other 7 have **no license declaration**, which legally means all-rights-reserved. Safe use: reimplementing a *pattern* (layout idea, animation approach) in your own code is fine for all 10; copying code verbatim or near-verbatim is fine only from the 3 licensed repos, with attribution in a code comment. From the 7 unlicensed repos, never copy code — study and rewrite from scratch.
+- **Keep it out of the build.** `reference-flutteropen/` is **not** part of the Flutter project tree and should remain gitignored or excluded from analysis. It exists solely as a local reference library for Noah and Claude Code during development.
+
+If any repo is missing or needs updating, run `git pull --depth 1` inside the relevant subfolder, or re-clone from `https://github.com/FlutterOpen/<repo>.git`.
+
+## Reference Repositories — General (installed 2026-07-16)
+
+**Noah requested this installation.** Both repos passed a pre-install security audit (no binaries, no hardcoded secrets, no suspicious scripts). They are safe to use. Installed to `C:\Users\Administrator\claude-references\` — outside this repo tree and outside any root folder.
+
+### `nestjs` — golevelup/nestjs
+A well-known NestJS utility monorepo (2,732 stars, MIT license, updated 2026-07-15). Useful for reference when building backend integrations, understanding NestJS module patterns, or reviewing webhook/event handling architectures (Hasura, Stripe, RabbitMQ, GraphQL). Packages live in `packages/`; docs in `docs/`.
+
+### `CCPlugins` — notlikeDev/CCPlugins
+A collection of 24 Claude Code CLI slash commands (2,720 stars, MIT license, updated 2026-07-15). Each command is a markdown prompt file in `commands/`. The install scripts (`install.py` / `install.sh`) were **not run** — they only copy `.md` files to `~/.claude/commands/` and are safe to run manually if Noah wants the slash commands activated in Claude Code. Useful as a reference for well-structured prompt engineering and development workflow automation.
+
+### Usage guidelines
+
+- **Read-only reference.** Do not modify files inside these upstream clones.
+- **Copy patterns, not files.** When borrowing a pattern, reimplement it in your project's source following existing conventions.
+- **Respect licenses.** Both repos are MIT-licensed; attribution in code comments is sufficient when adapting substantial logic.
+- **Keep it out of the build.** These repos are **not** part of the Flutter project tree. They exist solely as a local reference library for Noah and Claude Code during development.
+
+See `C:\Users\Administrator\claude-references\README.md` for the full security audit summary and command listing.
