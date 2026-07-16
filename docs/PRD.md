@@ -11,13 +11,12 @@ were read from production (project `dnqwsgpkinieitiiikij`) on 2026-07-08.
 
 ## 0. NOW (next ~2 weeks)
 
-- **Current milestone:** M3 (Phase 3 origin drill) — M3.1 done, M3.2 content
-  staged for the reviewer gate; M3.3 (persistence migration) is next once
-  M3.2 is approved.
-- **In flight:** M3.2 copy awaiting the delegated cold-context judge pass +
-  Noah's written approval (`lib/features/drill/drill_questions.dart`). love_flow
-  530-vs-550 decision brief is in `ACTION-FOR-NOAH.md`, awaiting Noah's call —
-  no scoring artifact touched.
+- **Current milestone:** M3 (Phase 3 origin drill) — M3.1, M3.2, M3.3 all
+  COMPLETE; M3.4 (drill controller + screens) is next.
+- **In flight:** M3.4 — `drill_controller.dart` + `/drill` screens per PRD
+  §M3.4.
+- **Resolved:** love_flow 530-vs-550 — Noah decided to defer, keep 530
+  (`ACTION-FOR-NOAH.md`, 2026-07-16). No scoring artifact touched.
 - **Parked on purpose:** Dodson extraction doc (done — see
   `docs/dodson-2e-reference.md`); OAuth (blocked on credentials); test-account
   deletion (needs Noah's ID list); marketing site (separate workstream, own
@@ -410,11 +409,14 @@ screens. Read it in full first. Every task ends with `flutter analyze` clean,
 ### M3 — Phase 3 origin drill
 
 **Status: M3.1 COMPLETE (`054b91e`, live-verified against production
-2026-07-15). M3.2 content drafted (`lib/features/drill/drill_questions.dart`)
-and self-checked against `docs/copy-tone-rubric.md` — staged for the
-delegated reviewer's cold-context judge pass per the Content gates protocol;
-NOT yet approved. Do not build M3.3/M3.4 on top of this until the written
-verdict + Noah's approval land.**
+2026-07-15). M3.2 COMPLETE — reviewer verdict PASS WITH MINOR NOTES, all
+five suggested fixes applied (`bc3aa17`), Noah's written approval recorded
+in `docs/m3.2-copy-review-verdict.md` 2026-07-15; gate closed. M3.3
+COMPLETE — `process_phase3_drill` deployed via migration
+`20260716045043_process_phase3_drill.sql`, MCP read-back confirmed the
+deployed body and existing RLS policies, functional test against a
+disposable row confirmed correct routing and loop sync (test row cleaned
+up). M3.4 is next.**
 
 1. **M3.1 — Token mirrors.** Create `lib/features/drill/drill_tokens.dart`:
    Dart enums mirroring `origin_type`, `origin_domain`, `coping_mechanism`,
