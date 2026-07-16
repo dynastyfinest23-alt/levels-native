@@ -197,12 +197,6 @@ class _DashboardBody extends StatelessWidget {
               ),
               if (allRevealed) ...[
                 const SizedBox(height: LevelsSpace.space32),
-                Text(
-                  'Phase 3 coming soon.',
-                  style: LevelsType.caption,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: LevelsSpace.space24),
                 Center(child: _PrimaryCta(zoneColor: style.zoneColor)),
               ],
             ],

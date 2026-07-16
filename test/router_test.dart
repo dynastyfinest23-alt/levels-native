@@ -14,7 +14,7 @@ void main() {
         '/',
         '/assessment',
         '/dashboard/:loopId',
-        '/drill',
+        '/drill/:loopId',
         '/track',
         '/reassessment',
       ]),

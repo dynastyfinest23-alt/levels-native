@@ -11,12 +11,14 @@ were read from production (project `dnqwsgpkinieitiiikij`) on 2026-07-08.
 
 ## 0. NOW (next ~2 weeks)
 
-- **Current milestone:** M3 (Phase 3 origin drill) — M3.1, M3.2, M3.3 all
-  COMPLETE; M3.4 (drill controller + screens) is next.
-- **In flight:** M3.4 — `drill_controller.dart` + `/drill` screens per PRD
-  §M3.4.
+- **Current milestone:** M3 (Phase 3 origin drill) — COMPLETE (M3.1-M3.4 all
+  shipped and verified 2026-07-16). M4 (Phase 4 tracks) is next, starting
+  with M4.1 (track content pack, a review-gate task).
 - **Resolved:** love_flow 530-vs-550 — Noah decided to defer, keep 530
   (`ACTION-FOR-NOAH.md`, 2026-07-16). No scoring artifact touched.
+- **Flagged for cleanup:** a real test account created during M3.4's manual
+  verification run needs deletion alongside the existing parked
+  test-account cleanup item (`ACTION-FOR-NOAH.md`).
 - **Parked on purpose:** Dodson extraction doc (done — see
   `docs/dodson-2e-reference.md`); OAuth (blocked on credentials); test-account
   deletion (needs Noah's ID list); marketing site (separate workstream, own
@@ -416,7 +418,8 @@ COMPLETE — `process_phase3_drill` deployed via migration
 `20260716045043_process_phase3_drill.sql`, MCP read-back confirmed the
 deployed body and existing RLS policies, functional test against a
 disposable row confirmed correct routing and loop sync (test row cleaned
-up). M3.4 is next.**
+up). M3.4 COMPLETE (2026-07-16) — see task 4 below for the full verification
+record. M3 is done; M4 is next.**
 
 1. **M3.1 — Token mirrors.** Create `lib/features/drill/drill_tokens.dart`:
    Dart enums mirroring `origin_type`, `origin_domain`, `coping_mechanism`,
@@ -441,14 +444,22 @@ up). M3.4 is next.**
    pattern: one RPC that decides AND persists. Done when: migration pushed,
    `levels-verify` passes, and a read-only `pg_get_functiondef` check
    confirms the deployed body; results reported.
-4. **M3.4 — Drill controller + screens.** Create
-   `lib/features/drill/drill_controller.dart` (ChangeNotifier, single typed
-   state, single submit: insert row with answers + free text → RPC
-   `process_phase3_drill` → read row back) and the PageView-style screens at
-   `/drill`. `deepening_layer` comes from routing (default 1; M5 passes 2+).
-   Done when: manual run writes a complete drill row and the home hub
-   advances to the track phase; a test pins the controller's submit-order
-   contract with a fake client.
+4. **M3.4 — Drill controller + screens. COMPLETE (2026-07-16).** Created
+   `lib/features/drill/drill_controller.dart` (`DrillDataSource` seam +
+   `SupabaseDrillDataSource`, `ChangeNotifier` controller: single typed
+   state, single submit — insert row with answers + free text → RPC
+   `process_phase3_drill` → read row back) and `drill_screen.dart` (3
+   PageView-style pages at `/drill/:loopId`). `deepening_layer` defaults to 1
+   (M5 will pass 2+). Router and home hub CTA updated to carry `loopId`
+   through to the drill route. Verified: `test/drill_controller_test.dart`
+   pins the insert → process → read-back submit-order contract with a fake
+   `DrillDataSource` (5 tests); a full manual run in a release build
+   (headless Chromium) signed up a fresh account, completed Phase 1 and the
+   Phase 2 reveal, ran the drill end to end, and confirmed both the written
+   `phase3_origin_drills` row (correct routing: `childhood_conditioning` →
+   `embodiment`, matching deployed `assign_phase4_track`) and the home hub
+   advancing to "Working your track". Also fixed a stale "Phase 3 coming
+   soon." string on the Phase 2 dashboard, found during that manual run.
 
 ### M4 — Phase 4 tracks
 
