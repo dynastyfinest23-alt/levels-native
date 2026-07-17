@@ -16,7 +16,10 @@ abstract class TrackSessionDataSource {
     required AscensionTrack track,
   });
 
-  Future<String> insertSession({
+  /// Returns the full inserted row (including the DB-assigned
+  /// `started_at`), matching [fetchOpenSession]'s shape so both paths
+  /// hydrate identically.
+  Future<Map<String, dynamic>> insertSession({
     required String loopId,
     required AscensionTrack track,
   });
@@ -55,7 +58,7 @@ class SupabaseTrackSessionDataSource implements TrackSessionDataSource {
   }
 
   @override
-  Future<String> insertSession({
+  Future<Map<String, dynamic>> insertSession({
     required String loopId,
     required AscensionTrack track,
   }) async {
@@ -64,16 +67,15 @@ class SupabaseTrackSessionDataSource implements TrackSessionDataSource {
       // The auth gate should make this unreachable; fail loudly if it isn't.
       throw StateError('No active session. Please sign in again.');
     }
-    final row = await _client
+    return _client
         .from('phase4_track_sessions')
         .insert({
           'loop_id': loopId,
           'user_id': user.id,
           'track_type': track.token,
         })
-        .select('id')
+        .select()
         .single();
-    return row['id'] as String;
   }
 
   @override
@@ -97,6 +99,11 @@ bool completionIntegrityCheckTriggered(PrepDuration duration) =>
 /// the Phase 5 classification stance (CLAUDE.md).
 bool commitmentCheckedInSuccessfully(CheckinResponse response) =>
     response == CheckinResponse.yes;
+
+/// embodiment track's success rule (`ACTION-FOR-NOAH.md`, approved by Noah
+/// 2026-07-16): success is exactly `day7_action_confirmed` from the day-7
+/// `embodiment_daily_logs` row, written back to this session on finish.
+bool embodimentSucceeded(bool day7ActionConfirmed) => day7ActionConfirmed;
 
 /// Starts or resumes the loop's `phase4_track_sessions` row for one
 /// `AscensionTrack` and exposes typed setters + one save path per stage.
@@ -134,6 +141,7 @@ class TrackSessionController extends ChangeNotifier {
   bool _loading = true;
   String? _error;
   String? _sessionId;
+  DateTime? _startedAt;
 
   // completion
   String? _completionStatement;
@@ -162,6 +170,10 @@ class TrackSessionController extends ChangeNotifier {
   bool get loading => _loading;
   String? get error => _error;
   String? get sessionId => _sessionId;
+
+  /// The session's `started_at` — the embodiment daily-log gate's calendar
+  /// anchor (`embodiment_gate.dart`). Null until [load] completes.
+  DateTime? get startedAt => _startedAt;
   bool get saving => _saving;
 
   String? get completionStatement => _completionStatement;
@@ -213,21 +225,18 @@ class TrackSessionController extends ChangeNotifier {
 
   /// Starts a new session, or resumes the loop's already-open one for
   /// [track] — never both. Hydrates every field the resumed row already
-  /// has, so re-entering mid-flow shows prior answers.
+  /// has, so re-entering mid-flow shows prior answers. Both paths return a
+  /// full row (`fetchOpenSession`/`insertSession`), hydrated identically.
   Future<void> load() async {
     _loading = true;
     _error = null;
     notifyListeners();
     try {
-      final existing =
-          await _dataSource.fetchOpenSession(loopId: loopId, track: track);
-      if (existing != null) {
-        _sessionId = existing['id'] as String;
-        _hydrate(existing);
-      } else {
-        _sessionId =
-            await _dataSource.insertSession(loopId: loopId, track: track);
-      }
+      final row =
+          await _dataSource.fetchOpenSession(loopId: loopId, track: track) ??
+              await _dataSource.insertSession(loopId: loopId, track: track);
+      _sessionId = row['id'] as String;
+      _hydrate(row);
     } catch (err) {
       _error = err.toString();
     } finally {
@@ -237,6 +246,7 @@ class TrackSessionController extends ChangeNotifier {
   }
 
   void _hydrate(Map<String, dynamic> row) {
+    _startedAt = DateTime.parse(row['started_at'] as String);
     _completionStatement = row['completion_statement'] as String?;
     final prepToken = row['preparation_duration'] as String?;
     _prepDuration = prepToken == null ? null : PrepDuration.fromToken(prepToken);
@@ -486,4 +496,11 @@ class TrackSessionController extends ChangeNotifier {
     }
     await finish(success: commitmentCheckedInSuccessfully(_checkinResponse!));
   }
+
+  /// embodiment track: success iff the day-7 daily log's
+  /// `day7_action_confirmed` is true. Called once the day-7
+  /// `embodiment_daily_logs` row is saved (`EmbodimentDailyLogController`,
+  /// a separate flow — see class doc).
+  Future<void> finishEmbodiment({required bool day7ActionConfirmed}) =>
+      finish(success: embodimentSucceeded(day7ActionConfirmed));
 }

@@ -29,8 +29,13 @@ class _FakeTrackSessionDataSource implements TrackSessionDataSource {
     return null;
   }
 
+  /// Fixed so gate-related tests get a deterministic anchor; override via
+  /// `sessions[id]['started_at']` after insert if a test needs a different
+  /// one.
+  DateTime startedAtForNextInsert = DateTime.utc(2026, 7, 1);
+
   @override
-  Future<String> insertSession({
+  Future<Map<String, dynamic>> insertSession({
     required String loopId,
     required AscensionTrack track,
   }) async {
@@ -41,9 +46,10 @@ class _FakeTrackSessionDataSource implements TrackSessionDataSource {
       'id': id,
       'loop_id': loopId,
       'track_type': track.token,
+      'started_at': startedAtForNextInsert.toIso8601String(),
       'completed_at': null,
     };
-    return id;
+    return Map<String, dynamic>.from(sessions[id]!);
   }
 
   @override
@@ -72,6 +78,7 @@ void main() {
       expect(fake.insertCount, 1);
       expect(controller.sessionId, isNotNull);
       expect(controller.error, isNull);
+      expect(controller.startedAt, fake.startedAtForNextInsert);
     });
 
     test('resumes the open session instead of inserting a second one',
@@ -429,6 +436,43 @@ void main() {
       expect(commitmentCheckedInSuccessfully(CheckinResponse.yes), isTrue);
       expect(commitmentCheckedInSuccessfully(CheckinResponse.partially), isFalse);
       expect(commitmentCheckedInSuccessfully(CheckinResponse.no), isFalse);
+    });
+  });
+
+  group('embodimentSucceeded (pure rule)', () {
+    test('mirrors day7_action_confirmed exactly', () {
+      expect(embodimentSucceeded(true), isTrue);
+      expect(embodimentSucceeded(false), isFalse);
+    });
+  });
+
+  group('TrackSessionController.finishEmbodiment', () {
+    test('persists success_state_reached matching day7ActionConfirmed',
+        () async {
+      final fake = _FakeTrackSessionDataSource();
+      final confirmed = TrackSessionController(
+        loopId: 'loop-1',
+        track: AscensionTrack.embodiment,
+        dataSource: fake,
+      );
+      await confirmed.load();
+      await confirmed.finishEmbodiment(day7ActionConfirmed: true);
+      expect(
+        fake.sessions[confirmed.sessionId]!['success_state_reached'],
+        isTrue,
+      );
+
+      final unconfirmed = TrackSessionController(
+        loopId: 'loop-2',
+        track: AscensionTrack.embodiment,
+        dataSource: fake,
+      );
+      await unconfirmed.load();
+      await unconfirmed.finishEmbodiment(day7ActionConfirmed: false);
+      expect(
+        fake.sessions[unconfirmed.sessionId]!['success_state_reached'],
+        isFalse,
+      );
     });
   });
 
