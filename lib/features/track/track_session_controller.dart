@@ -125,6 +125,12 @@ class TrackSessionController extends ChangeNotifier {
   final AscensionTrack track;
   final TrackSessionDataSource _dataSource;
 
+  /// belief_audit's belief-count cap (`ACTION-FOR-NOAH.md`, approved by
+  /// Noah 2026-07-16): matches PRD M4.4's 3-belief done-when and the
+  /// tab-navigation UI pattern (`docs/m4-ui-pattern-notes.md`).
+  static const int minBeliefCount = 1;
+  static const int maxBeliefCount = 3;
+
   bool _loading = true;
   String? _error;
   String? _sessionId;
@@ -183,10 +189,13 @@ class TrackSessionController extends ChangeNotifier {
       _prepDuration != null;
 
   bool get isBeliefAuditStageComplete =>
-      _flaggedBeliefs.isNotEmpty &&
+      _flaggedBeliefs.length >= minBeliefCount &&
+      _flaggedBeliefs.length <= maxBeliefCount &&
       _beliefAuthorshipAge.every((v) => v != null) &&
       _beliefAuthorshipSource.every((v) => v != null && v.trim().isNotEmpty) &&
       _crossExamVerdict.every((v) => v != null);
+
+  bool get canAddMoreBeliefs => _flaggedBeliefs.length < maxBeliefCount;
 
   bool get isEmbodimentSessionStageComplete =>
       (_bodyLocationTapped?.trim().isNotEmpty ?? false) &&
@@ -293,8 +302,12 @@ class TrackSessionController extends ChangeNotifier {
 
   /// Appends a newly flagged belief and grows the other three aligned
   /// lists in lockstep, so every list always shares one length and index i
-  /// always refers to the same belief.
+  /// always refers to the same belief. Throws once [maxBeliefCount] is
+  /// already reached (ACTION-FOR-NOAH.md, approved 2026-07-16).
   void addFlaggedBelief(String belief) {
+    if (!canAddMoreBeliefs) {
+      throw StateError('Cannot flag more than $maxBeliefCount beliefs.');
+    }
     _flaggedBeliefs.add(belief);
     _beliefAuthorshipAge.add(null);
     _beliefAuthorshipSource.add(null);

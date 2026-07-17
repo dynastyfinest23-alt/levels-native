@@ -5,15 +5,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/design_tokens.dart';
 import '../../core/widgets/breathing_dot.dart';
 import '../drill/drill_tokens.dart' show AscensionTrack;
+import 'belief_audit_screen.dart';
 import 'commitment_screen.dart';
 import 'completion_screen.dart';
 import 'track_widgets.dart';
 
 /// Entry point for `/track/:loopId`: reads the loop's `assigned_track`
 /// (set by `process_phase3_drill`, PRD M3.3) and renders the matching
-/// track flow. Only `completion` and `commitment` are built (PRD M4.3);
-/// `belief_audit`/`embodiment` show a coming-soon placeholder pending
-/// M4.4/M4.5, matching `router.dart`'s existing placeholder convention.
+/// track flow. `completion`, `commitment` (M4.3), and `belief_audit`
+/// (M4.4) are built; `embodiment` shows a coming-soon placeholder pending
+/// M4.5, matching `router.dart`'s existing placeholder convention.
 class TrackScreen extends StatefulWidget {
   const TrackScreen({super.key, required this.loopId});
 
@@ -76,9 +77,8 @@ class _TrackScreenState extends State<TrackScreen> {
     return switch (_track!) {
       AscensionTrack.completion => CompletionScreen(loopId: widget.loopId),
       AscensionTrack.commitment => CommitmentScreen(loopId: widget.loopId),
-      AscensionTrack.beliefAudit ||
-      AscensionTrack.embodiment =>
-        _TrackComingSoon(loopId: widget.loopId),
+      AscensionTrack.beliefAudit => BeliefAuditScreen(loopId: widget.loopId),
+      AscensionTrack.embodiment => _TrackComingSoon(loopId: widget.loopId),
     };
   }
 }

@@ -11,11 +11,10 @@ were read from production (project `dnqwsgpkinieitiiikij`) on 2026-07-08.
 
 ## 0. NOW (next ~2 weeks)
 
-- **Current milestone:** M3 COMPLETE. M4.1 COMPLETE (approved 2026-07-16).
-  M4.2 COMPLETE (2026-07-16, `track_session_controller.dart`). M4.3
-  COMPLETE (2026-07-16, completion + commitment screens; both manually
-  verified end-to-end in a release build). M4.4 (belief-audit screen) is
-  next.
+- **Current milestone:** M3, M4.1, M4.2, M4.3 all COMPLETE. M4.4
+  (belief-audit screen) COMPLETE 2026-07-17 — manually verified end-to-end
+  in a release build (3-belief run, arrays confirmed index-aligned via
+  MCP). M4.5 (embodiment screen + 7-day daily loop) is next.
 - **Resolved:** love_flow 530-vs-550 — Noah decided to defer, keep 530
   (`ACTION-FOR-NOAH.md`, 2026-07-16). No scoring artifact touched.
 - **Flagged for cleanup:** a real test account created during M3.4's manual
@@ -531,11 +530,27 @@ record. M3 is done; M4 is next.**
    tracks write every documented column, including the `over_3yr` ->
    `integrity_check_triggered` auto-trigger and the `partially` ->
    `success_state_reached = false` commitment rule (`ACTION-FOR-NOAH.md`).
-4. **M4.4 — Belief-audit screen.** Flow: flag beliefs (`flagged_beliefs`),
-   authorship per belief (`belief_authorship_age`/`_source`), cross-exam
-   verdict per belief (`fact`/`conclusion` → `cross_exam_verdict`). Arrays
-   stay index-aligned — enforce in the controller, test the alignment.
-   Done when: arrays land index-aligned in the DB for a 3-belief run.
+4. **M4.4 — Belief-audit screen. COMPLETE (2026-07-17).** Built
+   `lib/features/track/belief_audit_screen.dart`: repeating per-belief
+   flow (flag → authorship age → authorship source → cross-exam verdict),
+   "Add another belief" (secondary) / "Finish" (primary) after each
+   belief's cross-exam, min 1 / max 3 beliefs enforced in
+   `TrackSessionController` (`minBeliefCount`/`maxBeliefCount`,
+   `canAddMoreBeliefs`, `addFlaggedBelief` throws past the cap — approved
+   rule, `ACTION-FOR-NOAH.md`). All four arrays
+   (`flagged_beliefs`/`belief_authorship_age`/`belief_authorship_source`/
+   `cross_exam_verdict`) are only ever written together, fully
+   index-aligned, by `saveBeliefAuditStage` — nothing persists mid-flow.
+   Copy is entirely from the M4.1-approved `track_content.dart` (no new
+   narrative strings; "Add another belief"/"Finish" are UI chrome, same
+   precedent as M4.3's "Save"/"Continue"). Wired into
+   `lib/features/track/track_screen.dart`, replacing the coming-soon
+   placeholder. Verified: `flutter analyze` clean, `flutter test` green
+   (149/149, +4 new controller tests pinning the cap); a full manual run
+   in a release build (fresh test account, drill Q1 answer
+   `inherited_belief`) completed a real 3-belief run and an MCP SELECT
+   confirmed all four arrays land perfectly index-aligned
+   (`ACTION-FOR-NOAH.md` has the full row).
 5. **M4.5 — Embodiment screen + daily loop.** Session screen (body
    location, `sensation_words`, `stage4_response`) plus the 7-day
    `embodiment_daily_logs` flow: one log per `day_number`, gated by

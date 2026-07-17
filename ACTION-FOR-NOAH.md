@@ -97,3 +97,28 @@ Left both test accounts in place for the same reason as M3.4's
 `m34-drill-verify@example.com`: deleting the `public.users`/loop rows would
 orphan the linked `auth.users` row without the admin/service-role API. Add
 both to the existing test-account cleanup pass.
+
+## M4.4 manual-verification test account (2026-07-17)
+
+Verified the M4.4 belief-audit screen end-to-end in a real browser (release
+build, headless Chromium), same method as M4.3. One fresh test account,
+`m44-belief-audit-verify@example.com` (loop
+`84f28c44-8da3-468b-9d11-c0ec4ed0f4c7`) -- driven through signup -> Phase 1
+-> Phase 2 reveal -> Phase 3 drill (Q1 answer `inherited_belief`, which
+routes to `belief_audit`) -> a full 3-belief run (the approved cap). MCP
+SELECT on `phase4_track_sessions` confirmed all four arrays land perfectly
+index-aligned:
+
+- `flagged_beliefs`: `["I am not enough", "I will be abandoned if I speak
+  up", "I have to earn rest"]`
+- `belief_authorship_age`: `[8, 12, 20]`
+- `belief_authorship_source`: `["A strict teacher in school.", "A
+  difficult breakup.", "A demanding parent."]`
+- `cross_exam_verdict`: `{conclusion,fact,conclusion}`
+- `completed_at` set, `success_state_reached = true`
+
+Also confirmed the "Add another belief" button correctly disappears once
+`canAddMoreBeliefs` goes false at the 3-belief cap (screenshot: belief 3's
+cross-exam stage shows only "Finish"). Add this account to the existing
+test-account cleanup pass, same reasoning as M3.4/M4.3 (orphaned
+`auth.users` row risk without the admin/service-role API).

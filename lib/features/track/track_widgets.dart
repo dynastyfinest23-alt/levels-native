@@ -16,6 +16,8 @@ class TrackTextStage extends StatelessWidget {
     required this.controller,
     required this.onChanged,
     this.maxLines = 4,
+    this.keyboardType,
+    this.hintText = 'In your own words…',
   });
 
   final String title;
@@ -23,6 +25,8 @@ class TrackTextStage extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final int maxLines;
+  final TextInputType? keyboardType;
+  final String hintText;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +48,8 @@ class TrackTextStage extends StatelessWidget {
                 controller: controller,
                 style: LevelsType.body,
                 maxLines: maxLines,
-                decoration: const InputDecoration(hintText: 'In your own words…'),
+                keyboardType: keyboardType,
+                decoration: InputDecoration(hintText: hintText),
                 onChanged: onChanged,
               ),
               const SizedBox(height: LevelsSpace.space64),

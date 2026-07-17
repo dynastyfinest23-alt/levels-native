@@ -240,6 +240,68 @@ void main() {
         throwsRangeError,
       );
     });
+
+    test('a single belief satisfies the minimum (min 1, max 3)', () async {
+      final fake = _FakeTrackSessionDataSource();
+      final controller = TrackSessionController(
+        loopId: 'loop-1',
+        track: AscensionTrack.beliefAudit,
+        dataSource: fake,
+      );
+      await controller.load();
+
+      controller
+        ..addFlaggedBelief('I am not enough')
+        ..setBeliefAuthorship(0, age: 8, source: 'a teacher')
+        ..setCrossExamVerdict(0, BeliefVerdict.conclusion);
+
+      expect(controller.isBeliefAuditStageComplete, isTrue);
+      await controller.saveBeliefAuditStage();
+
+      final row = fake.sessions[controller.sessionId]!;
+      expect(row['flagged_beliefs'], ['I am not enough']);
+    });
+
+    test('addFlaggedBelief throws past the 3-belief cap', () async {
+      final fake = _FakeTrackSessionDataSource();
+      final controller = TrackSessionController(
+        loopId: 'loop-1',
+        track: AscensionTrack.beliefAudit,
+        dataSource: fake,
+      );
+      await controller.load();
+
+      controller
+        ..addFlaggedBelief('I am not enough')
+        ..addFlaggedBelief('I will be abandoned')
+        ..addFlaggedBelief('I have to earn rest');
+
+      expect(controller.canAddMoreBeliefs, isFalse);
+      expect(
+        () => controller.addFlaggedBelief('One belief too many'),
+        throwsStateError,
+      );
+      expect(controller.flaggedBeliefs.length, 3);
+    });
+
+    test('canAddMoreBeliefs flips false only once the cap is reached',
+        () async {
+      final fake = _FakeTrackSessionDataSource();
+      final controller = TrackSessionController(
+        loopId: 'loop-1',
+        track: AscensionTrack.beliefAudit,
+        dataSource: fake,
+      );
+      await controller.load();
+
+      expect(controller.canAddMoreBeliefs, isTrue);
+      controller.addFlaggedBelief('I am not enough');
+      expect(controller.canAddMoreBeliefs, isTrue);
+      controller.addFlaggedBelief('I will be abandoned');
+      expect(controller.canAddMoreBeliefs, isTrue);
+      controller.addFlaggedBelief('I have to earn rest');
+      expect(controller.canAddMoreBeliefs, isFalse);
+    });
   });
 
   group('TrackSessionController — embodiment session column mapping', () {
