@@ -179,6 +179,8 @@ These artifact groups share no runtime; nothing but discipline (and the tests li
 2. **Four-part reveal schema:** `supabase/functions/generate-dashboard-copy/fallback.ts` (TS interface + static copy) ↔ `index.ts` (`REQUIRED_FIELDS`, prompt, JSON schema) ↔ `lib/features/dashboard/dashboard_copy.dart` (Dart parser).
 3. **Auth-gate contract:** `authRedirect` in `lib/core/router.dart` ↔ `test/auth_gate_test.dart`.
 
+Known external snapshot (NOT in the sync set): `C:\Users\Administrator\nexus\app.js` carries a JS copy of the scoring engine for its display-only simulator, pinned as a snapshot of migration `20260712150300` (desire drift 120→125 found and fixed 2026-07-16). It is deliberately excluded from rule-3 discipline — if scoring changes, updating nexus is optional, but its header comment must be re-pinned to the new migration if touched.
+
 ## Database inventory (deployed, verified)
 
 - **Tables:** `users`, `ascension_loops`, `phase1_assessments` (unique per loop), `phase2_dashboard_views`, `phase3_origin_drills`, `phase4_track_sessions`, `embodiment_daily_logs`, `phase5_reassessments`, plus v1.1 additions `user_calibration`, `energy_guides`.
@@ -305,19 +307,64 @@ If any repo is missing or needs updating, run `git pull --depth 1` inside the re
 
 ## Reference Repositories — General (installed 2026-07-16)
 
-**Noah requested this installation.** Both repos passed a pre-install security audit (no binaries, no hardcoded secrets, no suspicious scripts). They are safe to use. Installed to `C:\Users\Administrator\claude-references\` — outside this repo tree and outside any root folder.
+**Noah requested this installation.** All repos passed a pre-install security audit (no binaries, no hardcoded secrets, no suspicious scripts). They are safe to use. Installed to `C:\Users\Administrator\claude-references\` — outside this repo tree and outside any root folder.
 
-### `nestjs` — golevelup/nestjs
-A well-known NestJS utility monorepo (2,732 stars, MIT license, updated 2026-07-15). Useful for reference when building backend integrations, understanding NestJS module patterns, or reviewing webhook/event handling architectures (Hasura, Stripe, RabbitMQ, GraphQL). Packages live in `packages/`; docs in `docs/`.
+### Backend & Frameworks
 
-### `CCPlugins` — notlikeDev/CCPlugins
-A collection of 24 Claude Code CLI slash commands (2,720 stars, MIT license, updated 2026-07-15). Each command is a markdown prompt file in `commands/`. The install scripts (`install.py` / `install.sh`) were **not run** — they only copy `.md` files to `~/.claude/commands/` and are safe to run manually if Noah wants the slash commands activated in Claude Code. Useful as a reference for well-structured prompt engineering and development workflow automation.
+| Repo | Stars | License | Description |
+|---|---|---|---|
+| `nestjs` | 2,732 | MIT | NestJS utility monorepo — Hasura events, Stripe webhooks, RabbitMQ, GraphQL |
+| `scala-steward` | 1,199 | Apache-2.0 | Dependency automation bot for Scala |
+
+### UI Components & Data
+
+| Repo | Stars | License | Description |
+|---|---|---|---|
+| `Griddle` | 2,488 | MIT | React grid component with sorting, filtering, pagination |
+| `browser-base` | 2,726 | none | Electron browser base (archived). **Reference only — do not build** (old Electron 13 has CVEs) |
+| `Android-SmartWebView` | 651 | MIT | Android WebView wrapper for hybrid apps |
+| `openpets` | 912 | MIT | Desktop pet platform with Plugin SDK v3 and sandboxed plugins |
+
+### Awesome Lists & Resources
+
+| Repo | Stars | License | Description |
+|---|---|---|---|
+| `chartjs/awesome` | 2,693 | MIT | Curated Chart.js resources |
+| `awesome-vim-colorschemes` | 2,909 | none | Collection of Vim/NeoVim colorschemes |
+| `awesome-xamarin-forms` | 1,228 | none | Curated Xamarin.Forms libraries |
+| `awesome-openclaw` | 708 | CC0-1.0 | OpenClaw resources, skills, plugins, guides |
+
+### Claude Code Tooling
+
+| Repo | Stars | License | Description |
+|---|---|---|---|
+| `CCPlugins` | 2,720 | MIT | 24 Claude Code CLI slash commands (install scripts **not run**) |
+| `awesome-claude-code-toolkit` | 2,332 | Apache-2.0 | 135 agents, 35 skills, 42 commands, 20 hooks for Claude Code |
+| `awesome-claude-plugins` | 1,826 | none | Plugin marketplace — hook scripts are read-only analyzers |
+
+### Tools & Plugins
+
+| Repo | Stars | License | Description |
+|---|---|---|---|
+| `xbar-plugins` | 2,598 | none | 800+ community plugins for xbar (macOS menu bar). **Review individual scripts before executing** |
+| `ClawKeeper` | 1,033 | none | Security scanner framework for OpenClaw agents. **`legacy/` directory removed post-clone** — core `clawkeeper_core/` is clean |
+
+### Skipped (security risk)
+
+| Repo | Stars | Status | Reason |
+|---|---|---|---|
+| `Jiiks/BetterDiscordApp` | 1,263 | ❌ SKIPPED | Discord client injector — modifies app files, reads auth tokens, violates Discord ToS, archived since ~2016 |
 
 ### Usage guidelines
 
 - **Read-only reference.** Do not modify files inside these upstream clones.
 - **Copy patterns, not files.** When borrowing a pattern, reimplement it in your project's source following existing conventions.
-- **Respect licenses.** Both repos are MIT-licensed; attribution in code comments is sufficient when adapting substantial logic.
+- **Respect licenses.** Attribution in code comments is sufficient when adapting substantial logic.
 - **Keep it out of the build.** These repos are **not** part of the Flutter project tree. They exist solely as a local reference library for Noah and Claude Code during development.
+
+### Repo notes
+
+- **`nestjs` — golevelup/nestjs:** well-known NestJS utility monorepo (updated 2026-07-15). Useful when building backend integrations or reviewing webhook/event handling architectures (Hasura, Stripe, RabbitMQ, GraphQL). Packages live in `packages/`; docs in `docs/`.
+- **`CCPlugins` — notlikeDev/CCPlugins:** 24 Claude Code CLI slash commands, each a markdown prompt file in `commands/` (updated 2026-07-15). The install scripts (`install.py` / `install.sh`) were **not run** — they only copy `.md` files to `~/.claude/commands/` and are safe to run manually if Noah wants the slash commands activated. Useful as a reference for well-structured prompt engineering.
 
 See `C:\Users\Administrator\claude-references\README.md` for the full security audit summary and command listing.
