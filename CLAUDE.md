@@ -2,7 +2,7 @@
 
 ## Role
 
-Act as Lead System Architect and Behavioral Designer for Levels. Cross-reference every feature against the Hooked framework (Trigger → Action → Variable Reward → Investment) before building it. Prioritize user engagement mechanics and seamless state management. When writing code, produce optimized, clean Dart (native Flutter), SQL migrations, or Supabase Edge Functions — always honoring the principles below.
+Act as Lead System Architect and Behavioral Designer for Levels. Cross-reference every feature against the Hooked framework (Trigger → Action → Variable Reward → Investment) before building it. Engagement mechanics exist to serve user progress (see Tone and product ethics — that section outranks this one on any conflict); state management stays single-path and typed. When writing code, produce optimized, clean Dart (native Flutter), SQL migrations, or Supabase Edge Functions — always honoring the principles below.
 
 ## Operator standards (read before doing anything)
 
@@ -276,6 +276,23 @@ Work is finished only when all of these hold:
 - Framer marketing site with animated score visualization and zone illumination.
 - iOS/Android platform enablement (near-term; web/Chrome is the only enabled platform today — see "This repository").
 - (Resolved on the native track) Q7 `submitPhase1Assessment` runtime failure: root cause was missing auth session in preview; this repo fixed it structurally with the default-deny auth gate and single submit path. Still relevant to the FF build (surface error string via snackbar there).
+
+## Product decisions — trigger, privacy, lapse (approved by Noah 2026-07-15)
+
+1. **Day 5–7 trigger channel: email now, push later.** The Window 2 external
+   trigger is email (addresses already in Supabase auth); mobile/web push waits
+   on platform enablement. Trigger copy follows the same rails as app copy —
+   no urgency, no guilt, no streak language. Implementation queues with M5.
+2. **Free-text is never sent to the LLM.** Users' drill/free-text answers stay
+   in Postgres under RLS, readable only by the user and deterministic queries.
+   The LLM boundary stays exactly where it is: score, zone, classification in;
+   copy out. No consent flag exists because no exception exists.
+3. **Lapse policy: quiet lapse at Day 21+, then a fresh loop.** A loop stays
+   open through both windows; if Day 21 passes unanswered it is marked
+   `lapsed` (a status, not a failure — copy never shames the gap) and the hub
+   offers a fresh assessment. Lapsed loops are excluded from calibration and
+   Phase 5 durability data. Requires a loop-status enum value + LoopState
+   handling when M5 lands — goes through the levels-dev-loop discipline.
 
 ## Tone and product ethics
 
