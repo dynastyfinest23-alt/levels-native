@@ -181,6 +181,12 @@ These artifact groups share no runtime; nothing but discipline (and the tests li
 
 Known external snapshot (NOT in the sync set): `C:\Users\Administrator\nexus\app.js` carries a JS copy of the scoring engine for its display-only simulator, pinned as a snapshot of migration `20260712150300` (desire drift 120→125 found and fixed 2026-07-16). It is deliberately excluded from rule-3 discipline — if scoring changes, updating nexus is optional, but its header comment must be re-pinned to the new migration if touched.
 
+## Notion knowledge base
+
+- Workspace: `movewithnoaht@gmail.com` via the Notion connector.
+- Anchor page: `📈 Levels — App Notes` (id `3a0c30c2-f733-81bd-b521-f989ab2ad9da`) — product/planning notes live there; fetch it when product intent is unclear from code.
+- Notion never holds scoring/classification logic (rule 2) — Postgres functions + Dart mirrors + golden tests remain the only truth for that.
+
 ## Database inventory (deployed, verified)
 
 - **Tables:** `users`, `ascension_loops`, `phase1_assessments` (unique per loop), `phase2_dashboard_views`, `phase3_origin_drills`, `phase4_track_sessions`, `embodiment_daily_logs`, `phase5_reassessments`, plus v1.1 additions `user_calibration`, `energy_guides`.
