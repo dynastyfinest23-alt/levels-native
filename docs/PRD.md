@@ -11,10 +11,11 @@ were read from production (project `dnqwsgpkinieitiiikij`) on 2026-07-08.
 
 ## 0. NOW (next ~2 weeks)
 
-- **Current milestone:** M3, M4.1, M4.2, M4.3 all COMPLETE. M4.4
-  (belief-audit screen) COMPLETE 2026-07-17 — manually verified end-to-end
-  in a release build (3-belief run, arrays confirmed index-aligned via
-  MCP). M4.5 (embodiment screen + 7-day daily loop) is next.
+- **Current milestone:** M3, M4.1, M4.2, M4.3, M4.4 all COMPLETE. M4.5
+  (embodiment screen + 7-day daily loop) COMPLETE 2026-07-18 — manually
+  verified end-to-end through day 7 (session screen, day 1, and days 6-7
+  via SQL-backdated `started_at`). All four Phase 4 tracks are now built.
+  M4.6 (hub integration — track progress + daily CTA) is next.
 - **Resolved:** love_flow 530-vs-550 — Noah decided to defer, keep 530
   (`ACTION-FOR-NOAH.md`, 2026-07-16). No scoring artifact touched.
 - **Flagged for cleanup:** a real test account created during M3.4's manual
@@ -556,8 +557,34 @@ record. M3 is done; M4 is next.**
    `embodiment_daily_logs` flow: one log per `day_number`, gated by
    calendar day (no catch-up backfill), day 6 adds `day6_delta_reported`,
    day 7 adds `day7_action_committed`/`_confirmed`. Done when: gating
-   logic is a pure function with a pinned test (same-day re-entry shows
-   today's log, tomorrow unlocks the next), and a manual run writes day-1.
+   COMPLETE (2026-07-18). Built `lib/features/track/embodiment_gate.dart`
+   (`embodimentDayGate`, pure — calendar day_number = elapsed local-calendar
+   days since `started_at` + 1, clamped 1-7; local date, not UTC, per
+   Fable's 2026-07-17 decision; skipped days are never offered later since
+   the gate always maps to *today's* slot, not "the next unlogged day"),
+   `lib/features/track/embodiment_daily_log_controller.dart`
+   (`EmbodimentDailyLogController`, one insert per day: base fields
+   `identity_statement_shown`/`body_response` plus day6/day7 extras), and
+   `lib/features/track/embodiment_screen.dart` (one-time session screen ->
+   same-visit day-1 check -> gated re-entry each day after, including an
+   "already logged today" status view and a "window elapsed" view for days
+   past 7). `body_location`/`sensation_words` on `embodiment_daily_logs`
+   are left unwritten daily (no per-day copy for them exists; flagged in
+   `ACTION-FOR-NOAH.md`, not invented). Wired into `track_screen.dart`,
+   replacing the last coming-soon placeholder — all four tracks are now
+   built. Verified: `flutter analyze` clean, `flutter test` green
+   (170/170, including 10 pinned gate tests covering
+   same-day/next-day/skipped-day/window-boundary/local-vs-UTC scenarios).
+   Manual run against production (fresh test account) completed the
+   session screen, day 1 same visit, then days 6 and 7 via SQL-backdated
+   `started_at` (the only way to reach later days in one sitting); MCP
+   confirmed every column per day plus
+   `phase4_track_sessions.completed_at`/`success_state_reached = true` on
+   day 7's confirmation (`ACTION-FOR-NOAH.md` has the full row-by-row
+   detail). One real bug surfaced during verification and was fixed: it
+   was in the Playwright test harness (a stale browser profile/service-
+   worker serving a cached JS bundle across rebuilds), not in the app — no
+   `lib/` changes resulted from that finding.
 6. **M4.6 — Hub integration.** Home hub shows track progress (stage or
    day N/7) and routes the daily embodiment CTA. Done when: manual run
    mid-track shows correct progress and CTA.

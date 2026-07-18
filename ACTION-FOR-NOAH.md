@@ -149,3 +149,50 @@ since neither file had actually written it yet.
 
 Neither decision touches scoring, schema, or the deployed backend — both
 are reversible in a follow-up commit if you want it done differently.
+
+## M4.5 manual-verification test account (2026-07-17/18)
+
+Verified the M4.5 embodiment screen and 7-day daily-log flow end-to-end
+against production, same method as M4.3/M4.4, plus SQL backdating to reach
+days 6-7 in one sitting (documented in `docs/PRD.md`'s M4.5 entry). One
+test account, `m45-embodiment-verify@example.com` (loop
+`0c2a6b5f-fa0f-4c57-acae-2778439f036b`, session
+`e4abb0c9-ac72-42a6-9300-741e95363f0a`) -- driven through signup -> Phase 1
+-> Phase 2 reveal -> Phase 3 drill (Q1 answer `childhood_conditioning`,
+which routes to `embodiment`) -> the session screen -> day 1's check-in
+same visit, then days 6 and 7 across two `started_at` backdates.
+
+MCP SELECTs confirmed:
+- Session screen: `body_location_tapped` = `"chest"`, `sensation_words` =
+  `["tight","warm"]`, `stage4_response` = `"shifted"`.
+- `embodiment_daily_logs`, one row per day, each with the correct static
+  `identity_statement_shown` for that day_number and a `body_response`:
+  day 1 (`true_open`), day 6 (`true_open` + `day6_delta_reported` =
+  `"yes_different"`), day 7 (`true_open` + `day7_action_committed` =
+  `"Send the email I keep drafting."` + `day7_action_confirmed = true`).
+- Re-entering after day 1's log correctly showed the "already logged
+  today" status screen instead of a second entry form.
+- Day 7's confirmation wrote `phase4_track_sessions.completed_at` and
+  `success_state_reached = true` (via `finishEmbodiment`), matching the
+  approved rule (success = `day7_action_confirmed`).
+
+**A real bug was found and fixed during this verification, but it was in
+my test harness, not the app.** The headless Chromium instance was reusing
+a persistent default profile across relaunches; Flutter's web service
+worker cached the JS bundle at that profile level and kept serving a stale
+build across every rebuild *and every browser process restart* for a long
+stretch of this session, making a working Save button look completely
+broken (no click effect, no network call, nothing). Confirmed via a
+throwaway `--user-data-dir` per Chrome launch, which immediately fixed it.
+No code in `lib/` was changed as a result — the `onPressed` wiring was
+already correct in the committed code. If browser-based verification ever
+looks inexplicably "dead" again (button does nothing, no errors, no
+requests) on a *rebuilt* release bundle, suspect stale profile/service-
+worker caching before suspecting the Dart code.
+
+Left the account in place, same reasoning as M3.4/M4.3/M4.4 (orphaned
+`auth.users` row risk without the admin/service-role API). The session row
+is now fully completed (day 7 done) so it won't be resumed again by
+accident; `started_at` was intentionally backdated by SQL for this test
+and was left as-is afterward since the row is a closed historical record.
+Add this account to the existing test-account cleanup pass.
