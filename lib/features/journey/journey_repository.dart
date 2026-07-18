@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../drill/drill_tokens.dart' show AscensionTrack;
+import '../track/embodiment_gate.dart';
 import 'loop_state.dart';
 
 /// Read-only snapshot of `user_calibration` — written only by deployed DB
@@ -27,6 +29,7 @@ class JourneyData {
     required this.loopNumber,
     required this.loopState,
     required this.calibration,
+    required this.trackProgress,
   });
 
   final String loopId;
@@ -35,6 +38,28 @@ class JourneyData {
 
   /// Null until `seed_calibration_from_assessment` has run at least once.
   final UserCalibration? calibration;
+
+  /// Null until the loop's `phase4_track_sessions` row exists (PRD M4.6).
+  final TrackProgress? trackProgress;
+}
+
+/// Home hub's view of the loop's track session (PRD M4.6): which track,
+/// whether it's done, and — for embodiment only, while still open — the
+/// day gate so the hub can show "Day N of 7" instead of generic copy.
+class TrackProgress {
+  const TrackProgress({
+    required this.track,
+    required this.completed,
+    required this.embodimentGate,
+  });
+
+  final AscensionTrack track;
+  final bool completed;
+
+  /// Only computed for an open embodiment session (CLAUDE.md: mechanic-free
+  /// hub copy elsewhere doesn't need this). Null for every other track, and
+  /// null for a completed embodiment session.
+  final EmbodimentDayGate? embodimentGate;
 }
 
 /// Single read path for "where is this user in their journey". Follows
@@ -85,7 +110,7 @@ class JourneyRepository {
           .maybeSingle(),
       _client
           .from('phase4_track_sessions')
-          .select('id')
+          .select('id, track_type, started_at, completed_at')
           .eq('loop_id', loopId)
           .limit(1)
           .maybeSingle(),
@@ -136,11 +161,52 @@ class JourneyRepository {
             flowResident: calibrationRow['flow_resident'] as bool,
           );
 
+    final sessionRow = rows[2];
+    final trackProgress = sessionRow == null
+        ? null
+        : await _fetchTrackProgress(sessionRow);
+
     return JourneyData(
       loopId: loopId,
       loopNumber: loopRow['loop_number'] as int,
       loopState: loopState,
       calibration: calibration,
+      trackProgress: trackProgress,
+    );
+  }
+
+  /// Only queries `embodiment_daily_logs` when the session is an open
+  /// embodiment track — every other track has no gate to compute.
+  Future<TrackProgress> _fetchTrackProgress(
+    Map<String, dynamic> sessionRow,
+  ) async {
+    final track = AscensionTrack.fromToken(sessionRow['track_type'] as String);
+    final completed = sessionRow['completed_at'] != null;
+
+    if (track != AscensionTrack.embodiment || completed) {
+      return TrackProgress(
+        track: track,
+        completed: completed,
+        embodimentGate: null,
+      );
+    }
+
+    final logRows = await _client
+        .from('embodiment_daily_logs')
+        .select('day_number')
+        .eq('session_id', sessionRow['id'] as String)
+        .not('completed_at', 'is', null);
+
+    final gate = embodimentDayGate(
+      startedAt: DateTime.parse(sessionRow['started_at'] as String),
+      now: DateTime.now(),
+      completedDayNumbers: logRows.map((r) => r['day_number'] as int).toSet(),
+    );
+
+    return TrackProgress(
+      track: track,
+      completed: false,
+      embodimentGate: gate,
     );
   }
 }
