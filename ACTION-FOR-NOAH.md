@@ -122,3 +122,30 @@ Also confirmed the "Add another belief" button correctly disappears once
 cross-exam stage shows only "Finish"). Add this account to the existing
 test-account cleanup pass, same reasoning as M3.4/M4.3 (orphaned
 `auth.users` row risk without the admin/service-role API).
+
+## M4.5 embodiment: two scope decisions made without a review gate (2026-07-17)
+
+`lib/features/track/embodiment_daily_log_controller.dart` and
+`lib/features/track/embodiment_screen.dart` both carry doc comments that
+say "flagged in ACTION-FOR-NOAH.md" — this is that flag, added on review
+since neither file had actually written it yet.
+
+1. **`body_location`/`sensation_words` on `embodiment_daily_logs` are left
+   null every day.** The table has both columns (confirmed live via
+   `information_schema.columns`), but `track_content.dart` (M4.1,
+   gate-approved) only has a prompt for them on the one-time session
+   screen, not per day. PRD M4.5's task text also only lists identity
+   statement + body_response as the daily baseline. Read as intentional —
+   the columns are likely vestigial from an earlier schema draft — but
+   flagging since nothing says so explicitly. If you want daily
+   location/sensation capture too, that needs new copy through the content
+   gate, not a silent code change.
+2. **"Already logged today" / "window elapsed" states use plain
+   functional-chrome copy, not content-gate-reviewed narrative.** Same
+   register as `TrackErrorView` and the router's coming-soon placeholder —
+   status text, not drill/reveal copy. If you want these two states held
+   to the M4.1 tone rubric too, say so and they'll go through a review
+   pass like the rest of the track content did.
+
+Neither decision touches scoring, schema, or the deployed backend — both
+are reversible in a follow-up commit if you want it done differently.

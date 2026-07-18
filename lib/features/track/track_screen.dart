@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../core/design_tokens.dart';
 import '../../core/widgets/breathing_dot.dart';
 import '../drill/drill_tokens.dart' show AscensionTrack;
 import 'belief_audit_screen.dart';
 import 'commitment_screen.dart';
 import 'completion_screen.dart';
+import 'embodiment_screen.dart';
 import 'track_widgets.dart';
 
 /// Entry point for `/track/:loopId`: reads the loop's `assigned_track`
 /// (set by `process_phase3_drill`, PRD M3.3) and renders the matching
-/// track flow. `completion`, `commitment` (M4.3), and `belief_audit`
-/// (M4.4) are built; `embodiment` shows a coming-soon placeholder pending
-/// M4.5, matching `router.dart`'s existing placeholder convention.
+/// track flow. All four tracks are built: `completion`, `commitment`
+/// (M4.3), `belief_audit` (M4.4), `embodiment` (M4.5).
 class TrackScreen extends StatefulWidget {
   const TrackScreen({super.key, required this.loopId});
 
@@ -78,40 +76,7 @@ class _TrackScreenState extends State<TrackScreen> {
       AscensionTrack.completion => CompletionScreen(loopId: widget.loopId),
       AscensionTrack.commitment => CommitmentScreen(loopId: widget.loopId),
       AscensionTrack.beliefAudit => BeliefAuditScreen(loopId: widget.loopId),
-      AscensionTrack.embodiment => _TrackComingSoon(loopId: widget.loopId),
+      AscensionTrack.embodiment => EmbodimentScreen(loopId: widget.loopId),
     };
-  }
-}
-
-/// Placeholder for the two tracks not yet built (M4.4, M4.5). Matches
-/// `router.dart`'s `_ComingSoonScreen`: displayTitle + one body line + text
-/// button home (MASTER.md §6) — placeholders stay humble.
-class _TrackComingSoon extends StatelessWidget {
-  const _TrackComingSoon({required this.loopId});
-
-  final String loopId;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Track', style: LevelsType.displayTitle),
-            const SizedBox(height: 8),
-            Text(
-              'This track is coming soon.',
-              style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () => context.go('/'),
-              child: const Text('Back to home'),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

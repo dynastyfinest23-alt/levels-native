@@ -111,17 +111,20 @@ void main() {
 
   group('embodimentDayGate — local calendar date, not UTC (decided '
       '2026-07-17)', () {
-    test('uses the local calendar date of a UTC-aware startedAt', () {
-      // startedAt stored as UTC late in the evening; "now" a few hours
-      // later has already crossed into the next UTC day, but is still the
-      // same LOCAL calendar day for a caller west of UTC. Simulate by
-      // constructing startedAt with an explicit UTC instant and confirming
-      // the gate still reads day 1 as open on the same local day.
-      final utcStart = DateTime.utc(2026, 7, 1, 23, 30);
-      final sameLocalDay = utcStart.toLocal();
+    test('uses the local calendar date of a UTC-aware startedAt, not the '
+        'UTC date', () {
+      // Discriminating case for a machine west of UTC (this dev sandbox
+      // runs UTC-5): pick a `startedAt` whose UTC date is one day ahead of
+      // its own local date (03:00 UTC = 22:00 the previous day at UTC-5),
+      // and a `now` on that same local day. Without `.toLocal()`, the gate
+      // would compare against the UTC date (one day later than local),
+      // making day 1 look already past -> windowElapsed. With it, day 1 is
+      // correctly still open.
+      final utcStart = DateTime.utc(2026, 7, 2, 3, 0);
+      final localSameDay = DateTime(2026, 7, 1, 23, 0);
       final gate = embodimentDayGate(
         startedAt: utcStart,
-        now: sameLocalDay.add(const Duration(minutes: 10)),
+        now: localSameDay,
         completedDayNumbers: {},
       );
       expect(gate.status, EmbodimentDayStatus.open);
