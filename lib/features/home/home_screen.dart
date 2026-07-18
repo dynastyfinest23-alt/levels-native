@@ -7,6 +7,7 @@ import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
 import '../journey/journey_repository.dart';
 import '../journey/loop_state.dart';
+import '../track/embodiment_gate.dart';
 
 /// The journey hub: shows where the user is in their current loop and
 /// routes to exactly one next action. No active loop -> "Begin assessment".
@@ -155,15 +156,29 @@ class _PhaseCta {
   final String route;
 }
 
-_PhaseCta _ctaFor(JourneyPhase phase, String? loopId) {
+_PhaseCta _ctaFor(JourneyPhase phase, String? loopId, TrackProgress? track) {
   return switch (phase) {
     JourneyPhase.assessment => const _PhaseCta('Begin assessment', '/assessment'),
     JourneyPhase.dashboard => _PhaseCta('See your dashboard', '/dashboard/$loopId'),
     JourneyPhase.drill => _PhaseCta('Start your origin drill', '/drill/$loopId'),
-    JourneyPhase.track => _PhaseCta('Continue your track', '/track/$loopId'),
+    JourneyPhase.track => _PhaseCta(_trackCtaLabel(track), '/track/$loopId'),
     JourneyPhase.window2 => const _PhaseCta('Day 5–7 check-in', '/reassessment'),
     JourneyPhase.window3 => const _PhaseCta('Day 21 durability check', '/reassessment'),
     JourneyPhase.complete => const _PhaseCta('Start a new loop', '/assessment'),
+  };
+}
+
+/// The embodiment track is the only one with a daily beat worth surfacing
+/// on the hub (PRD M4.6) — every other track (and a completed or gate-less
+/// embodiment session) keeps the generic label.
+String _trackCtaLabel(TrackProgress? track) {
+  final gate = track?.embodimentGate;
+  if (gate == null) return 'Continue your track';
+  return switch (gate.status) {
+    EmbodimentDayStatus.open => 'Day ${gate.dayNumber} of 7',
+    EmbodimentDayStatus.alreadyLoggedToday =>
+      'Day ${gate.dayNumber} logged — come back tomorrow',
+    EmbodimentDayStatus.windowElapsed => 'Continue your track',
   };
 }
 
@@ -187,7 +202,7 @@ class _HubBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = this.data;
     final phase = data?.loopState.currentPhase ?? JourneyPhase.assessment;
-    final cta = _ctaFor(phase, data?.loopId);
+    final cta = _ctaFor(phase, data?.loopId, data?.trackProgress);
 
     return Center(
       child: ConstrainedBox(
