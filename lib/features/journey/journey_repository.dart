@@ -32,6 +32,7 @@ class JourneyData {
     required this.calibration,
     required this.trackProgress,
     required this.window2Reassessment,
+    required this.hasWindow3Reassessment,
   });
 
   final String loopId;
@@ -48,6 +49,11 @@ class JourneyData {
   /// (PRD M5.2/M5.4 — the hub and the `/reassessment` gate read the routing
   /// outcome and submission time from it).
   final Window2Reassessment? window2Reassessment;
+
+  /// Whether the loop already has a Window 3 reassessment row — the
+  /// `/reassessment` gate needs it to keep a completed durability check
+  /// from being answered twice (PRD M5.5).
+  final bool hasWindow3Reassessment;
 }
 
 /// The loop's most recent Window 2 `phase5_reassessments` row, read-only.
@@ -149,6 +155,8 @@ class JourneyRepository {
           .select('id')
           .eq('loop_id', loopId)
           .eq('window_number', 'window_3')
+          .order('created_at', ascending: false)
+          .limit(1)
           .maybeSingle(),
       _client
           .from('user_calibration')
@@ -208,6 +216,7 @@ class JourneyRepository {
                     ),
               createdAt: DateTime.parse(window2Row['created_at'] as String),
             ),
+      hasWindow3Reassessment: rows[4] != null,
     );
   }
 

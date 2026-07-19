@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:levels_native/core/widgets/progress_dots.dart';
+import 'package:levels_native/features/journey/journey_repository.dart'
+    show UserCalibration;
 import 'package:levels_native/features/reassessment/reassessment_controller.dart';
 import 'package:levels_native/features/reassessment/reassessment_screen.dart';
 import 'package:levels_native/features/reassessment/reassessment_tokens.dart';
@@ -64,6 +67,18 @@ class _FakeDataSource implements ReassessmentDataSource {
   @override
   Future<void> markLoopComplete(String loopId) async {
     calls.add('markLoopComplete');
+  }
+
+  @override
+  Future<UserCalibration?> fetchCalibration() async {
+    calls.add('fetchCalibration');
+    return const UserCalibration(
+      calibratedLevel: 380.5,
+      verifiedFloor: 320,
+      consecutiveVerifiedLoops: 2,
+      peakLevel: 400,
+      flowResident: false,
+    );
   }
 }
 
@@ -174,6 +189,51 @@ void main() {
       expect(find.text('The change held'), findsOneWidget);
       expect(find.text(_rediagQ1Prompt), findsNothing);
       expect(fake.calls, isNot(contains('routeFalsePositive')));
+    },
+  );
+
+  testWidgets(
+    'Window 3 closes on the calibration view — progress dots, never raw '
+    'numbers (PRD M5.5)',
+    (tester) async {
+      final fake =
+          _FakeDataSource(classification: Phase5Classification.trueAscension);
+      final controller = ReassessmentController(
+        loopId: 'loop-1',
+        window: ReassessmentWindow.window3,
+        dataSource: fake,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ReassessmentFlow(
+            loopId: 'loop-1',
+            window: ReassessmentWindow.window3,
+            controller: controller,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await _submitMainFlow(tester);
+
+      // The closing screen renders the read-back calibration change.
+      expect(find.text('Three weeks later, it holds'), findsOneWidget);
+      expect(find.text('Verified climb'), findsOneWidget);
+      final dots = tester.widget<ProgressDots>(find.byType(ProgressDots));
+      expect(dots.filled, 2);
+      expect(dots.total, flowGateLoops);
+
+      // Mechanic-free: no raw calibration numbers, and no digit anywhere on
+      // the closing screen.
+      for (final text
+          in tester.widgetList<Text>(find.byType(Text, skipOffstage: false))) {
+        expect(
+          text.data ?? '',
+          isNot(matches(RegExp(r'\d'))),
+          reason: 'closing screen must never render raw numbers',
+        );
+      }
+      expect(fake.calls, contains('fetchCalibration'));
     },
   );
 }

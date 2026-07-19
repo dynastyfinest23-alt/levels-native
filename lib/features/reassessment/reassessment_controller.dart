@@ -5,6 +5,7 @@ import 'reassessment_questions.dart'
     show Q3BlockFlag, RediagFeeling, RediagPattern, RediagResistance;
 import 'reassessment_tokens.dart';
 import '../assessment/scoring.dart' show P1Answer;
+import '../journey/journey_repository.dart' show UserCalibration;
 
 /// Authoritative Phase 5 outcome, read back from the database after the
 /// processing RPC runs. Never constructed from client math (CLAUDE.md:
@@ -21,6 +22,7 @@ class ReassessmentResult {
     required this.classification,
     required this.routingOutcome,
     this.rediagClassification,
+    this.calibration,
   });
 
   final String reassessmentId;
@@ -34,6 +36,20 @@ class ReassessmentResult {
   /// `pg_enum` dump lands, replace this with a throwing mirror like
   /// [Phase5Classification].
   final String? rediagClassification;
+
+  /// The `user_calibration` row as `process_window3_durability` left it
+  /// (Window 3 only, PRD M5.5). Read back after the RPC — the closing
+  /// screen renders this, never client math.
+  final UserCalibration? calibration;
+
+  ReassessmentResult withCalibration(UserCalibration calibration) =>
+      ReassessmentResult(
+        reassessmentId: reassessmentId,
+        classification: classification,
+        routingOutcome: routingOutcome,
+        rediagClassification: rediagClassification,
+        calibration: calibration,
+      );
 }
 
 /// Seam over the Supabase calls [ReassessmentController] makes, so the
@@ -78,6 +94,12 @@ abstract class ReassessmentDataSource {
   /// the controller right after a read-back says `new_loop` — the DB
   /// decided, the client persists the consequence.
   Future<void> markLoopComplete(String loopId);
+
+  /// Reads the caller's `user_calibration` row (written ONLY by DB
+  /// functions — the client never writes it). Used by the Window 3 submit
+  /// path after `process_window3_durability` runs (PRD M5.5). Null when no
+  /// calibration row exists yet.
+  Future<UserCalibration?> fetchCalibration();
 }
 
 /// Real implementation, talking straight to the deployed schema/RPC.
@@ -186,6 +208,30 @@ class SupabaseReassessmentDataSource implements ReassessmentDataSource {
   Future<void> markLoopComplete(String loopId) => _client
       .from('ascension_loops')
       .update({'status': 'complete'}).eq('id', loopId);
+
+  @override
+  Future<UserCalibration?> fetchCalibration() async {
+    final user = _client.auth.currentUser;
+    if (user == null) {
+      throw StateError('No active session. Please sign in again.');
+    }
+    final row = await _client
+        .from('user_calibration')
+        .select(
+          'calibrated_level, verified_floor, consecutive_verified_loops, '
+          'peak_level, flow_resident',
+        )
+        .eq('user_id', user.id)
+        .maybeSingle();
+    if (row == null) return null;
+    return UserCalibration(
+      calibratedLevel: (row['calibrated_level'] as num).toDouble(),
+      verifiedFloor: (row['verified_floor'] as num).toDouble(),
+      consecutiveVerifiedLoops: row['consecutive_verified_loops'] as int,
+      peakLevel: (row['peak_level'] as num).toDouble(),
+      flowResident: row['flow_resident'] as bool,
+    );
+  }
 }
 
 /// Single typed state object for the reassessment: Q1, Q2, Q3 answers, one
@@ -300,6 +346,19 @@ class ReassessmentController extends ChangeNotifier {
           'process_phase5_reassessment returned without writing '
           'classification/routing to the row.',
         );
+      }
+      if (window == ReassessmentWindow.window3) {
+        // Window 3's result IS the calibration change (PRD M5.5) — read it
+        // back after the RPC, loud if the row is missing.
+        final calibration = await _dataSource.fetchCalibration();
+        if (calibration == null) {
+          throw StateError(
+            'process_window3_durability returned without a calibration row.',
+          );
+        }
+        final withCalibration = result.withCalibration(calibration);
+        await _completeLoopIfRouted(withCalibration);
+        return withCalibration;
       }
       await _completeLoopIfRouted(result);
       return result;

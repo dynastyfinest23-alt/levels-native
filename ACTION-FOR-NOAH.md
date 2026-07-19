@@ -318,3 +318,27 @@ blind:
    practice", "Start a fresh drill", "Your check-in opens soon", "Take your
    check-in"), same standing as the M4.5 status states — not
    content-gate-reviewed narrative.
+
+## M5.5 Window 3 flow — manual day-21 run pending (2026-07-19)
+
+Built the Window 3 durability flow on `kimi/m5`: same three questions with
+`window_number = 'window_3'`, `process_window3_durability` RPC, read-back of
+both the reassessment row and `user_calibration`, and a closing screen that
+renders the calibration change as progress dots (shared
+`ProgressDots`/`flowGateLoops` widget, extracted from the hub's calibration
+strip) with copy framing Flow as earned loop by loop. The gate requires
+`window3Open` and no existing Window 3 row.
+
+**The PRD M5.5 done-when manual run is still pending**, same as M5.2's: it
+needs a day-21 test loop (backdating `ascension_loops.started_at` requires
+your approval each time) showing the hub's calibration display update after
+the durability check. Unit/widget tests pin the submit order and the
+mechanic-free rendering (a no-digits-anywhere assertion on the closing
+screen), but per the definition of done they do not substitute for the
+manual run.
+
+Assumption flagged: whether `process_window3_durability` also writes
+`classification`/`routing_outcome` to the reassessment row is unverifiable
+from this repo — the closing screen deliberately depends only on
+`user_calibration`, and the row's classification fields are treated as
+nullable, so either deployed behavior works.

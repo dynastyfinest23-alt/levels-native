@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:levels_native/features/assessment/scoring.dart';
+import 'package:levels_native/features/journey/journey_repository.dart'
+    show UserCalibration;
 import 'package:levels_native/features/reassessment/reassessment_controller.dart';
 import 'package:levels_native/features/reassessment/reassessment_questions.dart'
     show
@@ -101,6 +103,21 @@ class _FakeReassessmentDataSource implements ReassessmentDataSource {
   Future<void> markLoopComplete(String loopId) async {
     calls.add('markLoopComplete');
     completedLoops.add(loopId);
+  }
+
+  /// What the fake `user_calibration` row reads back (Window 3).
+  UserCalibration? calibration = const UserCalibration(
+    calibratedLevel: 380.5,
+    verifiedFloor: 320,
+    consecutiveVerifiedLoops: 2,
+    peakLevel: 400,
+    flowResident: false,
+  );
+
+  @override
+  Future<UserCalibration?> fetchCalibration() async {
+    calls.add('fetchCalibration');
+    return calibration;
   }
 }
 
@@ -268,6 +285,57 @@ void main() {
         throwsStateError,
       );
       expect(fake.calls, isNot(contains('routeFalsePositive')));
+    });
+  });
+
+  group('ReassessmentController.submit — Window 3 (PRD M5.5)', () {
+    test('runs insert -> process_window3 -> read-back -> calibration, in '
+        'order', () async {
+      final fake = _FakeReassessmentDataSource();
+      final controller =
+          _answeredController(fake, window: ReassessmentWindow.window3);
+
+      await controller.submit();
+
+      expect(fake.calls, [
+        'insertReassessment',
+        'processReassessment',
+        'fetchResult',
+        'fetchCalibration',
+      ]);
+      expect(fake.processed['window'], ReassessmentWindow.window3);
+    });
+
+    test('inserts window_3 as the window_number', () async {
+      final fake = _FakeReassessmentDataSource();
+      final controller =
+          _answeredController(fake, window: ReassessmentWindow.window3);
+
+      await controller.submit();
+
+      expect(fake.inserted['window_number'], 'window_3');
+    });
+
+    test('the result carries the calibration from the read-back row only',
+        () async {
+      final fake = _FakeReassessmentDataSource();
+      final controller =
+          _answeredController(fake, window: ReassessmentWindow.window3);
+
+      final result = await controller.submit();
+
+      expect(result.calibration, isNotNull);
+      expect(result.calibration!.consecutiveVerifiedLoops, 2);
+      expect(result.calibration!.verifiedFloor, 320);
+      expect(result.calibration!.flowResident, isFalse);
+    });
+
+    test('throws when no calibration row reads back', () async {
+      final fake = _FakeReassessmentDataSource()..calibration = null;
+      final controller =
+          _answeredController(fake, window: ReassessmentWindow.window3);
+
+      await expectLater(controller.submit(), throwsStateError);
     });
   });
 

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/design_tokens.dart';
 import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
+import '../../core/widgets/progress_dots.dart';
 import '../journey/journey_repository.dart';
 import '../journey/loop_state.dart';
 import '../reassessment/routing.dart';
@@ -272,12 +273,6 @@ class _HubBody extends StatelessWidget {
   }
 }
 
-/// Loops of accumulated verification needed before Flow-band framing opens
-/// (CLAUDE.md "Flow reachability", FLOW_GATE). Sizes the progress dots below
-/// only — never rendered as a number (CLAUDE.md: copy never mentions
-/// numbers, scores, or zone names as mechanics).
-const _flowGate = 3;
-
 /// design-system/MASTER.md §6 calibration strip: `caption` type on
 /// `surface`, no glass, no glow — an instrument readout, deliberately quiet.
 ///
@@ -291,9 +286,9 @@ class _CalibrationStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final loopsVerified = calibration.consecutiveVerifiedLoops < _flowGate
+    final loopsVerified = calibration.consecutiveVerifiedLoops < flowGateLoops
         ? calibration.consecutiveVerifiedLoops
-        : _flowGate;
+        : flowGateLoops;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(LevelsSpace.space16),
@@ -310,38 +305,11 @@ class _CalibrationStrip extends StatelessWidget {
             children: [
               Text('Verified climb', style: LevelsType.caption),
               const SizedBox(width: LevelsSpace.space8),
-              _ProgressDots(filled: loopsVerified, total: _flowGate),
+              ProgressDots(filled: loopsVerified, total: flowGateLoops),
             ],
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ProgressDots extends StatelessWidget {
-  const _ProgressDots({required this.filled, required this.total});
-
-  final int filled;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(total, (i) {
-        return Container(
-          margin: const EdgeInsets.only(right: LevelsSpace.space4),
-          width: 6,
-          height: 6,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: i < filled
-                ? LevelsColors.neutralAccent
-                : LevelsColors.textFaint,
-          ),
-        );
-      }),
     );
   }
 }

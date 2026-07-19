@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/design_tokens.dart';
 import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
+import '../../core/widgets/progress_dots.dart';
+import '../../core/zone_style.dart';
+import '../assessment/scoring.dart' show EnergyZone;
 import '../journey/journey_repository.dart';
 import 'reassessment_controller.dart';
 import 'reassessment_questions.dart';
@@ -67,7 +70,8 @@ class _ReassessmentScreenState extends State<ReassessmentScreen> {
     if (data == null || data.loopId != widget.loopId) return false;
     return switch (widget.window) {
       ReassessmentWindow.window2 => _window2GateOpen(data),
-      ReassessmentWindow.window3 => data.loopState.window3Open,
+      ReassessmentWindow.window3 =>
+        data.loopState.window3Open && !data.hasWindow3Reassessment,
     };
   }
 
@@ -238,6 +242,11 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
       builder: (context, _) {
         final result = _result;
         if (result != null) {
+          // Window 3 closes the loop: its result view is the calibration
+          // change (PRD M5.5), not the classification/routing panel.
+          if (widget.window == ReassessmentWindow.window3) {
+            return _ClosingView(result: result);
+          }
           return _ResultView(
             result: result,
             afterRediag: _finishedRediag,
@@ -591,11 +600,84 @@ class _ResultView extends StatelessWidget {
   }
 }
 
+/// The loop's closing screen (PRD M5.5): renders the `user_calibration`
+/// change from the read-back row, mechanic-free. Verification progress is
+/// progress dots — never raw floor/loop numbers — and the copy frames Flow
+/// as earned across verified loops, never reachable from one assessment
+/// (CLAUDE.md Flow reachability + tone rules).
+class _ClosingView extends StatelessWidget {
+  const _ClosingView({required this.result});
+
+  final ReassessmentResult result;
+
+  @override
+  Widget build(BuildContext context) {
+    final calibration = result.calibration;
+    if (calibration == null) {
+      // The controller's Window 3 submit path already throws in this case;
+      // fail loudly here too rather than rendering a blank celebration.
+      throw StateError('Window 3 result is missing its calibration row.');
+    }
+    final loopsVerified =
+        calibration.consecutiveVerifiedLoops < flowGateLoops
+            ? calibration.consecutiveVerifiedLoops
+            : flowGateLoops;
+    final body = calibration.flowResident
+        ? '${ZoneStyle.of(EnergyZone.flow).displayName} is no longer '
+            'somewhere you visit. It is where you live now, and it was '
+            'earned loop by loop.'
+        : 'This is what durable change looks like. Not one good week, but '
+            'ground that stays under you. The highest states on the climb '
+            'open only to proof like this, earned loop by loop, never to a '
+            'single assessment.';
+    return SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints:
+              const BoxConstraints(maxWidth: LevelsSpace.contentMaxWidth),
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.symmetric(
+              horizontal: LevelsSpace.screenGutter,
+              vertical: LevelsSpace.space32,
+            ),
+            children: [
+              Text('Three weeks later, it holds',
+                  style: LevelsType.displayTitle),
+              const SizedBox(height: LevelsSpace.space16),
+              Text(
+                body,
+                style:
+                    LevelsType.body.copyWith(color: LevelsColors.textSecondary),
+              ),
+              const SizedBox(height: LevelsSpace.space32),
+              Row(
+                children: [
+                  Text('Verified climb', style: LevelsType.caption),
+                  const SizedBox(width: LevelsSpace.space8),
+                  ProgressDots(filled: loopsVerified, total: flowGateLoops),
+                ],
+              ),
+              const SizedBox(height: LevelsSpace.space32),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => context.go('/'),
+                  child: const Text('Back to home'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Shown when the window is not open for this loop (wrong loop, wrong day,
 /// or already answered). Functional chrome copy, same register as the
 /// coming-soon placeholders.
-class _GateClosedView extends StatelessWidget {
-  const _GateClosedView();
+class _GateClosedView extends StatelessWidget {  const _GateClosedView();
 
   @override
   Widget build(BuildContext context) {
