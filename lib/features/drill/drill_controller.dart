@@ -26,7 +26,12 @@ abstract class DrillDataSource {
   /// drill runs at deepest + 1.
   Future<int?> fetchDeepestLayer(String loopId);
 
-  Future<String> insertDrill({
+  /// Writes the loop's drill row and returns its id. `one_drill_per_loop`
+  /// UNIQUE(loop_id) is enforced in production (verified 2026-07-19 — a
+  /// second insert for the same loop is a 409), so deepening and
+  /// track-reassignment drills UPDATE the loop's one row (new answers, new
+  /// [deepeningLayer]) and `process_phase3_drill` re-decides the track.
+  Future<String> saveDrill({
     required String loopId,
     required OriginType originType,
     required OriginDomain originDomain,
@@ -76,7 +81,7 @@ class SupabaseDrillDataSource implements DrillDataSource {
   }
 
   @override
-  Future<String> insertDrill({
+  Future<String> saveDrill({
     required String loopId,
     required OriginType originType,
     required OriginDomain originDomain,
@@ -91,19 +96,30 @@ class SupabaseDrillDataSource implements DrillDataSource {
       // The auth gate should make this unreachable; fail loudly if it isn't.
       throw StateError('No active session. Please sign in again.');
     }
+    final answers = {
+      'q1_origin_type': originType.token,
+      'q2_domain': originDomain.token,
+      'q3_mechanism': copingMechanism.token,
+      'q1_free_text': q1FreeText,
+      'q2_free_text': q2FreeText,
+      'q3_free_text': q3FreeText,
+      'deepening_layer': deepeningLayer,
+    };
+    // one_drill_per_loop (verified against production 2026-07-19): update
+    // the loop's existing row, insert only when there is none.
+    final existing = await _client
+        .from('phase3_origin_drills')
+        .select('id')
+        .eq('loop_id', loopId)
+        .maybeSingle();
+    if (existing != null) {
+      final id = existing['id'] as String;
+      await _client.from('phase3_origin_drills').update(answers).eq('id', id);
+      return id;
+    }
     final drill = await _client
         .from('phase3_origin_drills')
-        .insert({
-          'loop_id': loopId,
-          'user_id': user.id,
-          'q1_origin_type': originType.token,
-          'q2_domain': originDomain.token,
-          'q3_mechanism': copingMechanism.token,
-          'q1_free_text': q1FreeText,
-          'q2_free_text': q2FreeText,
-          'q3_free_text': q3FreeText,
-          'deepening_layer': deepeningLayer,
-        })
+        .insert({'loop_id': loopId, 'user_id': user.id, ...answers})
         .select('id')
         .single();
     return drill['id'] as String;
@@ -253,7 +269,7 @@ class DrillController extends ChangeNotifier {
     _submitting = true;
     notifyListeners();
     try {
-      final drillId = await _dataSource.insertDrill(
+      final drillId = await _dataSource.saveDrill(
         loopId: loopId,
         originType: _originType!,
         originDomain: _originDomain!,

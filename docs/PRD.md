@@ -717,6 +717,12 @@ and approver line. A chat message or session summary is evidence, not
 closure.**
 
 **Gotchas already paid for (don't rediscover):**
+- `one_window_per_loop` UNIQUE(loop_id, window_number) and
+  `one_drill_per_loop` UNIQUE(loop_id) are enforced in production (verified
+  live 2026-07-19 — a second INSERT is a 409). Retests and
+  deepening/track-reassignment drills UPDATE the loop's existing row and
+  re-run the processing RPC, which recomputes and overwrites every derived
+  column from its arguments.
 - `ascension_loops.started_at` is the only clock; windows are day 5–7 and
   day ≥ 21, computed in pure Dart (`LoopState`) so they're testable.
 - `phase2_dashboard_views` is written by the Edge Function (service role);

@@ -29,19 +29,33 @@ class _FakeReassessmentDataSource implements ReassessmentDataSource {
   RediagClassification? readBackRediagClassification;
 
   final Map<String, dynamic> rediag = {};
+
+  /// One row per (loopId, window), mirroring production's
+  /// `one_window_per_loop` UNIQUE constraint (verified 2026-07-19).
+  final Map<String, String> rowIdsByKey = {};
+  final List<String> resetRowIds = [];
   int _nextId = 1;
 
   @override
-  Future<String> insertReassessment({
+  Future<String> insertOrResetReassessment({
     required String loopId,
     required ReassessmentWindow window,
   }) async {
+    final key = '$loopId/${window.token}';
+    final existing = rowIdsByKey[key];
+    if (existing != null) {
+      calls.add('resetReassessment');
+      resetRowIds.add(existing);
+      return existing;
+    }
     calls.add('insertReassessment');
     inserted.addAll({
       'loop_id': loopId,
       'window_number': window.token,
     });
-    return 'reassessment-${_nextId++}';
+    final id = 'reassessment-${_nextId++}';
+    rowIdsByKey[key] = id;
+    return id;
   }
 
   @override
@@ -149,6 +163,24 @@ void main() {
         'loop_id': 'loop-1',
         'window_number': 'window_2',
       });
+    });
+
+    test("a retest resets the loop's one window_2 row instead of inserting "
+        'a second (one_window_per_loop, verified 2026-07-19)', () async {
+      final fake = _FakeReassessmentDataSource();
+      final first = _answeredController(fake);
+      await first.submit();
+
+      final retest = _answeredController(fake);
+      await retest.submit();
+
+      expect(fake.rowIdsByKey.length, 1);
+      expect(fake.resetRowIds, ['reassessment-1']);
+      expect(fake.processed['reassessment_id'], 'reassessment-1');
+      expect(
+        fake.calls.where((c) => c == 'insertReassessment').length,
+        1,
+      );
     });
 
     test('processes the inserted row with the same answers', () async {

@@ -17,7 +17,7 @@ class _FakeDataSource implements ReassessmentDataSource {
   final List<String> calls = [];
 
   @override
-  Future<String> insertReassessment({
+  Future<String> insertOrResetReassessment({
     required String loopId,
     required ReassessmentWindow window,
   }) async {

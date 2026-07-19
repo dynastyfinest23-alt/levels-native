@@ -390,3 +390,50 @@ Also resolved by the dump:
 **Still pending:** the two manual runs (day-5 Window 2, day-21 Window 3)
 with your approved `started_at` backdates. Note Docker Desktop was started
 on this machine for the dump and left running.
+
+## Phase 5 API-level verification against production — ALL PASS (2026-07-19)
+
+With the schema-dump fixes in place, the full client contract was exercised
+against production via PostgREST + RPC with a fresh test user's own JWT
+(RLS-scoped, publishable key only — the exact calls the Flutter client
+makes). Round 1 (14/18) surfaced one more real bug the dump-reading had
+missed; round 2 (11/11) passed everything.
+
+**Bug 4 — `one_window_per_loop` UNIQUE(loop_id, window_number).** The M5.4
+retest design assumed a retest could insert a second `window_2` row; the
+insert 409'd live. The constraint WAS in the dump — my earlier grep missed
+it (the "no unique constraint" claim in the previous entry was wrong, and
+this correction supersedes it). Fixed: a retest now resets
+`administered_at` on the loop's one row and re-runs
+`process_phase5_reassessment`, which overwrites every computed column.
+Verified live: same row id, clock reset, `false_positive` reclassified to
+`true_ascension`/`new_loop` on the retest.
+
+**Bug 5 — `one_drill_per_loop` UNIQUE(loop_id).** Same shape: M5.4's
+deepening/track-reassignment drills would have 409'd on a second drill
+insert. Fixed: `DrillController` now updates the loop's one drill row (new
+answers, resolved `deepening_layer`) and re-runs `process_phase3_drill`.
+Verified live: `deepening_layer` 1 -> 2 on the same row, `assigned_protocol`
+recomputed, no 409.
+
+Round-2 trail (test account `m52-api-verify2-1784500982739@example.com`):
+window2 false_positive/retest_scheduled read back with deltas
+(-175/-175/-175); rediag -> reclassify_residual + track_reassignment;
+retest row reuse + clock reset + reclassification; loop auto-completed by
+the RPC itself (`status=complete`, `completed_at`, `exit_score=442.5`,
+`exit_zone=builder` — confirms removing the client `markLoopComplete` was
+right); drill deepening update path; window3 durability (classification
+written, `routing_outcome` null as the client assumes); `user_calibration`
+read back after the durability engine ran.
+
+**Test accounts to add to the cleanup pass** (same orphaned-`auth.users`
+reasoning as M3.4/M4.x): `m52-api-verify-1784500478699@example.com` and
+`m52-api-verify-1784500482929@example.com` (round 1 ran twice due to a
+shell `||` misfire), `m52-repro-1784500960533@example.com` (409 repro),
+`m52-api-verify2-1784500982739@example.com` (round 2).
+
+**Still pending:** the browser-level manual runs (day-5 Window 2, day-21
+Window 3 with your approved `started_at` backdates) covering the UI gating
+and rendering end to end. The backend contract those runs depend on is now
+verified; what remains unverified is the Flutter UI against production
+(window gates, hub states, closing screen).

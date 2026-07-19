@@ -53,12 +53,20 @@ class ReassessmentResult {
 /// insert -> RPC -> read-back submit order can be pinned by a fake without a
 /// real Supabase client (mirrors `DrillDataSource`).
 abstract class ReassessmentDataSource {
-  /// Inserts the bare row (loop, user, window). The answers are NOT written
-  /// here: the processing RPC takes them as arguments and writes them to
-  /// the row itself (`q1_trigger_answer`, `q2_body_state_answer`,
-  /// `q3_block_flag` — verified against the deployed function bodies
-  /// 2026-07-19 via a read-only schema dump).
-  Future<String> insertReassessment({
+  /// Returns the id of the loop's row for [window], creating it if needed.
+  ///
+  /// `one_window_per_loop` UNIQUE(loop_id, window_number) is enforced in
+  /// production (verified 2026-07-19 — a second insert for the same
+  /// loop+window is a 409), so a retest can never be a second row: the
+  /// existing row's `administered_at` is reset instead (restarting the
+  /// 48-hour gate clock) and the processing RPC overwrites every computed
+  /// column from its arguments.
+  ///
+  /// The answers are NOT written here: the processing RPC takes them as
+  /// arguments and writes them to the row itself (`q1_trigger_answer`,
+  /// `q2_body_state_answer`, `q3_block_flag` — verified against the
+  /// deployed function bodies 2026-07-19).
+  Future<String> insertOrResetReassessment({
     required String loopId,
     required ReassessmentWindow window,
   });
@@ -113,13 +121,29 @@ class SupabaseReassessmentDataSource implements ReassessmentDataSource {
   final SupabaseClient _client;
 
   @override
-  Future<String> insertReassessment({
+  Future<String> insertOrResetReassessment({
     required String loopId,
     required ReassessmentWindow window,
   }) async {
     final user = _client.auth.currentUser;
     if (user == null) {
       throw StateError('No active session. Please sign in again.');
+    }
+    final existing = await _client
+        .from('phase5_reassessments')
+        .select('id')
+        .eq('loop_id', loopId)
+        .eq('window_number', window.token)
+        .maybeSingle();
+    if (existing != null) {
+      // Retest: reset the gate clock on the loop's one row for this window
+      // (one_window_per_loop, verified against production 2026-07-19).
+      final id = existing['id'] as String;
+      await _client
+          .from('phase5_reassessments')
+          .update({'administered_at': DateTime.now().toIso8601String()})
+          .eq('id', id);
+      return id;
     }
     final row = await _client
         .from('phase5_reassessments')
@@ -322,7 +346,7 @@ class ReassessmentController extends ChangeNotifier {
     _submitting = true;
     notifyListeners();
     try {
-      final reassessmentId = await _dataSource.insertReassessment(
+      final reassessmentId = await _dataSource.insertOrResetReassessment(
         loopId: loopId,
         window: window,
       );
