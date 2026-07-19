@@ -29,13 +29,10 @@ class ReassessmentResult {
   final Phase5Classification? classification;
   final RoutingOutcome? routingOutcome;
 
-  /// The raw `rediag_classification` token after `route_false_positive`
-  /// runs. Carried, never rendered: the enum's value set is not documented
-  /// anywhere in this repo (flagged in ACTION-FOR-NOAH.md 2026-07-19), so no
-  /// typed display lookup can be built without inventing schema. When the
-  /// `pg_enum` dump lands, replace this with a throwing mirror like
-  /// [Phase5Classification].
-  final String? rediagClassification;
+  /// The `rediag_classification` after `route_false_positive` runs, parsed
+  /// through the throwing mirror in reassessment_tokens.dart (enum values
+  /// verified against production 2026-07-19 via a read-only schema dump).
+  final RediagClassification? rediagClassification;
 
   /// The `user_calibration` row as `process_window3_durability` left it
   /// (Window 3 only, PRD M5.5). Read back after the RPC — the closing
@@ -56,12 +53,14 @@ class ReassessmentResult {
 /// insert -> RPC -> read-back submit order can be pinned by a fake without a
 /// real Supabase client (mirrors `DrillDataSource`).
 abstract class ReassessmentDataSource {
+  /// Inserts the bare row (loop, user, window). The answers are NOT written
+  /// here: the processing RPC takes them as arguments and writes them to
+  /// the row itself (`q1_trigger_answer`, `q2_body_state_answer`,
+  /// `q3_block_flag` — verified against the deployed function bodies
+  /// 2026-07-19 via a read-only schema dump).
   Future<String> insertReassessment({
     required String loopId,
     required ReassessmentWindow window,
-    required String q1Answer,
-    required String q2Answer,
-    required String q3Flag,
   });
 
   /// Dispatches to the window's processing RPC
@@ -80,7 +79,8 @@ abstract class ReassessmentDataSource {
 
   /// `route_false_positive` — the false-positive re-diagnosis (PRD M5.3).
   /// Writes the rediag columns, `rediag_classification`, and the resulting
-  /// `routing_outcome` to the same row.
+  /// `routing_outcome` to the same row (always `track_reassignment` per the
+  /// deployed body, verified 2026-07-19).
   Future<void> routeFalsePositive({
     required String reassessmentId,
     required String resistance,
@@ -89,18 +89,21 @@ abstract class ReassessmentDataSource {
     String? freeText,
   });
 
-  /// Carries out the `new_loop` routing outcome (PRD M5.4): marks the loop
-  /// `complete` so the hub and [LoopState] treat it as closed. Called by
-  /// the controller right after a read-back says `new_loop` — the DB
-  /// decided, the client persists the consequence.
-  Future<void> markLoopComplete(String loopId);
-
   /// Reads the caller's `user_calibration` row (written ONLY by DB
   /// functions — the client never writes it). Used by the Window 3 submit
   /// path after `process_window3_durability` runs (PRD M5.5). Null when no
   /// calibration row exists yet.
   Future<UserCalibration?> fetchCalibration();
 }
+
+/// NOTE on `new_loop` (PRD M5.4): there is deliberately no client-side
+/// "mark loop complete" write. The deployed `process_phase5_reassessment`
+/// already persists the full consequence on `true_ascension` (loop
+/// `status = 'complete'`, `completed_at`, `exit_score`, `exit_zone`), and
+/// `route_false_positive` never returns `new_loop` — both verified against
+/// production 2026-07-19 via a read-only schema dump. A client UPDATE would
+/// be a redundant no-op that could only ever write an *incomplete* version
+/// of the same fact (status without the exit data).
 
 /// Real implementation, talking straight to the deployed schema/RPC.
 class SupabaseReassessmentDataSource implements ReassessmentDataSource {
@@ -113,9 +116,6 @@ class SupabaseReassessmentDataSource implements ReassessmentDataSource {
   Future<String> insertReassessment({
     required String loopId,
     required ReassessmentWindow window,
-    required String q1Answer,
-    required String q2Answer,
-    required String q3Flag,
   }) async {
     final user = _client.auth.currentUser;
     if (user == null) {
@@ -127,9 +127,6 @@ class SupabaseReassessmentDataSource implements ReassessmentDataSource {
           'loop_id': loopId,
           'user_id': user.id,
           'window_number': window.token,
-          'q1_answer': q1Answer,
-          'q2_answer': q2Answer,
-          'q3_block_flag': q3Flag,
         })
         .select('id')
         .single();
@@ -178,7 +175,11 @@ class SupabaseReassessmentDataSource implements ReassessmentDataSource {
           : Phase5Classification.fromToken(classification),
       routingOutcome:
           routingOutcome == null ? null : RoutingOutcome.fromToken(routingOutcome),
-      rediagClassification: row['rediag_classification'] as String?,
+      rediagClassification: row['rediag_classification'] == null
+          ? null
+          : RediagClassification.fromToken(
+              row['rediag_classification'] as String,
+            ),
     );
   }
 
@@ -193,21 +194,17 @@ class SupabaseReassessmentDataSource implements ReassessmentDataSource {
       _client.rpc<void>(
         'route_false_positive',
         params: {
+          // Exact deployed signature, verified against production 2026-07-19
+          // (read-only schema dump): p_reassessment_id, p_resistance,
+          // p_feeling, p_pattern, p_free_text DEFAULT NULL.
           'p_reassessment_id': reassessmentId,
-          // Arg names as written in the PRD §2 signature (no p_ prefix,
-          // unlike the processing RPCs) — flagged in ACTION-FOR-NOAH.md.
-          'rediag_resistance': resistance,
-          'rediag_feeling': feeling,
-          'rediag_pattern': pattern,
+          'p_resistance': resistance,
+          'p_feeling': feeling,
+          'p_pattern': pattern,
           // Optional arg: omitted entirely when the user left it blank.
-          'free_text': ?freeText,
+          'p_free_text': ?freeText,
         },
       );
-
-  @override
-  Future<void> markLoopComplete(String loopId) => _client
-      .from('ascension_loops')
-      .update({'status': 'complete'}).eq('id', loopId);
 
   @override
   Future<UserCalibration?> fetchCalibration() async {
@@ -328,9 +325,6 @@ class ReassessmentController extends ChangeNotifier {
       final reassessmentId = await _dataSource.insertReassessment(
         loopId: loopId,
         window: window,
-        q1Answer: _q1Answer!.token,
-        q2Answer: _q2Answer!.token,
-        q3Flag: _q3Answer!.token,
       );
       await _dataSource.processReassessment(
         window: window,
@@ -356,24 +350,12 @@ class ReassessmentController extends ChangeNotifier {
             'process_window3_durability returned without a calibration row.',
           );
         }
-        final withCalibration = result.withCalibration(calibration);
-        await _completeLoopIfRouted(withCalibration);
-        return withCalibration;
+        return result.withCalibration(calibration);
       }
-      await _completeLoopIfRouted(result);
       return result;
     } finally {
       _submitting = false;
       notifyListeners();
-    }
-  }
-
-  /// The `new_loop` consequence (PRD M5.4): once the read-back row routes
-  /// to a new loop, the current one is marked complete. Applies to both
-  /// submit paths — a rediag that ends at `new_loop` closes the loop too.
-  Future<void> _completeLoopIfRouted(ReassessmentResult result) async {
-    if (result.routingOutcome == RoutingOutcome.newLoop) {
-      await _dataSource.markLoopComplete(loopId);
     }
   }
 
@@ -397,9 +379,7 @@ class ReassessmentController extends ChangeNotifier {
         pattern: _rediagPattern!.token,
         freeText: freeText.isEmpty ? null : freeText,
       );
-      final result = await _dataSource.fetchResult(reassessmentId);
-      await _completeLoopIfRouted(result);
-      return result;
+      return await _dataSource.fetchResult(reassessmentId);
     } finally {
       _submitting = false;
       notifyListeners();

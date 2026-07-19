@@ -221,7 +221,7 @@ class _HubBody extends StatelessWidget {
       final followUp = hubFollowUpFor(
         w2!.routingOutcome!,
         retestOpen: retestGateOpen(
-          reassessedAt: w2.createdAt,
+          reassessedAt: w2.administeredAt,
           now: DateTime.now(),
         ),
       );

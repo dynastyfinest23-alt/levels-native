@@ -117,13 +117,22 @@ Only the columns the client touches are listed; all tables also carry
 - **`phase5_reassessments`**: `loop_id`, `window_number
   reassessment_window` (`window_1`/`window_2`/`window_3` — this build uses
   only `window_2` (Day 5–7) and `window_3` (Day 21); `window_1` is unused,
-  never write it), q1/q2 answer+score+delta columns, `q3_block_flag
+  never write it), `administered_at` (**the timestamp column — there is no
+  `created_at`**), `q1_trigger_answer`/`q1_new_score`/`q1_original_score`/
+  `q1_delta`, `q2_body_state_answer`/`q2_new_score`/`q2_original_score`/
+  `q2_delta` (**column names corrected 2026-07-19 — verified live via a
+  read-only `supabase db dump --linked`; the processing RPC writes all
+  answer/score/delta columns itself, so the client insert carries only
+  `loop_id`, `user_id`, `window_number`**), `q3_block_flag
   q3_block_flag` (`regression`/`movement`/`ascension`), `combined_delta`,
   `classification`, `routing_outcome`, and the rediag columns
   `rediag_q1_resistance rediag_resistance` (`specific`/`general`/`none`),
   `rediag_q2_feeling rediag_feeling` (`relief`/`satisfaction`/`flatness`/
   `skepticism`), `rediag_q3_pattern rediag_pattern` (`handled_differently`/
-  `same`/`not_noticed`), `rediag_q4_free_text`, `rediag_classification`.
+  `same`/`not_noticed`), `rediag_q4_free_text`, `rediag_classification
+  rediag_classification` (`compliance_bypass`/`surface_contact`/
+  `method_mismatch`/`reclassify_residual` — enum values verified live
+  2026-07-19).
 - **`user_calibration`** (PK `user_id`): `calibrated_level`,
   `verified_floor`, `consecutive_verified_loops`, `peak_level`,
   `flow_resident`, `last_durability_at`. Written ONLY by DB functions —
@@ -138,7 +147,7 @@ Only the columns the client touches are listed; all tables also carry
 | `assign_phase4_track` | `(origin_type, origin_domain, coping_mechanism) → ascension_track` | which Phase 4 track a drill result routes to |
 | `process_phase5_reassessment` | `(p_reassessment_id uuid, p_q1_new_answer p1_answer, p_q2_new_answer p1_answer, p_q3_flag q3_block_flag) → phase5_classification` | Window 2 classification + routing (writes the row) |
 | `process_window3_durability` | `(same args) → user_calibration` | Day-21 durability + calibration update |
-| `route_false_positive` | `(p_reassessment_id, rediag_resistance, rediag_feeling, rediag_pattern, free_text?) → rediag_classification` | false-positive re-diagnosis routing |
+| `route_false_positive` | `(p_reassessment_id, p_resistance, p_feeling, p_pattern, p_free_text?) → rediag_classification` (**arg names corrected 2026-07-19 — verified live via read-only schema dump; an earlier draft of this table dropped the `p_` prefixes**) | false-positive re-diagnosis routing (always writes `routing_outcome = track_reassignment`; may rotate `ascension_loops.assigned_track`) |
 | `get_energy_guide` | `(p_score numeric) → energy_guides` | zone guidance content |
 
 ### Enum tokens the client must mirror (verified against production 2026-07-08)
@@ -626,7 +635,11 @@ record. M3 is done; M4 is next.**
    and resulting `routing_outcome` from the row. Done when: test pins that
    the rediag screens only mount on `false_positive`.
 4. **M5.4 — Routing outcomes.** Implement all four destinations:
-   `new_loop` → mark loop complete, CTA to new assessment;
+   `new_loop` → mark loop complete, CTA to new assessment (**corrected
+   2026-07-19 — verified live: the deployed `process_phase5_reassessment`
+   already writes `status = 'complete'` + `completed_at` + exit score/zone
+   on `true_ascension`, and `route_false_positive` never returns
+   `new_loop`; the client performs no loop write, it only routes**);
    `deepening_protocol` → `/drill` with `deepening_layer + 1`;
    `track_reassignment` → `/drill` fresh; `retest_scheduled` → gated
    48-hour retest state on the hub. Done when: each outcome is reachable in

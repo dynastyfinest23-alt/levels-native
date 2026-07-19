@@ -62,11 +62,15 @@ class JourneyData {
 class Window2Reassessment {
   const Window2Reassessment({
     required this.routingOutcome,
-    required this.createdAt,
+    required this.administeredAt,
   });
 
   final RoutingOutcome? routingOutcome;
-  final DateTime createdAt;
+
+  /// The row's `administered_at` — the clock the 48-hour retest gate runs
+  /// from (column name verified against production 2026-07-19 via a
+  /// read-only schema dump; the table has no `created_at`).
+  final DateTime administeredAt;
 }
 
 /// Home hub's view of the loop's track session (PRD M4.6): which track,
@@ -142,12 +146,12 @@ class JourneyRepository {
           .maybeSingle(),
       _client
           .from('phase5_reassessments')
-          .select('id, routing_outcome, created_at')
+          .select('id, routing_outcome, administered_at')
           .eq('loop_id', loopId)
           .eq('window_number', 'window_2')
           // A retest (M5.4) inserts a second Window 2 row; the hub and the
           // reassessment gate always act on the latest one.
-          .order('created_at', ascending: false)
+          .order('administered_at', ascending: false)
           .limit(1)
           .maybeSingle(),
       _client
@@ -155,7 +159,7 @@ class JourneyRepository {
           .select('id')
           .eq('loop_id', loopId)
           .eq('window_number', 'window_3')
-          .order('created_at', ascending: false)
+          .order('administered_at', ascending: false)
           .limit(1)
           .maybeSingle(),
       _client
@@ -214,7 +218,8 @@ class JourneyRepository {
                   : RoutingOutcome.fromToken(
                       window2Row['routing_outcome'] as String,
                     ),
-              createdAt: DateTime.parse(window2Row['created_at'] as String),
+              administeredAt:
+                  DateTime.parse(window2Row['administered_at'] as String),
             ),
       hasWindow3Reassessment: rows[4] != null,
     );

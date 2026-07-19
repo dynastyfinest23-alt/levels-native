@@ -342,3 +342,51 @@ Assumption flagged: whether `process_window3_durability` also writes
 from this repo — the closing screen deliberately depends only on
 `user_calibration`, and the row's classification fields are treated as
 nullable, so either deployed behavior works.
+
+## Phase 5 client verified against production — three real bugs found and fixed (2026-07-19)
+
+No Supabase MCP tools were connected in the executor session, so the blind
+spots were verified a different read-only way: started Docker Desktop and
+ran `npx supabase db dump --linked --schema public` (pure read; nothing was
+written to production). The dumped DDL answered every open assumption from
+the M5.2–M5.5 flags, and three of them were live bugs:
+
+1. **Insert columns were wrong.** The M5.2 client inserted `q1_answer` /
+   `q2_answer` / `q3_block_flag` — none of the answer columns exist under
+   those names (real: `q1_trigger_answer`, `q2_body_state_answer`; all
+   answer/score/delta columns are written by the processing RPC itself).
+   The insert now carries only `loop_id`, `user_id`, `window_number`.
+2. **`created_at` does not exist on `phase5_reassessments`** — the column
+   is `administered_at`. The hub's Window 2 query and ordering used
+   `created_at` and would have failed for every loop. Fixed everywhere
+   (repository, screen gate, hub).
+3. **`route_false_positive` arg names were wrong.** The PRD signature table
+   transcribed them unprefixed (`rediag_resistance`, …); the deployed
+   signature is `p_resistance`, `p_feeling`, `p_pattern`,
+   `p_free_text DEFAULT NULL`. The M5.3 RPC call would have 400'd. Fixed,
+   and PRD §2 corrected (production wins).
+
+Also resolved by the dump:
+
+- **`rediag_classification` enum is now mirrored** (`compliance_bypass`,
+  `surface_contact`, `method_mismatch`, `reclassify_residual`) with a
+  throwing `RediagCopy` display lookup; the post-rediag screen renders it.
+  The earlier "stored opaque, never rendered" workaround is gone.
+- **Rediag always routes `track_reassignment`** (and may rotate
+  `ascension_loops.assigned_track` server-side) — the client's post-rediag
+  CTA matches.
+- **Client `markLoopComplete` was removed.** The deployed
+  `process_phase5_reassessment` already writes `status='complete'` +
+  `completed_at` + exit score/zone on `true_ascension`, and rediag never
+  returns `new_loop`. A client UPDATE could only ever write an incomplete
+  copy of that fact. PRD M5.4's wording is corrected accordingly.
+- **No unique(loop_id, window_number) constraint exists** — the
+  second-row retest design is valid as built.
+- `loop_status` = `active`/`complete`/`stalled` (no `lapsed` value yet —
+  the lapse policy's enum addition is still future backend work).
+
+`flutter analyze` clean, `flutter test` 211/211 green after the fixes.
+
+**Still pending:** the two manual runs (day-5 Window 2, day-21 Window 3)
+with your approved `started_at` backdates. Note Docker Desktop was started
+on this machine for the dump and left running.

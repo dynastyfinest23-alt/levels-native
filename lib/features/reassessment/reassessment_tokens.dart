@@ -81,6 +81,37 @@ enum RoutingOutcome {
       );
 }
 
+/// Mirror of the `rediag_classification` enum — verified against production
+/// 2026-07-19 via a read-only `supabase db dump --linked` of the live schema
+/// (compliance_bypass, surface_contact, method_mismatch,
+/// reclassify_residual, in that enum sort order).
+///
+/// What each value means, from the deployed `route_false_positive` body
+/// (same dump): [reclassifyResidual] = behavior showed real movement
+/// despite flat scores (same track, deeper); [methodMismatch] = skepticism
+/// about the instrument (rotate the track format); [surfaceContact] =
+/// specific resistance with relief/flatness (body-first work next);
+/// [complianceBypass] = the default (the check-in did not make honest
+/// contact).
+enum RediagClassification {
+  complianceBypass('compliance_bypass'),
+  surfaceContact('surface_contact'),
+  methodMismatch('method_mismatch'),
+  reclassifyResidual('reclassify_residual');
+
+  const RediagClassification(this.token);
+  final String token;
+
+  static RediagClassification fromToken(String token) => values.firstWhere(
+        (v) => v.token == token,
+        orElse: () => throw ArgumentError.value(
+          token,
+          'token',
+          'unknown rediag_classification',
+        ),
+      );
+}
+
 /// Display copy for a [Phase5Classification]. The only path from the DB
 /// value to user-facing text — never render the raw token.
 class ClassificationCopy {
@@ -127,6 +158,62 @@ class ClassificationCopy {
           classification,
           'classification',
           'unknown Phase5Classification',
+        );
+    }
+  }
+}
+
+/// Display copy for a [RediagClassification] — the post-rediag result.
+/// Same rules as [ClassificationCopy]: the only path from the DB value to
+/// user-facing text; never render the raw token, never name a track, never
+/// shame the miss.
+class RediagCopy {
+  const RediagCopy._({required this.headline, required this.body});
+
+  final String headline;
+  final String body;
+
+  /// Throws on an unknown classification rather than rendering a blank or
+  /// a token.
+  static RediagCopy of(RediagClassification classification) {
+    switch (classification) {
+      case RediagClassification.reclassifyResidual:
+        return const RediagCopy._(
+          headline: 'The change is real',
+          body:
+              'Your scores were flat, but your behavior was not. What you '
+              'do in the moment counts more, and it says the work is '
+              'landing. The next step goes deeper on the same path.',
+        );
+      case RediagClassification.methodMismatch:
+        return const RediagCopy._(
+          headline: 'The effort was real. The fit was not.',
+          body:
+              'Nothing is wrong with you or the work you put in. A '
+              'different kind of practice will meet you better, and your '
+              'next sessions are already pointed at it.',
+        );
+      case RediagClassification.surfaceContact:
+        return const RediagCopy._(
+          headline: 'You reached the edge of it',
+          body:
+              'Part of this sits deeper than thinking can reach. The next '
+              'phase of work goes through the body instead.',
+        );
+      case RediagClassification.complianceBypass:
+        return const RediagCopy._(
+          headline: 'An honest miss',
+          body:
+              'These questions did not catch the real thing this time. '
+              'That happens. The next round is built to make contact with '
+              'it directly.',
+        );
+      // ignore: unreachable_switch_default
+      default:
+        throw ArgumentError.value(
+          classification,
+          'classification',
+          'unknown RediagClassification',
         );
     }
   }

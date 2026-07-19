@@ -20,9 +20,6 @@ class _FakeDataSource implements ReassessmentDataSource {
   Future<String> insertReassessment({
     required String loopId,
     required ReassessmentWindow window,
-    required String q1Answer,
-    required String q2Answer,
-    required String q3Flag,
   }) async {
     calls.add('insertReassessment');
     return 'reassessment-1';
@@ -42,14 +39,18 @@ class _FakeDataSource implements ReassessmentDataSource {
   @override
   Future<ReassessmentResult> fetchResult(String reassessmentId) async {
     calls.add('fetchResult');
+    final rediagRan = calls.contains('routeFalsePositive');
     return ReassessmentResult(
       reassessmentId: reassessmentId,
       classification: classification,
-      routingOutcome: RoutingOutcome.retestScheduled,
+      // Mirrors the deployed route_false_positive body (verified
+      // 2026-07-19): after rediag the row always routes to
+      // track_reassignment with a rediag_classification set.
+      routingOutcome: rediagRan
+          ? RoutingOutcome.trackReassignment
+          : RoutingOutcome.retestScheduled,
       rediagClassification:
-          classification == Phase5Classification.falsePositive
-              ? 'some_rediag_token'
-              : null,
+          rediagRan ? RediagClassification.reclassifyResidual : null,
     );
   }
 
@@ -62,11 +63,6 @@ class _FakeDataSource implements ReassessmentDataSource {
     String? freeText,
   }) async {
     calls.add('routeFalsePositive');
-  }
-
-  @override
-  Future<void> markLoopComplete(String loopId) async {
-    calls.add('markLoopComplete');
   }
 
   @override
@@ -172,7 +168,12 @@ void main() {
       await _tapButton(tester, 'Finish');
 
       expect(fake.calls, contains('routeFalsePositive'));
-      expect(find.text('Thank you'), findsOneWidget);
+      // The post-rediag view renders the typed rediag copy
+      // (reclassify_residual -> "The change is real") with the
+      // track_reassignment CTA, never a raw token.
+      expect(find.text('The change is real'), findsOneWidget);
+      expect(find.text('Start a fresh drill'), findsOneWidget);
+      expect(find.textContaining('reclassify_residual'), findsNothing);
     },
   );
 

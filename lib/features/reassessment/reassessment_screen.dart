@@ -83,7 +83,7 @@ class _ReassessmentScreenState extends State<ReassessmentScreen> {
     final w2 = data.window2Reassessment;
     if (w2 == null) return data.loopState.window2Open;
     return w2.routingOutcome == RoutingOutcome.retestScheduled &&
-        retestGateOpen(reassessedAt: w2.createdAt, now: DateTime.now());
+        retestGateOpen(reassessedAt: w2.administeredAt, now: DateTime.now());
   }
 
   @override
@@ -525,11 +525,9 @@ class _OptionCard extends StatelessWidget {
 }
 
 /// The outcome, rendered from the read-back row only (never client math).
-/// Classification text always comes through [ClassificationCopy.of] — raw
-/// tokens never reach the UI (CLAUDE.md mechanic-leak rule). After the
-/// rediag path, `rediag_classification` is deliberately NOT rendered (its
-/// enum values are undocumented — see ACTION-FOR-NOAH.md); the view falls
-/// back to a quiet acknowledgement plus the way home.
+/// Classification text always comes through [ClassificationCopy.of] /
+/// [RediagCopy.of] — raw tokens never reach the UI (CLAUDE.md mechanic-leak
+/// rule).
 class _ResultView extends StatelessWidget {
   const _ResultView({
     required this.result,
@@ -543,17 +541,26 @@ class _ResultView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final classification = result.classification;
-    final copy =
-        classification == null ? null : ClassificationCopy.of(classification);
     final String headline;
     final String body;
     if (afterRediag) {
-      headline = 'Thank you';
-      body =
-          'That gives a much clearer picture. Your home screen has the '
-          'right next step.';
+      // `route_false_positive` always writes rediag_classification (verified
+      // against the deployed body 2026-07-19); a missing value is a data
+      // error and must fail loudly, never render blank.
+      final rediag = result.rediagClassification;
+      if (rediag == null) {
+        throw StateError(
+          'Rediag result is missing its rediag_classification.',
+        );
+      }
+      final copy = RediagCopy.of(rediag);
+      headline = copy.headline;
+      body = copy.body;
     } else {
+      final classification = result.classification;
+      final copy = classification == null
+          ? null
+          : ClassificationCopy.of(classification);
       headline = copy?.headline ?? 'Check-in saved';
       body = copy?.body ??
           'Your answers are in. Head home to see what is next.';

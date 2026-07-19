@@ -26,7 +26,7 @@ class _FakeReassessmentDataSource implements ReassessmentDataSource {
   Phase5Classification? readBackClassification =
       Phase5Classification.falsePositive;
   RoutingOutcome? readBackRouting = RoutingOutcome.retestScheduled;
-  String? readBackRediagClassification;
+  RediagClassification? readBackRediagClassification;
 
   final Map<String, dynamic> rediag = {};
   int _nextId = 1;
@@ -35,17 +35,11 @@ class _FakeReassessmentDataSource implements ReassessmentDataSource {
   Future<String> insertReassessment({
     required String loopId,
     required ReassessmentWindow window,
-    required String q1Answer,
-    required String q2Answer,
-    required String q3Flag,
   }) async {
     calls.add('insertReassessment');
     inserted.addAll({
       'loop_id': loopId,
       'window_number': window.token,
-      'q1_answer': q1Answer,
-      'q2_answer': q2Answer,
-      'q3_block_flag': q3Flag,
     });
     return 'reassessment-${_nextId++}';
   }
@@ -97,14 +91,6 @@ class _FakeReassessmentDataSource implements ReassessmentDataSource {
     });
   }
 
-  final List<String> completedLoops = [];
-
-  @override
-  Future<void> markLoopComplete(String loopId) async {
-    calls.add('markLoopComplete');
-    completedLoops.add(loopId);
-  }
-
   /// What the fake `user_calibration` row reads back (Window 3).
   UserCalibration? calibration = const UserCalibration(
     calibratedLevel: 380.5,
@@ -151,7 +137,9 @@ void main() {
       );
     });
 
-    test('inserts window_2 with the three answer tokens', () async {
+    test('inserts a bare window_2 row — the answers travel via the RPC, '
+        'which writes them to the row itself (verified against the deployed '
+        'function body 2026-07-19)', () async {
       final fake = _FakeReassessmentDataSource();
       final controller = _answeredController(fake);
 
@@ -160,9 +148,6 @@ void main() {
       expect(fake.inserted, {
         'loop_id': 'loop-1',
         'window_number': 'window_2',
-        'q1_answer': 'courage',
-        'q2_answer': 'contentment',
-        'q3_block_flag': 'movement',
       });
     });
 
@@ -265,13 +250,17 @@ void main() {
     test('renders rediag_classification and routing from the read-back row',
         () async {
       final fake = _FakeReassessmentDataSource()
-        ..readBackRediagClassification = 'some_rediag_token'
+        ..readBackRediagClassification =
+            RediagClassification.reclassifyResidual
         ..readBackRouting = RoutingOutcome.trackReassignment;
       final controller = rediagReadyController(fake);
 
       final result = await controller.submitRediag('reassessment-1');
 
-      expect(result.rediagClassification, 'some_rediag_token');
+      expect(
+        result.rediagClassification,
+        RediagClassification.reclassifyResidual,
+      );
       expect(result.routingOutcome, RoutingOutcome.trackReassignment);
     });
 
@@ -339,10 +328,10 @@ void main() {
     });
   });
 
-  group('ReassessmentController — new_loop marks the loop complete '
-      '(PRD M5.4)', () {
-    test('submit marks the loop complete after a new_loop read-back',
-        () async {
+  group('new_loop loop completion (PRD M5.4)', () {
+    test('the client performs NO loop write — the deployed RPC already '
+        'marks the loop complete on true_ascension (verified against '
+        'production 2026-07-19 via read-only schema dump)', () async {
       final fake = _FakeReassessmentDataSource()
         ..readBackClassification = Phase5Classification.trueAscension
         ..readBackRouting = RoutingOutcome.newLoop;
@@ -350,42 +339,13 @@ void main() {
 
       await controller.submit();
 
+      // Exactly the three read/write steps and nothing else — a
+      // markLoopComplete-style fourth call would fail this pin.
       expect(fake.calls, [
         'insertReassessment',
         'processReassessment',
         'fetchResult',
-        'markLoopComplete',
       ]);
-      expect(fake.completedLoops, ['loop-1']);
-    });
-
-    test('submit leaves the loop alone for every other outcome', () async {
-      for (final outcome in RoutingOutcome.values) {
-        if (outcome == RoutingOutcome.newLoop) continue;
-        final fake = _FakeReassessmentDataSource()
-          ..readBackClassification = Phase5Classification.residualCharge
-          ..readBackRouting = outcome;
-        final controller = _answeredController(fake);
-
-        await controller.submit();
-
-        expect(fake.completedLoops, isEmpty, reason: outcome.token);
-      }
-    });
-
-    test('submitRediag also marks the loop complete on a new_loop outcome',
-        () async {
-      final fake = _FakeReassessmentDataSource()
-        ..readBackClassification = Phase5Classification.falsePositive
-        ..readBackRouting = RoutingOutcome.newLoop;
-      final controller = _answeredController(fake)
-        ..selectRediagResistance(RediagResistance.none)
-        ..selectRediagFeeling(RediagFeeling.relief)
-        ..selectRediagPattern(RediagPattern.handledDifferently);
-
-      await controller.submitRediag('reassessment-1');
-
-      expect(fake.completedLoops, ['loop-1']);
     });
   });
 
@@ -412,6 +372,34 @@ void main() {
         () => Phase5Classification.fromToken('made_up'),
         throwsArgumentError,
       );
+    });
+
+    test('RediagClassification mirrors the four deployed enum values', () {
+      // Verified against production 2026-07-19 via read-only schema dump.
+      expect(
+        RediagClassification.values.map((v) => v.token),
+        [
+          'compliance_bypass',
+          'surface_contact',
+          'method_mismatch',
+          'reclassify_residual',
+        ],
+      );
+      expect(
+        () => RediagClassification.fromToken('made_up'),
+        throwsArgumentError,
+      );
+    });
+
+    test('RediagCopy resolves all four classifications and never renders '
+        'a raw token', () {
+      for (final c in RediagClassification.values) {
+        final copy = RediagCopy.of(c);
+        expect(copy.headline, isNotEmpty);
+        expect(copy.body, isNotEmpty);
+        expect(copy.headline, isNot(contains(c.token)));
+        expect(copy.body, isNot(contains(c.token)));
+      }
     });
   });
 }
