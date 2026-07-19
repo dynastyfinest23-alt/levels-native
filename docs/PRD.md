@@ -604,7 +604,7 @@ record. M3 is done; M4 is next.**
 
 ### M5 — Phase 5 reassessment
 
-1. **M5.1 — Reassessment content (review gate).** Create
+1. **M5.1 — Reassessment content (review gate). COMPLETE — approved by Noah in writing 2026-07-19 (commit `a6a91be`; em dashes removed from all question copy per standing rule).** Create
    `lib/features/reassessment/reassessment_questions.dart`: behavioral copy
    for Q1 (re-run of the loop's trigger question), Q2 (body-state re-scan)
    — both answered in `p1_answer` tokens (reuse `P1Answer`; never the three
