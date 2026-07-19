@@ -1,6 +1,6 @@
 // Behavioral copy for the Phase 5 reassessment flow (Window 2 / Window 3
-// check-ins) and the false-positive rediag path. M5.1 content — pending
-// Noah's written approval before M5.2 builds screens against it.
+// check-ins) and the false-positive rediag path. M5.1 content — approved by
+// Noah in writing 2026-07-19 (PRD M5.1). Strings are frozen: use as-is.
 
 import '../assessment/questions.dart' show AnswerOption;
 import '../assessment/scoring.dart';
