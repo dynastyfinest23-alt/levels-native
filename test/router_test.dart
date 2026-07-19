@@ -16,7 +16,7 @@ void main() {
         '/dashboard/:loopId',
         '/drill/:loopId',
         '/track/:loopId',
-        '/reassessment',
+        '/reassessment/:loopId/:window',
       ]),
     );
   });

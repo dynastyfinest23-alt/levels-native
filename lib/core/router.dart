@@ -10,6 +10,8 @@ import '../features/auth/signup_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/drill/drill_screen.dart';
 import '../features/home/home_screen.dart';
+import '../features/reassessment/reassessment_screen.dart';
+import '../features/reassessment/reassessment_tokens.dart';
 import '../features/track/track_screen.dart';
 import 'design_tokens.dart';
 
@@ -59,10 +61,18 @@ Widget _buildDrill(BuildContext context, GoRouterState state) =>
     DrillScreen(loopId: state.pathParameters['loopId']!);
 Widget _buildTrack(BuildContext context, GoRouterState state) =>
     TrackScreen(loopId: state.pathParameters['loopId']!);
-// Placeholder scaffold — real screen lands in M5 (PRD M1.4). Existing now so
-// the home hub's phase CTA resolves and the auth gate covers it.
-Widget _buildReassessment(BuildContext context, GoRouterState state) =>
-    const _ComingSoonScreen(title: 'Reassessment');
+// Real screen landed in M5.2 (PRD). The window path param is parsed through
+// the typed mirror — an unknown token (including `window_1`, which this
+// build never uses) renders the not-found scaffold instead of the flow.
+Widget _buildReassessment(BuildContext context, GoRouterState state) {
+  final window =
+      ReassessmentWindow.tryFromToken(state.pathParameters['window'] ?? '');
+  if (window == null) return _NotFoundScreen(path: state.uri.path);
+  return ReassessmentScreen(
+    loopId: state.pathParameters['loopId']!,
+    window: window,
+  );
+}
 
 /// Single source of truth for every path [appRouter] serves: `routes` below
 /// is built by iterating this table, and [registeredRoutePaths] reads its
@@ -78,7 +88,7 @@ const Map<String, _RouteBuilder> _routeTable = {
   '/dashboard/:loopId': _buildDashboard,
   '/drill/:loopId': _buildDrill,
   '/track/:loopId': _buildTrack,
-  '/reassessment': _buildReassessment,
+  '/reassessment/:loopId/:window': _buildReassessment,
 };
 
 /// Every path registered with [appRouter]. Pinned by `test/router_test.dart`.
@@ -97,32 +107,16 @@ final GoRouter appRouter = GoRouter(
     for (final entry in _routeTable.entries)
       GoRoute(path: entry.key, builder: entry.value),
   ],
-  errorBuilder: (context, state) => Scaffold(
-    body: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Page not found: ${state.uri.path}',
-            style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () => context.go('/'),
-            child: const Text('Go home'),
-          ),
-        ],
-      ),
-    ),
-  ),
+  errorBuilder: (context, state) => _NotFoundScreen(path: state.uri.path),
 );
 
-/// Coming-soon placeholder per MASTER.md §6: displayTitle + one body line +
-/// text button home. No glass, no glow — placeholders stay humble.
-class _ComingSoonScreen extends StatelessWidget {
-  const _ComingSoonScreen({required this.title});
+/// Not-found scaffold, shared by the router's [GoRouter.errorBuilder] and
+/// route builders that reject an invalid path parameter (e.g. an unknown
+/// reassessment window token).
+class _NotFoundScreen extends StatelessWidget {
+  const _NotFoundScreen({required this.path});
 
-  final String title;
+  final String path;
 
   @override
   Widget build(BuildContext context) {
@@ -131,16 +125,14 @@ class _ComingSoonScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(title, style: LevelsType.displayTitle),
-            const SizedBox(height: 8),
             Text(
-              'Coming soon.',
+              'Page not found: $path',
               style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
             ),
             const SizedBox(height: 16),
             TextButton(
               onPressed: () => context.go('/'),
-              child: const Text('Back to home'),
+              child: const Text('Go home'),
             ),
           ],
         ),

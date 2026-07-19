@@ -162,8 +162,10 @@ _PhaseCta _ctaFor(JourneyPhase phase, String? loopId, TrackProgress? track) {
     JourneyPhase.dashboard => _PhaseCta('See your dashboard', '/dashboard/$loopId'),
     JourneyPhase.drill => _PhaseCta('Start your origin drill', '/drill/$loopId'),
     JourneyPhase.track => _PhaseCta(_trackCtaLabel(track), '/track/$loopId'),
-    JourneyPhase.window2 => const _PhaseCta('Day 5–7 check-in', '/reassessment'),
-    JourneyPhase.window3 => const _PhaseCta('Day 21 durability check', '/reassessment'),
+    JourneyPhase.window2 =>
+      _PhaseCta('Day 5–7 check-in', '/reassessment/$loopId/window_2'),
+    JourneyPhase.window3 =>
+      _PhaseCta('Day 21 durability check', '/reassessment/$loopId/window_3'),
     JourneyPhase.complete => const _PhaseCta('Start a new loop', '/assessment'),
   };
 }

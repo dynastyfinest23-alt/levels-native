@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../drill/drill_tokens.dart' show AscensionTrack;
+import '../reassessment/reassessment_tokens.dart' show RoutingOutcome;
 import '../track/embodiment_gate.dart';
 import 'loop_state.dart';
 
@@ -30,6 +31,7 @@ class JourneyData {
     required this.loopState,
     required this.calibration,
     required this.trackProgress,
+    required this.window2Reassessment,
   });
 
   final String loopId;
@@ -41,6 +43,24 @@ class JourneyData {
 
   /// Null until the loop's `phase4_track_sessions` row exists (PRD M4.6).
   final TrackProgress? trackProgress;
+
+  /// The loop's latest Window 2 reassessment row, null until one exists
+  /// (PRD M5.2/M5.4 — the hub and the `/reassessment` gate read the routing
+  /// outcome and submission time from it).
+  final Window2Reassessment? window2Reassessment;
+}
+
+/// The loop's most recent Window 2 `phase5_reassessments` row, read-only.
+/// [routingOutcome] is null while the row exists but the processing RPC has
+/// not written it (a submit that failed between insert and RPC).
+class Window2Reassessment {
+  const Window2Reassessment({
+    required this.routingOutcome,
+    required this.createdAt,
+  });
+
+  final RoutingOutcome? routingOutcome;
+  final DateTime createdAt;
 }
 
 /// Home hub's view of the loop's track session (PRD M4.6): which track,
@@ -116,9 +136,13 @@ class JourneyRepository {
           .maybeSingle(),
       _client
           .from('phase5_reassessments')
-          .select('id')
+          .select('id, routing_outcome, created_at')
           .eq('loop_id', loopId)
           .eq('window_number', 'window_2')
+          // A retest (M5.4) inserts a second Window 2 row; the hub and the
+          // reassessment gate always act on the latest one.
+          .order('created_at', ascending: false)
+          .limit(1)
           .maybeSingle(),
       _client
           .from('phase5_reassessments')
@@ -166,12 +190,24 @@ class JourneyRepository {
         ? null
         : await _fetchTrackProgress(sessionRow);
 
+    final window2Row = rows[3];
+
     return JourneyData(
       loopId: loopId,
       loopNumber: loopRow['loop_number'] as int,
       loopState: loopState,
       calibration: calibration,
       trackProgress: trackProgress,
+      window2Reassessment: window2Row == null
+          ? null
+          : Window2Reassessment(
+              routingOutcome: window2Row['routing_outcome'] == null
+                  ? null
+                  : RoutingOutcome.fromToken(
+                      window2Row['routing_outcome'] as String,
+                    ),
+              createdAt: DateTime.parse(window2Row['created_at'] as String),
+            ),
     );
   }
 

@@ -231,3 +231,36 @@ selected answer via type-ahead-style key handling. Tabbing one key at a
 time with a short wait and a screenshot between each step was reliable;
 batching all Tabs in one call was not. Not a product bug — an artifact of
 CanvasKit's accessibility tree being sparse for automation tooling.
+
+## M5.2 Window 2 flow — manual run pending, assumptions flagged (2026-07-19)
+
+Built the `/reassessment/:loopId/:window` flow (controller, screens, gate,
+hub CTA) on branch `kimi/m5`. The route changed from the M1.4 placeholder
+`/reassessment` to carry `loopId` + window; `router_test.dart` was updated
+to match.
+
+**The PRD M5.2 done-when manual run is still pending.** It needs a day-5+
+test loop (backdating `ascension_loops.started_at` is a production data
+edit — your approval required each time, per PRD §7) showing a real
+classification from `process_phase5_reassessment`. The fake-client test
+pins the insert -> RPC -> read-back order, but per the definition of done,
+unit tests do not substitute for the manual run.
+
+Assumptions coded blind against PRD §2 (no local migration defines the
+Phase 5 schema; `20260623000001_baseline.sql` is an empty file):
+
+1. `phase5_reassessments` insert columns are `loop_id`, `user_id`,
+   `window_number`, `q1_answer`, `q2_answer`, `q3_block_flag` (`user_id`
+   included per the house RLS insert pattern used by every other phase
+   table).
+2. `process_window3_durability` takes the identical `p_`-prefixed args as
+   `process_phase5_reassessment` (PRD says "same args"); the controller
+   dispatches on window.
+3. `classification`/`routing_outcome` are treated as nullable on read-back
+   (a row left by a failed submit reads back null; Window 2 treats that as
+   a loud error). If `process_window3_durability` never writes them, the
+   Window 3 closing screen in M5.5 does not depend on them.
+4. Result-screen copy (`ClassificationCopy`) and the gate-closed/error copy
+   are executor-written functional copy, not content-gate-reviewed
+   narrative — same standing as the M4.5 status states. Say the word if you
+   want it run through the rubric judge.
