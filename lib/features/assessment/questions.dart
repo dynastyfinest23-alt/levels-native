@@ -32,7 +32,7 @@ const List<AssessmentQuestion> assessmentQuestions = [
   AssessmentQuestion(
     title: 'Opportunity',
     prompt:
-        'A genuinely big opportunity lands in your lap — bigger than you '
+        'A genuinely big opportunity lands in your lap, bigger than you '
         'asked for. What is your first honest reaction?',
     options: [
       AnswerOption(
@@ -44,11 +44,11 @@ const List<AssessmentQuestion> assessmentQuestions = [
         P1Answer.fear,
       ),
       AnswerOption(
-        'I want it badly — I keep replaying having already won',
+        'I want it badly. I keep replaying having already won',
         P1Answer.desire,
       ),
       AnswerOption(
-        'Finally — proof for everyone who doubted me',
+        'Finally, proof for everyone who doubted me',
         P1Answer.pride,
       ),
       AnswerOption(
@@ -60,7 +60,7 @@ const List<AssessmentQuestion> assessmentQuestions = [
         P1Answer.neutrality,
       ),
       AnswerOption(
-        'Gratitude — it feels like life handing me the next step',
+        'Gratitude. It feels like life handing me the next step',
         P1Answer.loveFlow,
       ),
     ],
@@ -73,7 +73,7 @@ const List<AssessmentQuestion> assessmentQuestions = [
         'What actually happens inside you?',
     options: [
       AnswerOption(
-        'I collapse inward — part of me believes they are right',
+        'I collapse inward. Part of me believes they are right',
         P1Answer.shameApathy,
       ),
       AnswerOption(
@@ -81,11 +81,11 @@ const List<AssessmentQuestion> assessmentQuestions = [
         P1Answer.apathyGrief,
       ),
       AnswerOption(
-        'My chest tightens — I want to disappear from the room',
+        'My chest tightens. I want to disappear from the room',
         P1Answer.fear,
       ),
       AnswerOption(
-        'Heat rises — I want to put them in their place',
+        'Heat rises. I want to put them in their place',
         P1Answer.anger,
       ),
       AnswerOption(
@@ -97,7 +97,7 @@ const List<AssessmentQuestion> assessmentQuestions = [
         P1Answer.willingness,
       ),
       AnswerOption(
-        'I feel for them — attacks like that come from pain',
+        'I feel for them. Attacks like that come from pain',
         P1Answer.loveFlow,
       ),
     ],
@@ -122,7 +122,7 @@ const List<AssessmentQuestion> assessmentQuestions = [
         P1Answer.desire,
       ),
       AnswerOption(
-        'Easy and pleasant — real rest, no guilt about it',
+        'Easy and pleasant. Real rest, no guilt about it',
         P1Answer.contentment,
       ),
       AnswerOption(
@@ -147,7 +147,7 @@ const List<AssessmentQuestion> assessmentQuestions = [
         P1Answer.shameApathy,
       ),
       AnswerOption(
-        'Panic — I run the numbers over and over at night',
+        'Panic. I run the numbers over and over at night',
         P1Answer.fear,
       ),
       AnswerOption(
@@ -155,15 +155,15 @@ const List<AssessmentQuestion> assessmentQuestions = [
         P1Answer.desire,
       ),
       AnswerOption(
-        'Frustration — why does this always happen to me?',
+        'Frustration. Why does this always happen to me?',
         P1Answer.anger,
       ),
       AnswerOption(
-        'It is handled or it will be — money comes and goes',
+        'It is handled or it will be. Money comes and goes',
         P1Answer.neutrality,
       ),
       AnswerOption(
-        'Calm trust — resources have always shown up when needed',
+        'Calm trust. Resources have always shown up when needed',
         P1Answer.loveFlow,
       ),
     ],
@@ -176,7 +176,7 @@ const List<AssessmentQuestion> assessmentQuestions = [
         'what put you here?',
     options: [
       AnswerOption(
-        'My own defects — I have sabotaged everything good',
+        'My own defects. I have sabotaged everything good',
         P1Answer.shameApathy,
       ),
       AnswerOption(
@@ -192,11 +192,11 @@ const List<AssessmentQuestion> assessmentQuestions = [
         P1Answer.anger,
       ),
       AnswerOption(
-        'My grit — I made it here despite everyone',
+        'My grit. I made it here despite everyone',
         P1Answer.pride,
       ),
       AnswerOption(
-        'My choices — including the bad ones, which I own',
+        'My choices, including the bad ones, which I own',
         P1Answer.courage,
       ),
       AnswerOption(
@@ -213,7 +213,7 @@ const List<AssessmentQuestion> assessmentQuestions = [
         'What is the dominant signal?',
     options: [
       AnswerOption(
-        'Heaviness — like moving through wet sand',
+        'Heaviness, like moving through wet sand',
         P1Answer.apathyGrief,
       ),
       AnswerOption(
@@ -221,7 +221,7 @@ const List<AssessmentQuestion> assessmentQuestions = [
         P1Answer.fear,
       ),
       AnswerOption(
-        'Restless craving — reaching for the next thing',
+        'Restless craving, reaching for the next thing',
         P1Answer.desire,
       ),
       AnswerOption(
@@ -233,11 +233,11 @@ const List<AssessmentQuestion> assessmentQuestions = [
         P1Answer.contentment,
       ),
       AnswerOption(
-        'Quiet and open — nothing gripping',
+        'Quiet and open, nothing gripping',
         P1Answer.neutrality,
       ),
       AnswerOption(
-        'Lightness — energy moving freely',
+        'Lightness, energy moving freely',
         P1Answer.loveFlow,
       ),
     ],
