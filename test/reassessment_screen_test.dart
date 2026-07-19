@@ -60,6 +60,11 @@ class _FakeDataSource implements ReassessmentDataSource {
   }) async {
     calls.add('routeFalsePositive');
   }
+
+  @override
+  Future<void> markLoopComplete(String loopId) async {
+    calls.add('markLoopComplete');
+  }
 }
 
 const _rediagQ1Prompt = "If change hasn't held, where does it show up?";

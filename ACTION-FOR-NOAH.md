@@ -291,3 +291,30 @@ Phase 5 schema; `20260623000001_baseline.sql` is an empty file):
    (everything eager, nothing offstage) and the widget tests
    `ensureVisible` before tapping. `DrillScreen`'s lazy `ListView` pages
    have the same latent test quirk; left untouched as out of scope.
+
+## M5.4 routing outcomes — assumptions flagged (2026-07-19)
+
+All four routing outcomes are wired: `new_loop` (controller marks the loop
+`complete` on read-back, CTA to `/assessment`), `deepening_protocol`
+(`/drill/:loopId?deepen=1`, controller resolves deepest layer + 1),
+`track_reassignment` (`/drill/:loopId` fresh), `retest_scheduled` (48-hour
+gate on the hub, disabled quiet CTA until it lifts). Assumptions coded
+blind:
+
+1. **`ascension_loops.status = 'complete'` is a valid write.** The status
+   column's enum/text domain is not in this repo (baseline migration is
+   empty); `'complete'` is the value `JourneyRepository` already reads for.
+   If the deployed enum spells it differently, the new_loop path throws at
+   runtime — the manual verification run covers this.
+2. **A retest inserts a second `window_2` row.** No unique constraint is
+   documented; `JourneyRepository` now reads the latest row by `created_at`
+   to tolerate it. If a unique(loop_id, window_number) constraint exists,
+   the retest insert fails and we need an UPDATE-style retest path instead.
+3. **The retest is not re-bounded by the day 5-7 window.** A check-in
+   answered on day 6 retests on day 8, outside Window 2. The gate treats
+   the retest as its own event (spec says only "retest in 48h"). Correct me
+   if retests should instead be clipped to the window.
+4. **Hub/CTA copy is executor-written functional chrome** ("Continue your
+   practice", "Start a fresh drill", "Your check-in opens soon", "Take your
+   check-in"), same standing as the M4.5 status states — not
+   content-gate-reviewed narrative.

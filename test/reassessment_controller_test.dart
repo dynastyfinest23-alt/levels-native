@@ -94,6 +94,14 @@ class _FakeReassessmentDataSource implements ReassessmentDataSource {
       'free_text': freeText,
     });
   }
+
+  final List<String> completedLoops = [];
+
+  @override
+  Future<void> markLoopComplete(String loopId) async {
+    calls.add('markLoopComplete');
+    completedLoops.add(loopId);
+  }
 }
 
 ReassessmentController _answeredController(
@@ -260,6 +268,56 @@ void main() {
         throwsStateError,
       );
       expect(fake.calls, isNot(contains('routeFalsePositive')));
+    });
+  });
+
+  group('ReassessmentController — new_loop marks the loop complete '
+      '(PRD M5.4)', () {
+    test('submit marks the loop complete after a new_loop read-back',
+        () async {
+      final fake = _FakeReassessmentDataSource()
+        ..readBackClassification = Phase5Classification.trueAscension
+        ..readBackRouting = RoutingOutcome.newLoop;
+      final controller = _answeredController(fake);
+
+      await controller.submit();
+
+      expect(fake.calls, [
+        'insertReassessment',
+        'processReassessment',
+        'fetchResult',
+        'markLoopComplete',
+      ]);
+      expect(fake.completedLoops, ['loop-1']);
+    });
+
+    test('submit leaves the loop alone for every other outcome', () async {
+      for (final outcome in RoutingOutcome.values) {
+        if (outcome == RoutingOutcome.newLoop) continue;
+        final fake = _FakeReassessmentDataSource()
+          ..readBackClassification = Phase5Classification.residualCharge
+          ..readBackRouting = outcome;
+        final controller = _answeredController(fake);
+
+        await controller.submit();
+
+        expect(fake.completedLoops, isEmpty, reason: outcome.token);
+      }
+    });
+
+    test('submitRediag also marks the loop complete on a new_loop outcome',
+        () async {
+      final fake = _FakeReassessmentDataSource()
+        ..readBackClassification = Phase5Classification.falsePositive
+        ..readBackRouting = RoutingOutcome.newLoop;
+      final controller = _answeredController(fake)
+        ..selectRediagResistance(RediagResistance.none)
+        ..selectRediagFeeling(RediagFeeling.relief)
+        ..selectRediagPattern(RediagPattern.handledDifferently);
+
+      await controller.submitRediag('reassessment-1');
+
+      expect(fake.completedLoops, ['loop-1']);
     });
   });
 

@@ -72,6 +72,12 @@ abstract class ReassessmentDataSource {
     required String pattern,
     String? freeText,
   });
+
+  /// Carries out the `new_loop` routing outcome (PRD M5.4): marks the loop
+  /// `complete` so the hub and [LoopState] treat it as closed. Called by
+  /// the controller right after a read-back says `new_loop` — the DB
+  /// decided, the client persists the consequence.
+  Future<void> markLoopComplete(String loopId);
 }
 
 /// Real implementation, talking straight to the deployed schema/RPC.
@@ -175,6 +181,11 @@ class SupabaseReassessmentDataSource implements ReassessmentDataSource {
           'free_text': ?freeText,
         },
       );
+
+  @override
+  Future<void> markLoopComplete(String loopId) => _client
+      .from('ascension_loops')
+      .update({'status': 'complete'}).eq('id', loopId);
 }
 
 /// Single typed state object for the reassessment: Q1, Q2, Q3 answers, one
@@ -290,10 +301,20 @@ class ReassessmentController extends ChangeNotifier {
           'classification/routing to the row.',
         );
       }
+      await _completeLoopIfRouted(result);
       return result;
     } finally {
       _submitting = false;
       notifyListeners();
+    }
+  }
+
+  /// The `new_loop` consequence (PRD M5.4): once the read-back row routes
+  /// to a new loop, the current one is marked complete. Applies to both
+  /// submit paths — a rediag that ends at `new_loop` closes the loop too.
+  Future<void> _completeLoopIfRouted(ReassessmentResult result) async {
+    if (result.routingOutcome == RoutingOutcome.newLoop) {
+      await _dataSource.markLoopComplete(loopId);
     }
   }
 
@@ -317,7 +338,9 @@ class ReassessmentController extends ChangeNotifier {
         pattern: _rediagPattern!.token,
         freeText: freeText.isEmpty ? null : freeText,
       );
-      return await _dataSource.fetchResult(reassessmentId);
+      final result = await _dataSource.fetchResult(reassessmentId);
+      await _completeLoopIfRouted(result);
+      return result;
     } finally {
       _submitting = false;
       notifyListeners();

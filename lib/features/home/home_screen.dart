@@ -7,6 +7,7 @@ import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
 import '../journey/journey_repository.dart';
 import '../journey/loop_state.dart';
+import '../reassessment/routing.dart';
 import '../track/embodiment_gate.dart';
 
 /// The journey hub: shows where the user is in their current loop and
@@ -151,9 +152,13 @@ class _HubErrorView extends StatelessWidget {
 
 /// Where each phase's primary CTA sends the user, and what it says.
 class _PhaseCta {
-  const _PhaseCta(this.label, this.route);
+  const _PhaseCta(this.label, this.route, {this.enabled = true});
   final String label;
   final String route;
+
+  /// False only for the retest wait (PRD M5.4): the CTA renders disabled
+  /// until the 48-hour gate lifts. Quiet text, never a countdown.
+  final bool enabled;
 }
 
 _PhaseCta _ctaFor(JourneyPhase phase, String? loopId, TrackProgress? track) {
@@ -204,7 +209,27 @@ class _HubBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = this.data;
     final phase = data?.loopState.currentPhase ?? JourneyPhase.assessment;
-    final cta = _ctaFor(phase, data?.loopId, data?.trackProgress);
+    var cta = _ctaFor(phase, data?.loopId, data?.trackProgress);
+
+    // PRD M5.4: once Window 2 has been routed, the hub's next action is the
+    // routing outcome's destination, not the generic track CTA. (For
+    // `new_loop` the loop is already marked complete, so this branch is the
+    // belt-and-suspenders view before the next fetch.)
+    final w2 = data?.window2Reassessment;
+    if (phase == JourneyPhase.track && w2?.routingOutcome != null) {
+      final followUp = hubFollowUpFor(
+        w2!.routingOutcome!,
+        retestOpen: retestGateOpen(
+          reassessedAt: w2.createdAt,
+          now: DateTime.now(),
+        ),
+      );
+      cta = _PhaseCta(
+        followUp.label,
+        routeForDestination(followUp.destination, data!.loopId),
+        enabled: followUp.enabled,
+      );
+    }
 
     return Center(
       child: ConstrainedBox(
@@ -232,7 +257,7 @@ class _HubBody extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () => context.go(cta.route),
+                onPressed: cta.enabled ? () => context.go(cta.route) : null,
                 child: Text(cta.label),
               ),
             ),

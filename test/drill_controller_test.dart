@@ -19,6 +19,15 @@ class _FakeDrillDataSource implements DrillDataSource {
     return 'What would it mean to let this be enough?';
   }
 
+  /// Set by a test to simulate existing drill rows for the deepen path.
+  int? deepestLayer;
+
+  @override
+  Future<int?> fetchDeepestLayer(String loopId) async {
+    calls.add('fetchDeepestLayer');
+    return deepestLayer;
+  }
+
   @override
   Future<String> insertDrill({
     required String loopId,
@@ -117,6 +126,47 @@ void main() {
       expect(controller.bridgeQuestion, 'What would it mean to let this be enough?');
       expect(controller.loading, isFalse);
       expect(controller.error, isNull);
+    });
+  });
+
+  group('DrillController deepen (PRD M5.4 deepening_protocol)', () {
+    test('load resolves the layer to deepest existing + 1', () async {
+      final fake = _FakeDrillDataSource()..deepestLayer = 2;
+      final controller =
+          DrillController(loopId: 'loop-1', deepen: true, dataSource: fake);
+
+      await controller.load();
+
+      expect(fake.calls, ['fetchBridgeQuestion', 'fetchDeepestLayer']);
+      expect(controller.deepeningLayer, 3);
+    });
+
+    test('load never queries layers without deepen', () async {
+      final fake = _FakeDrillDataSource();
+      final controller = DrillController(loopId: 'loop-1', dataSource: fake);
+
+      await controller.load();
+
+      expect(fake.calls, isNot(contains('fetchDeepestLayer')));
+      expect(controller.deepeningLayer, 1);
+    });
+
+    test('a deepening drill inserts at the resolved layer', () async {
+      final fake = _FakeDrillDataSource()..deepestLayer = 1;
+      final controller =
+          DrillController(loopId: 'loop-1', deepen: true, dataSource: fake);
+      await controller.load();
+      controller
+        ..selectOriginType(OriginType.childhoodConditioning)
+        ..selectOriginDomain(OriginDomain.adequacyImpostor)
+        ..selectCopingMechanism(CopingMechanism.collapseShutdown)
+        ..setQ1FreeText('It started early.')
+        ..setQ2FreeText('It shows up at work.')
+        ..setQ3FreeText('I shut down.');
+
+      await controller.submit();
+
+      expect(fake.insertedDeepeningLayer, 2);
     });
   });
 }

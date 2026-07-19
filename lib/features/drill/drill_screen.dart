@@ -20,9 +20,13 @@ import 'drill_tokens.dart';
 /// screen (that lives on the Phase 2 reveal) — `neutralAccent`, no glow,
 /// matching `AssessmentScreen`.
 class DrillScreen extends StatefulWidget {
-  const DrillScreen({super.key, required this.loopId});
+  const DrillScreen({super.key, required this.loopId, this.deepen = false});
 
   final String loopId;
+
+  /// M5.4 `deepening_protocol` entry: run this drill one layer deeper than
+  /// the loop's deepest existing drill (resolved by the controller).
+  final bool deepen;
 
   @override
   State<DrillScreen> createState() => _DrillScreenState();
@@ -41,7 +45,8 @@ class _DrillScreenState extends State<DrillScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = DrillController(loopId: widget.loopId);
+    _controller =
+        DrillController(loopId: widget.loopId, deepen: widget.deepen);
     _controller.load();
   }
 

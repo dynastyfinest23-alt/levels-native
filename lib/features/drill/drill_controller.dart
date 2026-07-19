@@ -21,6 +21,11 @@ abstract class DrillDataSource {
   /// the Phase 2->3 hand-off seam (PRD M3.2/M3.4).
   Future<String> fetchBridgeQuestion(String loopId);
 
+  /// Highest `deepening_layer` among the loop's drill rows, null when the
+  /// loop has none. Backs M5.4's `deepening_protocol` routing: the next
+  /// drill runs at deepest + 1.
+  Future<int?> fetchDeepestLayer(String loopId);
+
   Future<String> insertDrill({
     required String loopId,
     required OriginType originType,
@@ -56,6 +61,18 @@ class SupabaseDrillDataSource implements DrillDataSource {
       throw StateError('No bridge question recorded for loop $loopId.');
     }
     return question;
+  }
+
+  @override
+  Future<int?> fetchDeepestLayer(String loopId) async {
+    final row = await _client
+        .from('phase3_origin_drills')
+        .select('deepening_layer')
+        .eq('loop_id', loopId)
+        .order('deepening_layer', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    return row?['deepening_layer'] as int?;
   }
 
   @override
@@ -117,17 +134,20 @@ class SupabaseDrillDataSource implements DrillDataSource {
 class DrillController extends ChangeNotifier {
   DrillController({
     required this.loopId,
-    this.deepeningLayer = 1,
+    this.deepen = false,
     DrillDataSource? dataSource,
   }) : _dataSource = dataSource ?? SupabaseDrillDataSource();
 
   final String loopId;
 
-  /// Default 1; M5 deepening protocols pass 2+ (PRD M3.4).
-  final int deepeningLayer;
+  /// M5.4 `deepening_protocol` routing: when true, [load] resolves
+  /// [deepeningLayer] to the loop's deepest existing layer + 1 instead of
+  /// the default first layer.
+  final bool deepen;
 
   final DrillDataSource _dataSource;
 
+  int _deepeningLayer = 1;
   bool _loading = true;
   String? _error;
   String? _bridgeQuestion;
@@ -141,6 +161,10 @@ class DrillController extends ChangeNotifier {
 
   bool get loading => _loading;
   String? get error => _error;
+
+  /// The layer this drill writes. Default 1; with [deepen] set, resolved
+  /// during [load] from the loop's deepest existing drill + 1 (PRD M5.4).
+  int get deepeningLayer => _deepeningLayer;
 
   /// The user's own bridge question from Phase 2 — Q1's free-text prompt.
   /// Null until [load] completes.
@@ -162,14 +186,22 @@ class DrillController extends ChangeNotifier {
       _q2FreeText.trim().isNotEmpty &&
       _q3FreeText.trim().isNotEmpty;
 
-  /// Fetches the bridge question. Errors surface via [error] — never
-  /// swallowed, never rendered as a blank prompt.
+  /// Fetches the bridge question (and, for a deepening drill, the layer to
+  /// write). Errors surface via [error] — never swallowed, never rendered
+  /// as a blank prompt.
   Future<void> load() async {
     _loading = true;
     _error = null;
     notifyListeners();
     try {
       _bridgeQuestion = await _dataSource.fetchBridgeQuestion(loopId);
+      if (deepen) {
+        // A missing prior drill still deepens from layer 1: the routing
+        // that sets `deepen` implies one exists, and inventing a 0 would
+        // silently restart at the surface instead.
+        final deepest = await _dataSource.fetchDeepestLayer(loopId);
+        _deepeningLayer = (deepest ?? 1) + 1;
+      }
     } catch (err) {
       _error = err.toString();
     } finally {
@@ -229,7 +261,7 @@ class DrillController extends ChangeNotifier {
         q1FreeText: _q1FreeText.trim(),
         q2FreeText: _q2FreeText.trim(),
         q3FreeText: _q3FreeText.trim(),
-        deepeningLayer: deepeningLayer,
+        deepeningLayer: _deepeningLayer,
       );
       await _dataSource.processDrill(drillId);
       final track = await _dataSource.fetchAssignedTrack(drillId);

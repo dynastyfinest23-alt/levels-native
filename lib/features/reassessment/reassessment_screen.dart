@@ -8,6 +8,7 @@ import '../journey/journey_repository.dart';
 import 'reassessment_controller.dart';
 import 'reassessment_questions.dart';
 import 'reassessment_tokens.dart';
+import 'routing.dart';
 
 /// Phase 5 check-in at `/reassessment/:loopId/:window` (PRD M5.2).
 ///
@@ -65,10 +66,20 @@ class _ReassessmentScreenState extends State<ReassessmentScreen> {
   bool _gateOpen(JourneyData? data) {
     if (data == null || data.loopId != widget.loopId) return false;
     return switch (widget.window) {
-      ReassessmentWindow.window2 =>
-        data.loopState.window2Open && data.window2Reassessment == null,
+      ReassessmentWindow.window2 => _window2GateOpen(data),
       ReassessmentWindow.window3 => data.loopState.window3Open,
     };
+  }
+
+  /// Window 2 admits two cases: the first visit while the day 5-7 window is
+  /// open, and a retest after a `retest_scheduled` outcome once the 48-hour
+  /// gate has lifted (PRD M5.4 — the retest is its own event; it is not
+  /// re-bounded by the day 5-7 window).
+  bool _window2GateOpen(JourneyData data) {
+    final w2 = data.window2Reassessment;
+    if (w2 == null) return data.loopState.window2Open;
+    return w2.routingOutcome == RoutingOutcome.retestScheduled &&
+        retestGateOpen(reassessedAt: w2.createdAt, now: DateTime.now());
   }
 
   @override
@@ -227,7 +238,11 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
       builder: (context, _) {
         final result = _result;
         if (result != null) {
-          return _ResultView(result: result, afterRediag: _finishedRediag);
+          return _ResultView(
+            result: result,
+            afterRediag: _finishedRediag,
+            loopId: widget.loopId,
+          );
         }
         final submitting = _controller.submitting;
         final inRediag = _rediagReassessmentId != null;
@@ -507,9 +522,14 @@ class _OptionCard extends StatelessWidget {
 /// enum values are undocumented — see ACTION-FOR-NOAH.md); the view falls
 /// back to a quiet acknowledgement plus the way home.
 class _ResultView extends StatelessWidget {
-  const _ResultView({required this.result, this.afterRediag = false});
+  const _ResultView({
+    required this.result,
+    required this.loopId,
+    this.afterRediag = false,
+  });
 
   final ReassessmentResult result;
+  final String loopId;
   final bool afterRediag;
 
   @override
@@ -529,6 +549,10 @@ class _ResultView extends StatelessWidget {
       body = copy?.body ??
           'Your answers are in. Head home to see what is next.';
     }
+    // The CTA follows the row's routing outcome (PRD M5.4) — all four
+    // destinations are real places, mapped in routing.dart.
+    final routing = result.routingOutcome;
+    final cta = routing == null ? null : resultCtaFor(routing);
     return SafeArea(
       child: Center(
         child: ConstrainedBox(
@@ -552,8 +576,11 @@ class _ResultView extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => context.go('/'),
-                  child: const Text('Back to home'),
+                  onPressed: () =>
+                      context.go(cta == null
+                          ? '/'
+                          : routeForResultCta(cta, loopId)),
+                  child: Text(cta?.label ?? 'Back to home'),
                 ),
               ),
             ],

@@ -57,8 +57,11 @@ Widget _buildAssessment(BuildContext context, GoRouterState state) =>
     const AssessmentScreen();
 Widget _buildDashboard(BuildContext context, GoRouterState state) =>
     DashboardScreen(loopId: state.pathParameters['loopId']!);
-Widget _buildDrill(BuildContext context, GoRouterState state) =>
-    DrillScreen(loopId: state.pathParameters['loopId']!);
+Widget _buildDrill(BuildContext context, GoRouterState state) => DrillScreen(
+      loopId: state.pathParameters['loopId']!,
+      // M5.4 deepening_protocol entry point ("/drill/:loopId?deepen=1").
+      deepen: state.uri.queryParameters['deepen'] == '1',
+    );
 Widget _buildTrack(BuildContext context, GoRouterState state) =>
     TrackScreen(loopId: state.pathParameters['loopId']!);
 // Real screen landed in M5.2 (PRD). The window path param is parsed through
