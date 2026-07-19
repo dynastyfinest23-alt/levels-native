@@ -194,6 +194,36 @@ void main() {
   );
 
   testWidgets(
+    'Window 3 never mounts the rediag flow — a false_positive still '
+    'closes on the calibration view (PRD M5.5)',
+    (tester) async {
+      final fake =
+          _FakeDataSource(classification: Phase5Classification.falsePositive);
+      final controller = ReassessmentController(
+        loopId: 'loop-1',
+        window: ReassessmentWindow.window3,
+        dataSource: fake,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ReassessmentFlow(
+            loopId: 'loop-1',
+            window: ReassessmentWindow.window3,
+            controller: controller,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await _submitMainFlow(tester);
+
+      expect(find.text('Three weeks later, it holds'), findsOneWidget);
+      expect(find.text(_rediagQ1Prompt), findsNothing);
+      expect(fake.calls, isNot(contains('routeFalsePositive')));
+    },
+  );
+
+  testWidgets(
     'Window 3 closes on the calibration view — progress dots, never raw '
     'numbers (PRD M5.5)',
     (tester) async {

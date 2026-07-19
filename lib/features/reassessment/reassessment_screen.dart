@@ -189,8 +189,14 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
     try {
       final result = await _controller.submit();
       if (!mounted) return;
-      if (result.classification == Phase5Classification.falsePositive) {
+      if (widget.window == ReassessmentWindow.window2 &&
+          result.classification == Phase5Classification.falsePositive) {
         // Continue into the rediag flow instead of showing a result.
+        // Window 2 only (PRD M5.3): a Window 3 false_positive still closes
+        // on the calibration view — the durability engine has already run,
+        // and route_false_positive's track_reassignment routing would
+        // contradict the loop's close (caught live in the M5 browser
+        // verification 2026-07-19).
         setState(() => _rediagReassessmentId = result.reassessmentId);
         await _pageController.nextPage(
           duration: const Duration(milliseconds: 250),
@@ -285,13 +291,13 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
               ),
             ),
           ),
-          body: submitting
-              ? const Center(child: BreathingDot())
-              : PageView(
-                  controller: _pageController,
-                  // Continue/Finish drives navigation, matching DrillScreen.
-                  physics: const NeverScrollableScrollPhysics(),
-                  onPageChanged: (page) => setState(() => _currentPage = page),
+          body: Stack(
+            children: [
+              PageView(
+                controller: _pageController,
+                // Continue/Finish drives navigation, matching DrillScreen.
+                physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (page) => setState(() => _currentPage = page),
                   children: [
                     _QuestionPage(
                       title: reassessmentQ1Trigger.title,
@@ -363,6 +369,18 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
                     ],
                   ],
                 ),
+              // Loading overlay (MASTER.md §6 breathing dot). The PageView
+              // stays mounted underneath: unmounting it mid-submit detaches
+              // the page controller and resets the page position.
+              if (submitting)
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: LevelsColors.voidColor.withValues(alpha: 0.85),
+                    child: const Center(child: BreathingDot()),
+                  ),
+                ),
+            ],
+          ),
           bottomNavigationBar: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(LevelsSpace.screenGutter),

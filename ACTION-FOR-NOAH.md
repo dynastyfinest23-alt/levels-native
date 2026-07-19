@@ -437,3 +437,64 @@ Window 3 with your approved `started_at` backdates) covering the UI gating
 and rendering end to end. The backend contract those runs depend on is now
 verified; what remains unverified is the Flutter UI against production
 (window gates, hub states, closing screen).
+
+## M5 browser manual run — COMPLETE, two more real bugs found and fixed (2026-07-19)
+
+Full browser verification against production (release build, headless
+Chromium via Playwright, fresh test accounts, `started_at` backdates run
+through each test account's own JWT under RLS — covered by your 2026-07-19
+blanket approval). Screenshots are in `Screenshots/` (m5-01 through m5-08).
+
+**Bug 6 — rediag navigation crashed in release builds.** On a
+`false_positive` submit, the flow swapped the PageView out for the loading
+dot; the submit finished with the PageView unmounted, so
+`PageController.nextPage` had no attached position and threw
+`Bad state: No element` (asserts stripped in release). The widget test
+could never catch this — tester frames don't interleave with the handler.
+Fixed by keeping the PageView mounted and rendering the loading state as
+an overlay.
+
+**Bug 7 — the rediag path mounted for Window 3 too.** A day-21
+`false_positive` continued into rediag questions instead of closing on the
+calibration view, and `route_false_positive`'s `track_reassignment`
+routing would have contradicted the loop's close. Rediag is now scoped to
+Window 2 (PRD M5.3's actual text), with a widget test pinning that a
+Window 3 `false_positive` closes on the calibration screen.
+
+Verified end-to-end after the fixes (each on a fresh account): auth gate
+login; hub day-5 state with the Day 5-7 check-in CTA; the full Window 2
+flow with `false_positive` answers; rediag mounting inline and completing;
+post-rediag result showing typed copy ("The change is real", never the
+token) with the Start-a-fresh-drill CTA; the drill destination loading;
+the hub reflecting `track_reassignment`; the 48-hour retest wait state
+(disabled "Your check-in opens soon" on the hub — verified live on an
+earlier account); the gate-closed backstop when re-entering a completed
+check-in's URL; the hub offering the Day 21 durability check after
+backdating; the Window 3 flow closing on "Three weeks later, it holds"
+with progress dots and zero digits anywhere on the closing screen
+(aria-verified); the hub closing the loop with Start a new loop.
+
+**Browser-phase test accounts for the cleanup pass** (same
+orphaned-`auth.users` reasoning as before):
+`m52-ui-verify-1784501186869@example.com`,
+`m52-ui-verify-1784502735325@example.com`,
+`m52-ui-verify-1784503431865@example.com`,
+`m52-ui-verify-1784503681818@example.com`,
+`m52-ui-verify-1784503931695@example.com`,
+`m52-ui-verify-1784504447822@example.com`.
+
+**Automation notes for the next session that drives this app:** Flutter
+web keeps its semantics tree off until the off-viewport
+`flt-semantics-placeholder` is activated via JS `el.click()` (it is
+outside the viewport, so a normal Playwright click times out); page
+reloads reset that toggle; the first keystroke after focusing a text
+field can be eaten (settle ~500ms before typing); option clicks right
+after a page transition can be dropped (click-verify-retry); `fill()`
+can miss Flutter's onChanged — click then `keyboard.type`. The M4.5
+stale-bundle warning still applies; serving `build/web` with
+`Cache-Control: no-store` avoided it this time.
+
+With this run, the M5.2 and M5.5 done-when manual verifications are
+COMPLETE (day-5 Window 2 shows a classification; day-21 Window 3 updates
+the hub calibration display). No M5 items remain pending except your
+review and the test-account cleanup.
