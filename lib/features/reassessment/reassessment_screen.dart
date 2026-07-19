@@ -119,15 +119,34 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
   late final ReassessmentController _controller = widget.controller ??
       ReassessmentController(loopId: widget.loopId, window: widget.window);
   final PageController _pageController = PageController();
+  final TextEditingController _rediagFreeTextController =
+      TextEditingController();
   int _currentPage = 0;
+
+  /// Set after the main submit returns `false_positive`: the id the rediag
+  /// RPC needs, and the signal to mount the rediag pages. The rediag flow
+  /// exists ONLY behind this flag (PRD M5.3 done-when).
+  String? _rediagReassessmentId;
+
+  /// The final read-back result, set by whichever submit path ran last.
   ReassessmentResult? _result;
 
-  static const int pageCount = 3;
+  /// True once `submitRediag` succeeds — the result view then renders the
+  /// post-rediag state instead of the classification copy.
+  bool _finishedRediag = false;
+
+  static const int _mainPageCount = 3;
+  static const int _rediagPageCount = 4;
+
+  int get _pageCount => _rediagReassessmentId == null
+      ? _mainPageCount
+      : _mainPageCount + _rediagPageCount;
 
   @override
   void dispose() {
     if (widget.controller == null) _controller.dispose();
     _pageController.dispose();
+    _rediagFreeTextController.dispose();
     super.dispose();
   }
 
@@ -139,13 +158,15 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
   }
 
   Future<void> _onContinue() async {
-    if (_currentPage < pageCount - 1) {
+    if (_currentPage < _pageCount - 1) {
       await _pageController.nextPage(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
       );
-    } else {
+    } else if (_rediagReassessmentId == null) {
       await _submit();
+    } else {
+      await _submitRediag();
     }
   }
 
@@ -153,7 +174,16 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
     try {
       final result = await _controller.submit();
       if (!mounted) return;
-      setState(() => _result = result);
+      if (result.classification == Phase5Classification.falsePositive) {
+        // Continue into the rediag flow instead of showing a result.
+        setState(() => _rediagReassessmentId = result.reassessmentId);
+        await _pageController.nextPage(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      } else {
+        setState(() => _result = result);
+      }
     } catch (error) {
       if (!mounted) return;
       // Surface the full error string — never swallow it.
@@ -163,10 +193,31 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
     }
   }
 
+  Future<void> _submitRediag() async {
+    try {
+      final result = await _controller.submitRediag(_rediagReassessmentId!);
+      if (!mounted) return;
+      setState(() {
+        _result = result;
+        _finishedRediag = true;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Submission failed: $error')),
+      );
+    }
+  }
+
   bool get _canContinue => switch (_currentPage) {
         0 => _controller.q1Answer != null,
         1 => _controller.q2Answer != null,
-        _ => _controller.q3Answer != null,
+        2 => _controller.q3Answer != null,
+        3 => _controller.rediagResistance != null,
+        4 => _controller.rediagFeeling != null,
+        5 => _controller.rediagPattern != null,
+        // Rediag Q4 free text is optional (the RPC's free_text arg is too).
+        _ => true,
       };
 
   @override
@@ -176,9 +227,10 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
       builder: (context, _) {
         final result = _result;
         if (result != null) {
-          return _ResultView(result: result);
+          return _ResultView(result: result, afterRediag: _finishedRediag);
         }
         final submitting = _controller.submitting;
+        final inRediag = _rediagReassessmentId != null;
         return Scaffold(
           extendBodyBehindAppBar: true,
           backgroundColor: Colors.transparent,
@@ -198,12 +250,12 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
                         color: LevelsColors.textSecondary),
                     onPressed: () => context.go('/'),
                   ),
-            title: Text('Question ${_currentPage + 1} of $pageCount',
+            title: Text('Question ${_currentPage + 1} of $_pageCount',
                 style: LevelsType.caption),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(4),
               child: LinearProgressIndicator(
-                value: (_currentPage + 1) / pageCount,
+                value: (_currentPage + 1) / _pageCount,
                 color: LevelsColors.neutralAccent,
                 backgroundColor: LevelsColors.glassStroke,
               ),
@@ -247,6 +299,44 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
                       selected: _controller.q3Answer,
                       onSelect: _controller.selectQ3,
                     ),
+                    // Rediag pages mount only once the read-back row says
+                    // false_positive (PRD M5.3).
+                    if (inRediag) ...[
+                      _QuestionPage(
+                        title: rediagQ1Resistance.title,
+                        prompt: rediagQ1Resistance.prompt,
+                        options: [
+                          for (final o in rediagQ1Resistance.options)
+                            (label: o.label, value: o.value),
+                        ],
+                        selected: _controller.rediagResistance,
+                        onSelect: _controller.selectRediagResistance,
+                      ),
+                      _QuestionPage(
+                        title: rediagQ2Feeling.title,
+                        prompt: rediagQ2Feeling.prompt,
+                        options: [
+                          for (final o in rediagQ2Feeling.options)
+                            (label: o.label, value: o.value),
+                        ],
+                        selected: _controller.rediagFeeling,
+                        onSelect: _controller.selectRediagFeeling,
+                      ),
+                      _QuestionPage(
+                        title: rediagQ3Pattern.title,
+                        prompt: rediagQ3Pattern.prompt,
+                        options: [
+                          for (final o in rediagQ3Pattern.options)
+                            (label: o.label, value: o.value),
+                        ],
+                        selected: _controller.rediagPattern,
+                        onSelect: _controller.selectRediagPattern,
+                      ),
+                      _RediagFreeTextPage(
+                        controller: _rediagFreeTextController,
+                        onChanged: _controller.setRediagFreeText,
+                      ),
+                    ],
                   ],
                 ),
           bottomNavigationBar: SafeArea(
@@ -255,12 +345,60 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
               child: FilledButton(
                 onPressed: submitting || !_canContinue ? null : _onContinue,
                 child: Text(
-                    _currentPage < pageCount - 1 ? 'Continue' : 'Finish'),
+                    _currentPage < _pageCount - 1 ? 'Continue' : 'Finish'),
               ),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+/// Rediag Q4 — optional free text. Never sent to the LLM (product decision,
+/// CLAUDE.md 2026-07-15): it goes to Postgres under RLS and nowhere else.
+class _RediagFreeTextPage extends StatelessWidget {
+  const _RediagFreeTextPage({
+    required this.controller,
+    required this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints:
+              const BoxConstraints(maxWidth: LevelsSpace.contentMaxWidth),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: LevelsSpace.screenGutter,
+              vertical: LevelsSpace.space32,
+            ),
+            children: [
+              Text('In your own words',
+                  style: LevelsType.panelTitle
+                      .copyWith(color: LevelsColors.textSecondary)),
+              const SizedBox(height: LevelsSpace.space8),
+              const Text(rediagQ4Prompt, style: LevelsType.displayTitle),
+              const SizedBox(height: LevelsSpace.space24),
+              TextField(
+                controller: controller,
+                style: LevelsType.body,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  hintText: 'Optional. Anything at all.',
+                ),
+                onChanged: onChanged,
+              ),
+              const SizedBox(height: LevelsSpace.space64),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -289,30 +427,36 @@ class _QuestionPage<T> extends StatelessWidget {
         child: ConstrainedBox(
           constraints:
               const BoxConstraints(maxWidth: LevelsSpace.contentMaxWidth),
-          child: ListView(
+          // SingleChildScrollView + Column, not a lazy ListView: every
+          // option card is always in the tree (no offstage marking), which
+          // keeps the flow widget-testable and is cheap at this length.
+          child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(
               horizontal: LevelsSpace.screenGutter,
               vertical: LevelsSpace.space32,
             ),
-            children: [
-              Text(title,
-                  style: LevelsType.panelTitle
-                      .copyWith(color: LevelsColors.textSecondary)),
-              const SizedBox(height: LevelsSpace.space8),
-              Text(prompt, style: LevelsType.displayTitle),
-              const SizedBox(height: LevelsSpace.space24),
-              for (final option in options)
-                Padding(
-                  padding:
-                      const EdgeInsets.only(bottom: LevelsSpace.space12),
-                  child: _OptionCard(
-                    label: option.label,
-                    selected: option.value == selected,
-                    onTap: () => onSelect(option.value),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: LevelsType.panelTitle
+                        .copyWith(color: LevelsColors.textSecondary)),
+                const SizedBox(height: LevelsSpace.space8),
+                Text(prompt, style: LevelsType.displayTitle),
+                const SizedBox(height: LevelsSpace.space24),
+                for (final option in options)
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(bottom: LevelsSpace.space12),
+                    child: _OptionCard(
+                      label: option.label,
+                      selected: option.value == selected,
+                      onTap: () => onSelect(option.value),
+                    ),
                   ),
-                ),
-              const SizedBox(height: LevelsSpace.space64),
-            ],
+                const SizedBox(height: LevelsSpace.space64),
+              ],
+            ),
           ),
         ),
       ),
@@ -358,17 +502,33 @@ class _OptionCard extends StatelessWidget {
 
 /// The outcome, rendered from the read-back row only (never client math).
 /// Classification text always comes through [ClassificationCopy.of] — raw
-/// tokens never reach the UI (CLAUDE.md mechanic-leak rule).
+/// tokens never reach the UI (CLAUDE.md mechanic-leak rule). After the
+/// rediag path, `rediag_classification` is deliberately NOT rendered (its
+/// enum values are undocumented — see ACTION-FOR-NOAH.md); the view falls
+/// back to a quiet acknowledgement plus the way home.
 class _ResultView extends StatelessWidget {
-  const _ResultView({required this.result});
+  const _ResultView({required this.result, this.afterRediag = false});
 
   final ReassessmentResult result;
+  final bool afterRediag;
 
   @override
   Widget build(BuildContext context) {
     final classification = result.classification;
     final copy =
         classification == null ? null : ClassificationCopy.of(classification);
+    final String headline;
+    final String body;
+    if (afterRediag) {
+      headline = 'Thank you';
+      body =
+          'That gives a much clearer picture. Your home screen has the '
+          'right next step.';
+    } else {
+      headline = copy?.headline ?? 'Check-in saved';
+      body = copy?.body ??
+          'Your answers are in. Head home to see what is next.';
+    }
     return SafeArea(
       child: Center(
         child: ConstrainedBox(
@@ -381,14 +541,10 @@ class _ResultView extends StatelessWidget {
               vertical: LevelsSpace.space32,
             ),
             children: [
-              Text(
-                copy?.headline ?? 'Check-in saved',
-                style: LevelsType.displayTitle,
-              ),
+              Text(headline, style: LevelsType.displayTitle),
               const SizedBox(height: LevelsSpace.space16),
               Text(
-                copy?.body ??
-                    'Your answers are in. Head home to see what is next.',
+                body,
                 style:
                     LevelsType.body.copyWith(color: LevelsColors.textSecondary),
               ),

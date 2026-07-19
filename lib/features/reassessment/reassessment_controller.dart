@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'reassessment_questions.dart' show Q3BlockFlag;
+import 'reassessment_questions.dart'
+    show Q3BlockFlag, RediagFeeling, RediagPattern, RediagResistance;
 import 'reassessment_tokens.dart';
 import '../assessment/scoring.dart' show P1Answer;
 
@@ -19,11 +20,20 @@ class ReassessmentResult {
     required this.reassessmentId,
     required this.classification,
     required this.routingOutcome,
+    this.rediagClassification,
   });
 
   final String reassessmentId;
   final Phase5Classification? classification;
   final RoutingOutcome? routingOutcome;
+
+  /// The raw `rediag_classification` token after `route_false_positive`
+  /// runs. Carried, never rendered: the enum's value set is not documented
+  /// anywhere in this repo (flagged in ACTION-FOR-NOAH.md 2026-07-19), so no
+  /// typed display lookup can be built without inventing schema. When the
+  /// `pg_enum` dump lands, replace this with a throwing mirror like
+  /// [Phase5Classification].
+  final String? rediagClassification;
 }
 
 /// Seam over the Supabase calls [ReassessmentController] makes, so the
@@ -51,6 +61,17 @@ abstract class ReassessmentDataSource {
   });
 
   Future<ReassessmentResult> fetchResult(String reassessmentId);
+
+  /// `route_false_positive` — the false-positive re-diagnosis (PRD M5.3).
+  /// Writes the rediag columns, `rediag_classification`, and the resulting
+  /// `routing_outcome` to the same row.
+  Future<void> routeFalsePositive({
+    required String reassessmentId,
+    required String resistance,
+    required String feeling,
+    required String pattern,
+    String? freeText,
+  });
 }
 
 /// Real implementation, talking straight to the deployed schema/RPC.
@@ -117,7 +138,7 @@ class SupabaseReassessmentDataSource implements ReassessmentDataSource {
   Future<ReassessmentResult> fetchResult(String reassessmentId) async {
     final row = await _client
         .from('phase5_reassessments')
-        .select('classification, routing_outcome')
+        .select('classification, routing_outcome, rediag_classification')
         .eq('id', reassessmentId)
         .single();
     final classification = row['classification'] as String?;
@@ -129,8 +150,31 @@ class SupabaseReassessmentDataSource implements ReassessmentDataSource {
           : Phase5Classification.fromToken(classification),
       routingOutcome:
           routingOutcome == null ? null : RoutingOutcome.fromToken(routingOutcome),
+      rediagClassification: row['rediag_classification'] as String?,
     );
   }
+
+  @override
+  Future<void> routeFalsePositive({
+    required String reassessmentId,
+    required String resistance,
+    required String feeling,
+    required String pattern,
+    String? freeText,
+  }) =>
+      _client.rpc<void>(
+        'route_false_positive',
+        params: {
+          'p_reassessment_id': reassessmentId,
+          // Arg names as written in the PRD §2 signature (no p_ prefix,
+          // unlike the processing RPCs) — flagged in ACTION-FOR-NOAH.md.
+          'rediag_resistance': resistance,
+          'rediag_feeling': feeling,
+          'rediag_pattern': pattern,
+          // Optional arg: omitted entirely when the user left it blank.
+          'free_text': ?freeText,
+        },
+      );
 }
 
 /// Single typed state object for the reassessment: Q1, Q2, Q3 answers, one
@@ -151,13 +195,30 @@ class ReassessmentController extends ChangeNotifier {
   Q3BlockFlag? _q3Answer;
   bool _submitting = false;
 
+  RediagResistance? _rediagResistance;
+  RediagFeeling? _rediagFeeling;
+  RediagPattern? _rediagPattern;
+  String _rediagFreeText = '';
+
   P1Answer? get q1Answer => _q1Answer;
   P1Answer? get q2Answer => _q2Answer;
   Q3BlockFlag? get q3Answer => _q3Answer;
   bool get submitting => _submitting;
 
+  RediagResistance? get rediagResistance => _rediagResistance;
+  RediagFeeling? get rediagFeeling => _rediagFeeling;
+  RediagPattern? get rediagPattern => _rediagPattern;
+  String get rediagFreeText => _rediagFreeText;
+
   bool get isComplete =>
       _q1Answer != null && _q2Answer != null && _q3Answer != null;
+
+  /// The three rediag selects are required; Q4 free text stays optional
+  /// (the RPC's `free_text` arg is optional per PRD §2).
+  bool get isRediagComplete =>
+      _rediagResistance != null &&
+      _rediagFeeling != null &&
+      _rediagPattern != null;
 
   void selectQ1(P1Answer answer) {
     _q1Answer = answer;
@@ -171,6 +232,26 @@ class ReassessmentController extends ChangeNotifier {
 
   void selectQ3(Q3BlockFlag answer) {
     _q3Answer = answer;
+    notifyListeners();
+  }
+
+  void selectRediagResistance(RediagResistance answer) {
+    _rediagResistance = answer;
+    notifyListeners();
+  }
+
+  void selectRediagFeeling(RediagFeeling answer) {
+    _rediagFeeling = answer;
+    notifyListeners();
+  }
+
+  void selectRediagPattern(RediagPattern answer) {
+    _rediagPattern = answer;
+    notifyListeners();
+  }
+
+  void setRediagFreeText(String value) {
+    _rediagFreeText = value;
     notifyListeners();
   }
 
@@ -210,6 +291,33 @@ class ReassessmentController extends ChangeNotifier {
         );
       }
       return result;
+    } finally {
+      _submitting = false;
+      notifyListeners();
+    }
+  }
+
+  /// The rediag write path (PRD M5.3), run only when the read-back
+  /// classification is `false_positive`: `route_false_positive` -> read the
+  /// updated row back. Same errors-surface discipline as [submit].
+  Future<ReassessmentResult> submitRediag(String reassessmentId) async {
+    if (!isRediagComplete) {
+      throw StateError(
+        'All three rediag questions must be answered before submitting.',
+      );
+    }
+    _submitting = true;
+    notifyListeners();
+    try {
+      final freeText = _rediagFreeText.trim();
+      await _dataSource.routeFalsePositive(
+        reassessmentId: reassessmentId,
+        resistance: _rediagResistance!.token,
+        feeling: _rediagFeeling!.token,
+        pattern: _rediagPattern!.token,
+        freeText: freeText.isEmpty ? null : freeText,
+      );
+      return await _dataSource.fetchResult(reassessmentId);
     } finally {
       _submitting = false;
       notifyListeners();

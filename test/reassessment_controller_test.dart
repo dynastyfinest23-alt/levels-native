@@ -1,7 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:levels_native/features/assessment/scoring.dart';
 import 'package:levels_native/features/reassessment/reassessment_controller.dart';
-import 'package:levels_native/features/reassessment/reassessment_questions.dart';
+import 'package:levels_native/features/reassessment/reassessment_questions.dart'
+    show
+        Q3BlockFlag,
+        RediagFeeling,
+        RediagPattern,
+        RediagResistance;
 import 'package:levels_native/features/reassessment/reassessment_tokens.dart';
 
 /// Records call order and parameters so [ReassessmentController]'s
@@ -19,7 +24,9 @@ class _FakeReassessmentDataSource implements ReassessmentDataSource {
   Phase5Classification? readBackClassification =
       Phase5Classification.falsePositive;
   RoutingOutcome? readBackRouting = RoutingOutcome.retestScheduled;
+  String? readBackRediagClassification;
 
+  final Map<String, dynamic> rediag = {};
   int _nextId = 1;
 
   @override
@@ -66,7 +73,26 @@ class _FakeReassessmentDataSource implements ReassessmentDataSource {
       reassessmentId: reassessmentId,
       classification: readBackClassification,
       routingOutcome: readBackRouting,
+      rediagClassification: readBackRediagClassification,
     );
+  }
+
+  @override
+  Future<void> routeFalsePositive({
+    required String reassessmentId,
+    required String resistance,
+    required String feeling,
+    required String pattern,
+    String? freeText,
+  }) async {
+    calls.add('routeFalsePositive');
+    rediag.addAll({
+      'reassessment_id': reassessmentId,
+      'resistance': resistance,
+      'feeling': feeling,
+      'pattern': pattern,
+      'free_text': freeText,
+    });
   }
 }
 
@@ -161,6 +187,79 @@ void main() {
 
       await expectLater(controller.submit(), throwsStateError);
       expect(fake.calls, isEmpty);
+    });
+  });
+
+  group('ReassessmentController.submitRediag — rediag path (PRD M5.3)', () {
+    ReassessmentController rediagReadyController(
+      _FakeReassessmentDataSource fake,
+    ) {
+      final controller = _answeredController(fake);
+      controller
+        ..selectRediagResistance(RediagResistance.specific)
+        ..selectRediagFeeling(RediagFeeling.flatness)
+        ..selectRediagPattern(RediagPattern.same);
+      return controller;
+    }
+
+    test('calls routeFalsePositive then reads the row back, in order',
+        () async {
+      final fake = _FakeReassessmentDataSource();
+      final controller = rediagReadyController(fake);
+
+      await controller.submitRediag('reassessment-1');
+
+      expect(fake.calls, ['routeFalsePositive', 'fetchResult']);
+    });
+
+    test('sends the three rediag tokens and omits empty free text', () async {
+      final fake = _FakeReassessmentDataSource();
+      final controller = rediagReadyController(fake);
+
+      await controller.submitRediag('reassessment-1');
+
+      expect(fake.rediag, {
+        'reassessment_id': 'reassessment-1',
+        'resistance': 'specific',
+        'feeling': 'flatness',
+        'pattern': 'same',
+        'free_text': null,
+      });
+    });
+
+    test('passes trimmed free text when provided', () async {
+      final fake = _FakeReassessmentDataSource();
+      final controller = rediagReadyController(fake)
+        ..setRediagFreeText('  still tense at work  ');
+
+      await controller.submitRediag('reassessment-1');
+
+      expect(fake.rediag['free_text'], 'still tense at work');
+    });
+
+    test('renders rediag_classification and routing from the read-back row',
+        () async {
+      final fake = _FakeReassessmentDataSource()
+        ..readBackRediagClassification = 'some_rediag_token'
+        ..readBackRouting = RoutingOutcome.trackReassignment;
+      final controller = rediagReadyController(fake);
+
+      final result = await controller.submitRediag('reassessment-1');
+
+      expect(result.rediagClassification, 'some_rediag_token');
+      expect(result.routingOutcome, RoutingOutcome.trackReassignment);
+    });
+
+    test('throws when rediag is incomplete and never calls the RPC',
+        () async {
+      final fake = _FakeReassessmentDataSource();
+      final controller = _answeredController(fake);
+
+      await expectLater(
+        controller.submitRediag('reassessment-1'),
+        throwsStateError,
+      );
+      expect(fake.calls, isNot(contains('routeFalsePositive')));
     });
   });
 

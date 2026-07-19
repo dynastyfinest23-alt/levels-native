@@ -264,3 +264,30 @@ Phase 5 schema; `20260623000001_baseline.sql` is an empty file):
    are executor-written functional copy, not content-gate-reviewed
    narrative — same standing as the M4.5 status states. Say the word if you
    want it run through the rubric judge.
+
+## M5.3 rediag path — gaps coded around, not resolved (2026-07-19)
+
+1. **`route_false_positive` RPC arg names are assumed.** PRD §2's signature
+   table writes them without the `p_` prefix the other Phase 5 functions use
+   (`rediag_resistance`, `rediag_feeling`, `rediag_pattern`, optional
+   `free_text`; `p_reassessment_id` IS prefixed there). Coded exactly as the
+   PRD writes them. If the deployed function actually uses `p_` prefixes,
+   the RPC will 400 on the first real false_positive run — the manual M5.2
+   verification pass should include one false_positive answer set to catch
+   this.
+2. **`rediag_classification` enum values are documented nowhere in this
+   repo** (the Phase 5 schema lives only in production; the local baseline
+   migration is empty). Per the no-invented-schema rule, the client stores
+   it as an opaque string and never renders it — the post-rediag screen
+   shows a quiet acknowledgement plus the way home. To render it properly
+   (typed throwing lookup like `ZoneStyle.of`), paste the output of
+   `SELECT enumlabel FROM pg_enum e JOIN pg_type t ON t.oid = e.enumtypid
+   WHERE t.typname = 'rediag_classification' ORDER BY e.enumsortorder;`
+   and it becomes a small follow-up commit.
+3. **Widget-test quirk worth knowing:** the bundled Fraunces/Inter assets
+   do not load under `flutter_test`, so prompts render far taller than
+   production and later option cards start scrolled under the bottom button
+   bar. Reassessment question pages use `SingleChildScrollView + Column`
+   (everything eager, nothing offstage) and the widget tests
+   `ensureVisible` before tapping. `DrillScreen`'s lazy `ListView` pages
+   have the same latent test quirk; left untouched as out of scope.
