@@ -196,3 +196,38 @@ is now fully completed (day 7 done) so it won't be resumed again by
 accident; `started_at` was intentionally backdated by SQL for this test
 and was left as-is afterward since the row is a closed historical record.
 Add this account to the existing test-account cleanup pass.
+
+## M4.6 manual-verification test accounts (2026-07-18/19)
+
+Verified the M4.6 hub track-progress CTA end-to-end in a real browser
+against production. Two accounts:
+
+- `m46-hub-verify@example.com` (loop routed to `completion`) — a keyboard
+  focus-traversal mistake during drill Q1 (typing into the wrong focused
+  element while hunting for the free-text field via Tab) accidentally
+  changed the selected origin-type answer mid-drill, so this account ended
+  up on the `completion` track instead of the intended `embodiment` track.
+  Not usable for the embodiment CTA test; left as-is.
+- `m46-hub-verify-2@example.com` (loop `17e2e644-355e-42ed-93c9-b529569e16a6`,
+  session `a60803fa-abac-4ebd-a499-8de927487c25`) — driven through signup ->
+  Phase 1 -> Phase 2 reveal -> Phase 3 drill (Q1 `childhood_conditioning`,
+  routing to `embodiment`) -> confirmed hub shows generic "Continue your
+  track" before a session row exists -> opened the track screen (creates
+  the session) -> back to hub, confirmed "Day 1 of 7" -> completed day 1's
+  check-in -> back to hub, confirmed "Day 1 logged — come back tomorrow".
+  MCP SELECT on `embodiment_daily_logs` confirmed `day_number=1`,
+  `completed_at` set, matching the UI.
+
+Both accounts left in place, same reasoning as prior milestones (orphaned
+`auth.users` row risk without the admin/service-role API). Add both to the
+existing test-account cleanup pass.
+
+**Browser-automation note:** on this Flutter web build, Tab-key focus
+traversal through a `_DrillQuestionPage`'s answer options is unreliable
+when driven in rapid batched keypresses (many `Tab`s in one tool call) —
+focus lands inconsistently and typed text can land on a still-focused
+option button instead of the free-text field, silently changing the
+selected answer via type-ahead-style key handling. Tabbing one key at a
+time with a short wait and a screenshot between each step was reliable;
+batching all Tabs in one call was not. Not a product bug — an artifact of
+CanvasKit's accessibility tree being sparse for automation tooling.

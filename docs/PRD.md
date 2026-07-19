@@ -14,8 +14,10 @@ were read from production (project `dnqwsgpkinieitiiikij`) on 2026-07-08.
 - **Current milestone:** M3, M4.1, M4.2, M4.3, M4.4 all COMPLETE. M4.5
   (embodiment screen + 7-day daily loop) COMPLETE 2026-07-18 — manually
   verified end-to-end through day 7 (session screen, day 1, and days 6-7
-  via SQL-backdated `started_at`). All four Phase 4 tracks are now built.
-  M4.6 (hub integration — track progress + daily CTA) is next.
+  via SQL-backdated `started_at`). M4.6 (hub integration — track progress
+  + daily CTA) COMPLETE 2026-07-19 — manually verified in-browser. All
+  Phase 4 work is now built and wired into the hub. M5 (Phase 5
+  reassessment) is next.
 - **Resolved:** love_flow 530-vs-550 — Noah decided to defer, keep 530
   (`ACTION-FOR-NOAH.md`, 2026-07-16). No scoring artifact touched.
 - **Flagged for cleanup:** a real test account created during M3.4's manual
@@ -585,9 +587,20 @@ record. M3 is done; M4 is next.**
    was in the Playwright test harness (a stale browser profile/service-
    worker serving a cached JS bundle across rebuilds), not in the app — no
    `lib/` changes resulted from that finding.
-6. **M4.6 — Hub integration.** Home hub shows track progress (stage or
-   day N/7) and routes the daily embodiment CTA. Done when: manual run
-   mid-track shows correct progress and CTA.
+6. **M4.6 — Hub integration. COMPLETE 2026-07-19.** Home hub shows track
+   progress (stage or day N/7) and routes the daily embodiment CTA.
+   `JourneyRepository.fetchActiveLoop` computes `TrackProgress` (track
+   type, completion, embodiment day-gate) from `phase4_track_sessions` +
+   `embodiment_daily_logs`; `home_screen.dart`'s `_trackCtaLabel` renders
+   "Day N of 7" for an open embodiment day and "Day N logged — come back
+   tomorrow" for an already-logged day, generic "Continue your track"
+   otherwise (including before a session row exists — session creation is
+   lazy, on first track-screen visit). `flutter analyze` clean, all 170
+   tests pass. Manually verified end-to-end in a real browser against
+   production: confirmed the no-session generic state, "Day 1 of 7" on an
+   open session, and "Day 1 logged — come back tomorrow" after saving the
+   check-in, with an MCP SELECT on `embodiment_daily_logs` matching the UI
+   (`ACTION-FOR-NOAH.md` has the full test-account detail).
 
 ### M5 — Phase 5 reassessment
 
