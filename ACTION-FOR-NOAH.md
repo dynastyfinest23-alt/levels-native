@@ -234,6 +234,16 @@ CanvasKit's accessibility tree being sparse for automation tooling.
 
 ## M5.2 Window 2 flow — manual run pending, assumptions flagged (2026-07-19)
 
+**Resolved (2026-07-22).** The manual run this section flags completed
+2026-07-19 (see "M5 browser manual run — COMPLETE" below; screenshots
+`m5-01` through `m5-08` in `Screenshots/`). Of the four blind assumptions
+listed here, assumption 1 (insert columns) was disproven and fixed: the
+client insert now carries only `loop_id`/`user_id`/`window_number` — the
+answer columns are `q1_trigger_answer`/`q2_body_state_answer` and are
+written by the processing RPC itself, not the client insert (see "Phase 5
+client verified against production" below, bug 1). Left as historical
+record below, not deleted.
+
 Built the `/reassessment/:loopId/:window` flow (controller, screens, gate,
 hub CTA) on branch `kimi/m5`. The route changed from the M1.4 placeholder
 `/reassessment` to carry `loopId` + window; `router_test.dart` was updated

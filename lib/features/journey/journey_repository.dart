@@ -149,8 +149,10 @@ class JourneyRepository {
           .select('id, routing_outcome, administered_at')
           .eq('loop_id', loopId)
           .eq('window_number', 'window_2')
-          // A retest (M5.4) inserts a second Window 2 row; the hub and the
-          // reassessment gate always act on the latest one.
+          // `one_window_per_loop` UNIQUE(loop_id, window_number) means a
+          // retest (M5.4) resets this same row's administered_at rather than
+          // inserting a second one (verified live 2026-07-19). order/limit
+          // is defensive, not load-bearing.
           .order('administered_at', ascending: false)
           .limit(1)
           .maybeSingle(),
@@ -159,6 +161,7 @@ class JourneyRepository {
           .select('id')
           .eq('loop_id', loopId)
           .eq('window_number', 'window_3')
+          // Same one-row-per-loop-per-window guarantee as above.
           .order('administered_at', ascending: false)
           .limit(1)
           .maybeSingle(),
