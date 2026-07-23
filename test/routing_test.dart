@@ -106,6 +106,61 @@ void main() {
     });
   });
 
+  group('resultCtaForRediag — reclassify_residual overrides the outcome CTA',
+      () {
+    test(
+        'reclassify_residual sends the deepening CTA even under '
+        'track_reassignment', () {
+      final cta = resultCtaForRediag(
+        RoutingOutcome.trackReassignment,
+        RediagClassification.reclassifyResidual,
+      );
+      expect(cta.destination, ReassessmentDestination.deepeningDrill);
+      expect(cta.label, 'Continue your practice');
+    });
+
+    test('method_mismatch falls through to the outcome\'s normal CTA', () {
+      final cta = resultCtaForRediag(
+        RoutingOutcome.trackReassignment,
+        RediagClassification.methodMismatch,
+      );
+      expect(cta.destination, ReassessmentDestination.freshDrill);
+      expect(cta.label, 'Start a fresh drill');
+    });
+
+    test('surface_contact falls through to the outcome\'s normal CTA', () {
+      final cta = resultCtaForRediag(
+        RoutingOutcome.trackReassignment,
+        RediagClassification.surfaceContact,
+      );
+      expect(cta.destination, ReassessmentDestination.freshDrill);
+      expect(cta.label, 'Start a fresh drill');
+    });
+
+    test('compliance_bypass falls through to the outcome\'s normal CTA', () {
+      final cta = resultCtaForRediag(
+        RoutingOutcome.trackReassignment,
+        RediagClassification.complianceBypass,
+      );
+      expect(cta.destination, ReassessmentDestination.freshDrill);
+      expect(cta.label, 'Start a fresh drill');
+    });
+
+    test(
+        'this test fails if the reclassify_residual branch is reverted to '
+        'resultCtaFor', () {
+      // Pins the fix: without the branch, resultCtaFor(trackReassignment)
+      // would return freshDrill, not deepeningDrill.
+      final withoutFix = resultCtaFor(RoutingOutcome.trackReassignment);
+      expect(withoutFix.destination, isNot(ReassessmentDestination.deepeningDrill));
+      final withFix = resultCtaForRediag(
+        RoutingOutcome.trackReassignment,
+        RediagClassification.reclassifyResidual,
+      );
+      expect(withFix.destination, ReassessmentDestination.deepeningDrill);
+    });
+  });
+
   group('hubFollowUpFor — the hub reflects each outcome', () {
     test('new_loop offers a new assessment', () {
       final followUp =

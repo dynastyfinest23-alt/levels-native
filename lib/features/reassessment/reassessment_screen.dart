@@ -561,6 +561,7 @@ class _ResultView extends StatelessWidget {
   Widget build(BuildContext context) {
     final String headline;
     final String body;
+    RediagClassification? rediagClassification;
     if (afterRediag) {
       // `route_false_positive` always writes rediag_classification (verified
       // against the deployed body 2026-07-19); a missing value is a data
@@ -571,6 +572,7 @@ class _ResultView extends StatelessWidget {
           'Rediag result is missing its rediag_classification.',
         );
       }
+      rediagClassification = rediag;
       final copy = RediagCopy.of(rediag);
       headline = copy.headline;
       body = copy.body;
@@ -584,9 +586,15 @@ class _ResultView extends StatelessWidget {
           'Your answers are in. Head home to see what is next.';
     }
     // The CTA follows the row's routing outcome (PRD M5.4) — all four
-    // destinations are real places, mapped in routing.dart.
+    // destinations are real places, mapped in routing.dart. After a rediag,
+    // the classification can override the outcome's usual CTA (PRD M5.R1):
+    // reclassify_residual goes to the deepening drill, not a fresh one.
     final routing = result.routingOutcome;
-    final cta = routing == null ? null : resultCtaFor(routing);
+    final cta = routing == null
+        ? null
+        : rediagClassification != null
+            ? resultCtaForRediag(routing, rediagClassification)
+            : resultCtaFor(routing);
     return SafeArea(
       child: Center(
         child: ConstrainedBox(

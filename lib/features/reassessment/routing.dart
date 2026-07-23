@@ -139,6 +139,25 @@ ResultCta resultCtaFor(RoutingOutcome outcome) {
   };
 }
 
+/// Result-screen CTA after a rediag completes. [RediagCopy.of] for
+/// `reclassifyResidual` reads "the next step goes deeper on the same path",
+/// so its CTA must lead to the deepening drill — not [resultCtaFor]'s
+/// `track_reassignment` mapping, which would send the user to a fresh
+/// layer-1 drill instead (review finding, PRD M5.R1). Every other rediag
+/// classification falls through to the outcome's ordinary CTA.
+ResultCta resultCtaForRediag(
+  RoutingOutcome outcome,
+  RediagClassification rediag,
+) {
+  if (rediag == RediagClassification.reclassifyResidual) {
+    return const ResultCta(
+      label: 'Continue your practice',
+      destination: ReassessmentDestination.deepeningDrill,
+    );
+  }
+  return resultCtaFor(outcome);
+}
+
 /// The route a result-screen CTA navigates to. Identical to
 /// [routeForDestination] except `retestGate`: a user who just finished the
 /// check-in goes home, and the hub carries the 48-hour waiting state (the

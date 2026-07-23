@@ -11,9 +11,13 @@ import 'package:levels_native/features/reassessment/reassessment_tokens.dart';
 /// when the read-back classification is `false_positive`. Uses a fake data
 /// source so no Supabase client is involved.
 class _FakeDataSource implements ReassessmentDataSource {
-  _FakeDataSource({required this.classification});
+  _FakeDataSource({
+    required this.classification,
+    this.rediagClassification = RediagClassification.reclassifyResidual,
+  });
 
   final Phase5Classification classification;
+  final RediagClassification rediagClassification;
   final List<String> calls = [];
 
   @override
@@ -49,8 +53,7 @@ class _FakeDataSource implements ReassessmentDataSource {
       routingOutcome: rediagRan
           ? RoutingOutcome.trackReassignment
           : RoutingOutcome.retestScheduled,
-      rediagClassification:
-          rediagRan ? RediagClassification.reclassifyResidual : null,
+      rediagClassification: rediagRan ? rediagClassification : null,
     );
   }
 
@@ -169,11 +172,45 @@ void main() {
 
       expect(fake.calls, contains('routeFalsePositive'));
       // The post-rediag view renders the typed rediag copy
-      // (reclassify_residual -> "The change is real") with the
-      // track_reassignment CTA, never a raw token.
+      // (reclassify_residual -> "The change is real") with the deepening
+      // CTA, not the row's raw track_reassignment outcome CTA (PRD M5.R1) —
+      // the copy says "goes deeper on the same path", so the button must
+      // agree, not send the user to a fresh layer-1 drill.
       expect(find.text('The change is real'), findsOneWidget);
-      expect(find.text('Start a fresh drill'), findsOneWidget);
+      expect(find.text('Continue your practice'), findsOneWidget);
+      expect(find.text('Start a fresh drill'), findsNothing);
       expect(find.textContaining('reclassify_residual'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'method_mismatch keeps the fresh-drill CTA — only reclassify_residual '
+    'gets the deepening override (PRD M5.R1)',
+    (tester) async {
+      final fake = _FakeDataSource(
+        classification: Phase5Classification.falsePositive,
+        rediagClassification: RediagClassification.methodMismatch,
+      );
+      await _pumpFlow(tester, fake);
+      await _submitMainFlow(tester);
+      await _tapOption(
+        tester,
+        'One particular situation or person, not everywhere',
+      );
+      await _tapButton(tester, 'Continue');
+      await _tapOption(tester, 'Relief, like something let go');
+      await _tapButton(tester, 'Continue');
+      await _tapOption(
+        tester,
+        'Noticeably different. I caught myself doing something new',
+      );
+      await _tapButton(tester, 'Continue');
+      await _tapButton(tester, 'Finish');
+
+      expect(find.text('The effort was real. The fit was not.'),
+          findsOneWidget);
+      expect(find.text('Start a fresh drill'), findsOneWidget);
+      expect(find.text('Continue your practice'), findsNothing);
     },
   );
 
