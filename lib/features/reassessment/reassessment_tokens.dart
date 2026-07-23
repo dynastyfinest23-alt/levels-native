@@ -181,9 +181,9 @@ class RediagCopy {
         return const RediagCopy._(
           headline: 'The change is real',
           body:
-              'Your scores were flat, but your behavior was not. What you '
-              'do in the moment counts more, and it says the work is '
-              'landing. The next step goes deeper on the same path.',
+              'What you reported stayed flat, but your behavior did not. '
+              'What you do in the moment counts more, and it says the work '
+              'is landing. The next step goes deeper on the same path.',
         );
       case RediagClassification.methodMismatch:
         return const RediagCopy._(

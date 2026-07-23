@@ -498,3 +498,29 @@ With this run, the M5.2 and M5.5 done-when manual verifications are
 COMPLETE (day-5 Window 2 shows a classification; day-21 Window 3 updates
 the hub calibration display). No M5 items remain pending except your
 review and the test-account cleanup.
+
+## M5.R2 cold-context copy rubric judge — one violation found and fixed (2026-07-22)
+
+Per CLAUDE.md's copy-gate rule, dispatched a fresh subagent with only the
+rubric (raw tokens, zone-as-noun, calibration vocabulary, mechanic
+numbers/instrument meta-commentary, em dashes, urgency/guilt/streak/
+permanent-identity, Flow-not-reachable-from-one-assessment) and the copy
+strings extracted verbatim from `reassessment_tokens.dart`
+(ClassificationCopy + RediagCopy), `reassessment_screen.dart` (`_ClosingView`,
+`_GateClosedView`, `_ReassessmentErrorView`, snackbar text), and
+`routing.dart` (all CTA labels). No file paths, no diff, no authorship
+context given to the judge.
+
+**Verdict: one violation, fixed.** `RediagClassification.reclassifyResidual`
+body read "Your scores were flat, but your behavior was not." — "scores" is
+calibration/instrument vocabulary (rubric rule 3). Changed to "What you
+reported stayed flat, but your behavior did not." in
+`lib/features/reassessment/reassessment_tokens.dart`. `flutter analyze`
+clean, `flutter test` 220/220 green after the fix. Not re-judged by a fresh
+pass per the brief (self-review by the fixing session doesn't count as a
+gate) — flagging here for your own read if you want a second look.
+
+All other strings passed every rule, including the `Flow` display-name
+usage in `_ClosingView` (sanctioned exception, rule 2) and the "never to a
+single assessment" / "earned loop by loop" framing (correct compliance with
+rule 7, not a violation).
