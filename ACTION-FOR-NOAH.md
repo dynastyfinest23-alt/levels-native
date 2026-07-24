@@ -534,3 +534,42 @@ All other strings passed every rule, including the `Flow` display-name
 usage in `_ClosingView` (sanctioned exception, rule 2) and the "never to a
 single assessment" / "earned loop by loop" framing (correct compliance with
 rule 7, not a violation).
+
+## M6.1 full-loop verification — two real bugs found and fixed, one open item (2026-07-23)
+
+Ran the complete `levels-verify` suite (all PASS) plus the two checks added
+to M6.1's done-when this session (security audit, retest-reuse regression
+check). Full details and the row trail are in `docs/PRD.md`'s M6.1 entry.
+Summary:
+
+1. **IDOR fixed.** Five SECURITY DEFINER functions
+   (`compute_center_of_gravity`, `process_phase5_reassessment`,
+   `process_window3_durability`, `apply_window3_calibration`,
+   `route_false_positive`) had no ownership check and were anon-executable.
+   Fixed via two migrations, verified clean post-fix.
+2. **`true_ascension` loops could never reach Window 3 — fixed.**
+   `LoopState` checked `loopComplete` before `window3Open`, so
+   `apply_window3_calibration`'s durability confirmation was dead code for
+   the one classification it exists to confirm. Fixed in `loop_state.dart`,
+   pinned with two new tests, verified live.
+3. **Open item — `ascension_loops.exit_score`/`exit_zone` are unclamped.**
+   `process_phase5_reassessment` writes `exit_score = center_of_gravity +
+   combined_delta` with no ceiling, so a single Window 2 true_ascension can
+   write `exit_zone = 'flow'` directly — on its face this contradicts
+   CLAUDE.md's "Flow reachability is climb-based, never single-assessment"
+   rule. Confirmed via `grep` that no client Dart code reads either column
+   today (`lib/` has zero references beyond one doc comment), so this is
+   not currently a live UI bug — the actual Flow-gating path
+   (`user_calibration.calibrated_level`, via `apply_window3_calibration`)
+   is correctly clamped and gated on the 3-loop streak, verified live in
+   this same run (`calibrated_level = 500.00`, `flow_resident = false`
+   after 1 loop). Not fixed — `process_phase5_reassessment`'s body is
+   frozen without your sign-off, and it's unclear whether `exit_score` is
+   meant to be a raw historical snapshot (current behavior, arguably fine)
+   or should carry the same clamp. Flagging for a decision, not urgent.
+
+**Test account to add to the cleanup pass:**
+`m61-fullloop-verify-1784768780@example.com` (loop
+`7f1fa09c-8d1c-45a6-a3be-b6bace345051`), same orphaned-`auth.users` reasoning
+as every prior milestone's accounts. This one completed the full five-phase
+trail including both Phase 5 windows.

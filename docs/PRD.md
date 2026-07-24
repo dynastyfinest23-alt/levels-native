@@ -655,22 +655,43 @@ record. M3 is done; M4 is next.**
 
 ### M6 — Full-loop hardening
 
-1. **M6.1 — Full-loop verification.** Run `levels-verify` against
-   production; then execute one complete manual loop in Chrome as a fresh
-   user (backdating `started_at` twice with Noah's approval to open the
-   windows) and record the row trail (loop → phase1 → phase2 → phase3 →
-   phase4 → phase5 ×2 → user_calibration) with read-only SELECTs. Also run
-   `get_advisors` (Supabase MCP) and spot-check RLS policies on the phase5
-   tables (`phase5_reassessments`, `user_calibration`) — these are new
-   since CLAUDE.md's last recorded security statement and have not had a
-   dedicated audit. Also run one read-only SELECT against an existing
-   false_positive/retest test account from M5 (see `ACTION-FOR-NOAH.md`
-   for account IDs) confirming its Window 2 row still shows the
-   UPDATE-reuse shape (one row, `administered_at` reset, not duplicated) —
-   a regression check on the `one_window_per_loop` fix. Done when: the row
-   trail is pasted into the PR/commit description, every row is present
-   and consistent, `get_advisors` findings are reported (not just run),
-   and the retest-reuse regression check passes.
+1. **M6.1 — Full-loop verification. COMPLETE — 2026-07-23.** Ran
+   `levels-verify` against production (all golden/classification/clamp/
+   infra checks PASS). `get_advisors` surfaced a real IDOR (not just a
+   lint): `compute_center_of_gravity`, `process_phase5_reassessment`,
+   `process_window3_durability`, `apply_window3_calibration`, and
+   `route_false_positive` were all anon/authenticated-executable with no
+   ownership check — fixed via two migrations (ownership guards +
+   `REVOKE ... FROM PUBLIC`; the first revoke attempt targeted `anon`
+   directly and had no effect since the grant was on `PUBLIC` — corrected
+   in a second migration), verified via `pg_get_functiondef`,
+   `role_routine_grants`, and a clean post-fix `get_advisors` re-check.
+   Regression check passed: an existing M5 false_positive/retest account
+   (`m52-api-verify2-1784500982739@example.com`) still shows exactly one
+   `window_2` row with `administered_at` reset, not duplicated.
+
+   The full manual loop (fresh account, browser, release build) surfaced a
+   second real bug: `LoopState` checked `loopComplete` before `window3Open`,
+   so a loop that reached `true_ascension` at Window 2 (which marks
+   `ascension_loops.status = 'complete'` immediately) could never route to
+   the Window 3 durability check — the one case `apply_window3_calibration`
+   was built to confirm. Fixed in `loop_state.dart` (window3Open now checked
+   first), pinned with two new tests, verified live end-to-end: the same
+   test loop reached "Three weeks later, it holds" after the fix, with the
+   full row trail confirmed present and consistent via read-only SELECTs
+   (loop → phase1 → phase2(fallback) → phase3_drill → phase4_track →
+   phase5_window_2(true_ascension) → phase5_window_3(true_ascension) →
+   user_calibration). `user_calibration.calibrated_level` clamped to
+   exactly 500.00 with `consecutive_verified_loops = 1` and
+   `flow_resident = false`, confirming the climb-only Flow rule holds even
+   though the raw (unused-by-client) `ascension_loops.exit_score` field is
+   itself unclamped and can read into Flow off one reassessment — flagged
+   in `ACTION-FOR-NOAH.md` as a loose end, not fixed (not currently
+   reachable from any UI).
+
+   `flutter analyze` clean, `flutter test` 222/222 green throughout.
+   Test-account cleanup still pending (needs the service-role API, same as
+   every prior milestone's manual-verification accounts).
 2. **M6.2 — Docs sync.** Update CLAUDE.md: repo tree (new feature dirs),
    open items (mark Phases 2–5 UI shipped; add push/email trigger and
    `checkin_scheduled_at` reminder as future items), and the mirror sync
