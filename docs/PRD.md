@@ -186,43 +186,65 @@ Only the columns the client touches are listed; all tables also carry
 
 The project is done when every box checks:
 
-- [ ] From a fresh signup in Chrome, a user can complete: assessment →
+- [x] From a fresh signup in Chrome, a user can complete: assessment →
       dashboard reveal → origin drill → assigned track work → Window 2
       reassessment → (if routed onward) Window 3 durability check, with no
-      dead ends and no manual SQL.
-- [ ] Every number, zone, classification, and routing decision shown on
+      dead ends and no manual SQL. (M6.1, 2026-07-23: walked end-to-end in
+      a real browser against production; only manual SQL used was the
+      sanctioned `started_at` backdate for testing the day-gated windows,
+      not a substitute for any app functionality.)
+- [x] Every number, zone, classification, and routing decision shown on
       screen was read back from a DB row or RPC result — grep-level check:
       no screen constructs an outcome from client math (mirrors are
-      display-only previews, labeled as such in code).
+      display-only previews, labeled as such in code). (M6.1, 2026-07-23:
+      grepped every `AssessmentResult`/`ClassificationCopy`/`RediagCopy`
+      construction site; both `AssessmentResult` builders read from a
+      post-RPC DB SELECT, copy lookups map a DB-returned token to display
+      text only.)
 - [x] Phase 2 screen writes `reality_tunnel_read`, `hidden_benefit_opened`,
       `illusion_opened`, and `time_on_screen_secs` as the user progresses
       (production SELECT 2026-07-11: newest row all-true + 24s; older null
       `time_on_screen_secs` rows predate the dispose-write fix).
-- [ ] Phase 3 writes a complete `phase3_origin_drills` row whose
+- [x] Phase 3 writes a complete `phase3_origin_drills` row whose
       `assigned_protocol` came from `assign_phase4_track`, and
-      `ascension_loops.assigned_track` matches it.
-- [ ] Each of the four tracks has a working session flow writing its
+      `ascension_loops.assigned_track` matches it. (M6.1 trail, 2026-07-23:
+      `q1_origin_type=childhood_conditioning`, `assigned_protocol=embodiment`,
+      loop `assigned_track=embodiment` — match.)
+- [x] Each of the four tracks has a working session flow writing its
       designated columns; embodiment writes 7 `embodiment_daily_logs` rows
-      gated one per day.
-- [ ] Window 2 is only offered on loop days 5–7 and Window 3 only on day
+      gated one per day. (Verified per-track in M4.3/M4.4/M4.5's manual
+      runs, logged in `ACTION-FOR-NOAH.md`; embodiment's day-7 completion
+      confirmed 2026-07-17/18.)
+- [x] Window 2 is only offered on loop days 5–7 and Window 3 only on day
       21+, both computed from `ascension_loops.started_at`; each calls its
       RPC and renders the returned classification/routing; the
       `false_positive` path runs the rediag flow via `route_false_positive`.
-- [ ] All four routing outcomes lead somewhere real: `new_loop` starts a new
+      (M5 browser run 2026-07-19 + M6.1 2026-07-23, including the Window 3
+      routing fix.)
+- [x] All four routing outcomes lead somewhere real: `new_loop` starts a new
       loop (Phase 1), `deepening_protocol` re-enters Phase 3 with
       `deepening_layer + 1`, `track_reassignment` re-enters the drill,
-      `retest_scheduled` shows the 48-hour gate.
-- [ ] Home screen is a journey hub showing loop number, current phase, day
+      `retest_scheduled` shows the 48-hour gate. (M5 browser run,
+      2026-07-19.)
+- [x] Home screen is a journey hub showing loop number, current phase, day
       counter, and calibration snapshot (`user_calibration` read-only).
-- [ ] `flutter analyze` zero warnings; `flutter test` fully green; every
-      new token mirror and window-gating rule has a pinned test.
-- [ ] The `levels-verify` suite passes against production after any backend
-      change, with results reported (not assumed).
-- [ ] All protocol/drill content was reviewed by Noah before being declared
-      shipped (each content task has an explicit review gate).
-- [ ] `pubspec.yaml` dependencies unchanged: `go_router`, `supabase_flutter`,
-      `flutter_lints` only.
-- [ ] CLAUDE.md "Current open items" updated to reflect what shipped.
+      (Confirmed in every M6.1 screenshot: "Loop 1", day counter, phase CTA,
+      "Calibration — Verified climb" progress dots.)
+- [x] `flutter analyze` zero warnings; `flutter test` fully green; every
+      new token mirror and window-gating rule has a pinned test. (222/222
+      green, zero analyze warnings, as of the M6.1 commits 2026-07-23.)
+- [x] The `levels-verify` suite passes against production after any backend
+      change, with results reported (not assumed). (Run and reported at the
+      start of M6.1, 2026-07-23; re-verified after the ownership-guard
+      migrations.)
+- [x] All protocol/drill content was reviewed by Noah before being declared
+      shipped (each content task has an explicit review gate). (M2.4
+      rubric pass 2026-07-10; M3.2 PASS WITH MINOR NOTES; M4.1 approved by
+      Noah 2026-07-16; M5.1 approved by Noah in writing 2026-07-19.)
+- [x] `pubspec.yaml` dependencies unchanged: `go_router`, `supabase_flutter`,
+      `flutter_lints` only. (Confirmed 2026-07-23.)
+- [x] CLAUDE.md "Current open items" updated to reflect what shipped.
+      (M6.2, 2026-07-23.)
 
 ## 4. CONSTRAINTS
 
@@ -692,12 +714,20 @@ record. M3 is done; M4 is next.**
    `flutter analyze` clean, `flutter test` 222/222 green throughout.
    Test-account cleanup still pending (needs the service-role API, same as
    every prior milestone's manual-verification accounts).
-2. **M6.2 — Docs sync.** Update CLAUDE.md: repo tree (new feature dirs),
-   open items (mark Phases 2–5 UI shipped; add push/email trigger and
-   `checkin_scheduled_at` reminder as future items), and the mirror sync
-   map (add the drill/reassessment token mirrors + their tests as group 4).
-   Update this PRD's checkboxes in §3. Done when: CLAUDE.md matches the
-   shipped reality and `docs/PRD.md` reflects final status.
+2. **M6.2 — Docs sync. COMPLETE — 2026-07-23.** Updated CLAUDE.md: repo
+   tree rebuilt from an actual `lib`/`test`/`docs` file listing (was
+   missing the drill/, track/, and reassessment/ feature dirs entirely,
+   plus 9 test files and 4 docs); "Current open items" rewritten (Phases
+   3–5 UI marked SHIPPED, push/email trigger + `checkin_scheduled_at`
+   reminder added as an explicit future item, stale "Framer marketing
+   site" bullet removed — it contradicted the Tech stack section's own
+   "Framer... do not resurrect it" note); mirror sync map gained group 4
+   (drill/reassessment token mirrors + their tests); Migration & SQL
+   discipline gained rule 8 (the ownership-guard lesson from M6.1) and
+   Definition of done item 4 now names it; Database inventory's function
+   list expanded from 9 named to 12 named + the ownership-guard note.
+   PRD §3 checkboxes updated (this session, see above). `flutter analyze`
+   clean, `flutter test` 222/222 green (docs-only change).
 3. **M6.3 — Loose ends audit.** Grep for TODOs introduced by this plan,
    confirm the `TODO(phase-3)` note in
    `supabase/functions/generate-dashboard-copy/index.ts` is now satisfied

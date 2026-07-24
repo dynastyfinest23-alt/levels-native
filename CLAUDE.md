@@ -44,7 +44,7 @@ lib/
     router.dart                 # go_router + default-deny auth gate (authRedirect)
     design_tokens.dart          # ALL colors/type/spacing/motion from MASTER.md §1–§5
     zone_style.dart             # ZoneStyle.of(zone) → display name + color + glow; throws on unknown
-    widgets/                    # aurora_backdrop.dart, breathing_dot.dart (shared design-system widgets)
+    widgets/                    # aurora_backdrop.dart, breathing_dot.dart, progress_dots.dart (shared design-system widgets)
   features/
     auth/                       # login_screen.dart, signup_screen.dart
     home/                       # home_screen.dart — journey hub (loop, phase CTA, progress dots)
@@ -57,9 +57,26 @@ lib/
       dashboard_copy.dart       # typed parser for the four-part reveal schema
       dashboard_repository.dart # Edge Function invoke + reveal-tracking column updates
       dashboard_controller.dart, dashboard_screen.dart  # Phase 2 tap-to-reveal
+    drill/                      # Phase 3 origin drill (3 structured + free-text questions)
+      drill_questions.dart      # origin_type/domain/mechanism question copy
+      drill_tokens.dart         # typed token mirrors + throwing display-copy helpers
+      drill_controller.dart     # insertDrill → saveDrill upsert; deepening-layer resolution
+      drill_screen.dart
+    track/                      # Phase 4 track sessions (completion/belief_audit/commitment/embodiment)
+      track_content.dart        # static protocol content, gated by Noah's review (M4.1)
+      track_tokens.dart, track_widgets.dart
+      track_screen.dart, track_session_controller.dart  # per-track dispatch
+      completion_screen.dart, commitment_screen.dart, belief_audit_screen.dart
+      embodiment_screen.dart, embodiment_gate.dart, embodiment_daily_log_controller.dart  # 7-day daily loop
     journey/
       loop_state.dart           # pure phase/window model (day 5–7, day 21 gates)
-      journey_repository.dart   # single read path for active loop + calibration
+      journey_repository.dart   # single read path for active loop + calibration + phase5 state
+    reassessment/                # Phase 5 (Window 2 check-in, rediag, Window 3 durability)
+      reassessment_questions.dart
+      reassessment_tokens.dart  # classification/rediag token mirrors + throwing display-copy helpers
+      reassessment_controller.dart  # insertOrReset submit path (one row per loop per window)
+      reassessment_screen.dart  # gate logic, PageView, rediag mount-gating, Window 3 closing view
+      routing.dart               # pure routing fn: routing_outcome (+ rediag) → CTA/destination
 test/
   scoring_mirror_test.dart      # golden-mirror suite (client ↔ deployed DB fns)
   auth_gate_test.dart           # pins the default-deny auth-gate contract
@@ -67,6 +84,9 @@ test/
   loop_state_test.dart          # pins phase progression + window boundaries
   dashboard_repository_test.dart
   zone_style_test.dart          # pins the six zone names/colors to MASTER.md §2
+  drill_questions_test.dart, drill_tokens_test.dart, drill_controller_test.dart
+  track_session_controller_test.dart, embodiment_gate_test.dart, embodiment_daily_log_controller_test.dart
+  reassessment_controller_test.dart, reassessment_screen_test.dart, routing_test.dart
 assets/fonts/                   # Fraunces + Inter variable fonts (OFL; files approved, google_fonts package is not)
 design-system/
   MASTER.md                     # binding visual system — read before touching any screen
@@ -75,7 +95,11 @@ supabase/
   functions/generate-dashboard-copy/  # index.ts + fallback.ts
 marketing-site/                 # separate React/Vite/Three.js app (Kimi-built) — not Dart, not this repo's standards
 docs/
-  PRD.md                        # standing PRD + task roadmap (Phases 2–5)
+  PRD.md                        # standing PRD + task roadmap (Phases 2–6)
+  copy-tone-rubric.md           # committed rubric content-gate reviewers judge against
+  dodson-2e-reference.md        # book-canon extraction, source of truth for content tasks
+  m3.2-copy-review-verdict.md, m4.1-track-content-review-verdict.md  # committed gate verdicts
+ACTION-FOR-NOAH.md              # running log of decisions, assumptions, and blockers batched for Noah
 ```
 
 Dependencies are deliberately minimal: `go_router` and `supabase_flutter` only (plus `flutter_lints`). **Do not add a dependency — including any state-management package — without explicit approval.** State management is plain `ChangeNotifier`; keep it that way.
@@ -178,6 +202,7 @@ These artifact groups share no runtime; nothing but discipline (and the tests li
 1. **Scoring:** deployed Postgres functions (`answer_to_raw_score`, `apply_downward_anchor_weight`, `score_to_zone`, `compute_center_of_gravity` incl. clamp + `was_clamped`) ↔ `lib/features/assessment/scoring.dart` ↔ `test/scoring_mirror_test.dart` ↔ the golden values in this file.
 2. **Four-part reveal schema:** `supabase/functions/generate-dashboard-copy/fallback.ts` (TS interface + static copy) ↔ `index.ts` (`REQUIRED_FIELDS`, prompt, JSON schema) ↔ `lib/features/dashboard/dashboard_copy.dart` (Dart parser).
 3. **Auth-gate contract:** `authRedirect` in `lib/core/router.dart` ↔ `test/auth_gate_test.dart`.
+4. **Drill/reassessment token mirrors:** deployed enums (`origin_type`, `origin_domain`, `coping_mechanism`, `phase5_classification`, `routing_outcome`, `rediag_classification`) ↔ `lib/features/drill/drill_tokens.dart` + `lib/features/reassessment/reassessment_tokens.dart` (typed mirrors + throwing display-copy helpers) ↔ `test/drill_tokens_test.dart` + `test/reassessment_controller_test.dart` + `test/reassessment_screen_test.dart` + `test/routing_test.dart`.
 
 Known external snapshot (NOT in the sync set): `C:\Users\Administrator\nexus\app.js` carries a JS copy of the scoring engine for its display-only simulator, pinned as a snapshot of migration `20260712150300` (desire drift 120→125 found and fixed 2026-07-16). It is deliberately excluded from rule-3 discipline — if scoring changes, updating nexus is optional, but its header comment must be re-pinned to the new migration if touched.
 
@@ -190,7 +215,7 @@ Known external snapshot (NOT in the sync set): `C:\Users\Administrator\nexus\app
 ## Database inventory (deployed, verified)
 
 - **Tables:** `users`, `ascension_loops`, `phase1_assessments` (unique per loop), `phase2_dashboard_views`, `phase3_origin_drills`, `phase4_track_sessions`, `embodiment_daily_logs`, `phase5_reassessments`, plus v1.1 additions `user_calibration`, `energy_guides`.
-- **Functions (13+):** `apply_downward_anchor_weight`, `answer_to_raw_score`, `score_to_zone`, `compute_center_of_gravity`, `compute_phase5_classification`, `process_phase5_reassessment`, `apply_window3_calibration`, `process_window3_durability`, `handle_new_user` (auth trigger), and supporting RPCs.
+- **Functions (18+):** `apply_downward_anchor_weight`, `answer_to_raw_score`, `score_to_zone`, `compute_center_of_gravity`, `assign_phase4_track`, `process_phase3_drill`, `compute_phase5_classification`, `process_phase5_reassessment`, `route_false_positive`, `apply_window3_calibration`, `process_window3_durability`, `seed_calibration_from_assessment`, `handle_new_user` (auth trigger), and supporting RPCs. All five ID-taking Phase 1/5 SECURITY DEFINER functions carry the `auth.uid()` ownership guard (rule 8 above, added 2026-07-23).
 - **Security:** RLS on all user tables (SELECT/INSERT/UPDATE scoped to `auth.uid() = user_id`). All SECURITY DEFINER functions hardened with `SET search_path = public, pg_temp`. Preserve both properties in any new function.
 - **Auth:** `on_auth_user_created` trigger auto-populates `public.users` from `auth.users`. Email confirmation is disabled for dev. Google/Apple OAuth pending credentials.
 
@@ -205,6 +230,7 @@ The binding end-to-end loop (read live state → migrate → MCP-verify → Dart
 5. Docker Desktop warnings during `db push` are non-fatal local caching noise. The authoritative success signal is `Applying migration <file>...` followed by `Finished supabase db push`.
 6. In the Supabase SQL Editor, only the last SELECT displays — combine multi-value checks into one query with labeled columns.
 7. Never run DDL via ad-hoc `execute_sql` against production. Migrations are the only schema-change path. (Read-only SELECTs via `execute_sql` for verification are fine — that is what Verify-as-you-go uses.)
+8. **Every SECURITY DEFINER function that takes a row ID must check `auth.uid()` against that row's `user_id` before mutating.** `SET search_path` alone is not enough — SECURITY DEFINER bypasses RLS by design, so without an explicit ownership check inside the function body, any authenticated (sometimes even anon) caller who has the ID can act on someone else's row. Found live 2026-07-23 via `get_advisors` (`anon_security_definer_function_executable`) on five Phase 1/5 functions with none of these checks; fixed by adding `IF v_rec.user_id <> auth.uid() THEN RAISE EXCEPTION` right after each function's existing `NOT FOUND` guard. Check this on every new ID-taking SECURITY DEFINER function, not just at milestone-end audits.
 
 ## Verify-as-you-go (run these after every backend change)
 
@@ -252,7 +278,7 @@ Work is finished only when all of these hold:
 1. `flutter analyze` is clean and `flutter test` passes.
 2. If a deployed DB function, enum, or schema changed: the relevant Verify-as-you-go checks were run against production and the results reported (not assumed).
 3. Every member of any touched mirror-sync group (see the sync map) was updated in the same change — including the golden values in this file if scoring changed.
-4. New routes, tables, or functions preserve the standing security properties: default-deny routing, RLS scoped to `auth.uid() = user_id`, `SET search_path = public, pg_temp` on SECURITY DEFINER.
+4. New routes, tables, or functions preserve the standing security properties: default-deny routing, RLS scoped to `auth.uid() = user_id`, `SET search_path = public, pg_temp` on SECURITY DEFINER, and an explicit `auth.uid()` ownership check inside any SECURITY DEFINER function that takes a row ID (see Migration & SQL discipline rule 8).
 5. No secret's literal value appears in any command, file, or output.
 6. The feature was cross-referenced against the Hooked framework and the Tone and product ethics section.
 7. Outcomes are reported faithfully — failing tests or skipped verifications are stated, never glossed.
@@ -272,9 +298,10 @@ Work is finished only when all of these hold:
 - Phase 2 Edge Function (generate-dashboard-copy): VERIFIED end-to-end on the fallback path in production (caller auth via user JWT, ownership 403, cache-hit/miss, one_dashboard_per_loop race handling, four-part schema write, bridge_question_shown stored). LLM path is code-complete and verified up to the Anthropic API boundary: request shape and model ID (claude-sonnet-4-6) confirmed valid against the live API reference; the sole blocker is Anthropic credit balance (API returns 400 'credit balance too low'). No code changes needed — the LLM path activates automatically when credits are added; the secret is already set. Root cause history: the multi-session debugging chain was (a) an invalid API key, then (b) zero credits — never an architecture, auth-design, or code defect. NOTE: an abandoned 2-month-old function `generate_phase2_dashboard` (underscores) was deleted 2026-07-08 via `supabase functions delete`; `generate-dashboard-copy` (hyphens) is canonical.
 - Phase 2 dashboard UI: SHIPPED and COMPLETE — progressive tap-to-reveal writes all three reveal columns; `time_on_screen_secs` is written on dispose via `recordTimeOnScreen` (verified in code 2026-07-11); M2.4 tone review passed 2026-07-10 (rubric judge pass; two `fallback.ts` fixes — flow + builder_clamped — deployed as Edge Function v8, MCP read-back confirmed).
 - Design system M-DS: M-DS.1–.5 SHIPPED (tokens, ZoneStyle, dashboard/home/auth+assessment restyles; calibration strip replaced with mechanic-free progress dots 2026-07-10). M-DS.6 (placeholders/loading/error states + anti-pattern grep sweep) NOT yet run.
-- Phases 3–5 UI (roadmap in `docs/PRD.md`; journey spine M1 COMPLETE, verified in-browser 2026-07-08 — home hub, LoopState, JourneyRepository, placeholder routes).
-- Framer marketing site with animated score visualization and zone illumination.
+- Phases 3–5 UI: SHIPPED. M3 (origin drill), M4 (all four track sessions, embodiment's 7-day daily loop), and M5 (Window 2/3 reassessment, rediag path, all four routing outcomes) are built, content-gate-approved, and verified end-to-end against production — most recently M6.1 (2026-07-23), which walked a fresh account through the complete five-phase loop in a real browser and confirmed every row present and consistent. M6 (docs sync, loose-ends audit) is the only remaining milestone.
+- Push/email reminder trigger (future milestone, explicitly out of scope for M1–M6): the Day 5–7 and Day 21 windows are in-app-only today, computed purely from `ascension_loops.started_at`. A scheduled `checkin_scheduled_at`-style reminder (email first per the 2026-07-15 product decision below, push once mobile ships) needs its own migration + pg_cron/Edge Function design — not built, not started.
 - iOS/Android platform enablement (near-term; web/Chrome is the only enabled platform today — see "This repository").
+- Test-account cleanup: ~20 accounts accumulated across M3.4 through M6.1's manual-verification runs (full list in `ACTION-FOR-NOAH.md`) need the service-role/admin API this client doesn't have — orphaned `auth.users` rows block a client-side-only delete.
 - (Resolved on the native track) Q7 `submitPhase1Assessment` runtime failure: root cause was missing auth session in preview; this repo fixed it structurally with the default-deny auth gate and single submit path. Still relevant to the FF build (surface error string via snackbar there).
 
 ## Product decisions — trigger, privacy, lapse (approved by Noah 2026-07-15)
