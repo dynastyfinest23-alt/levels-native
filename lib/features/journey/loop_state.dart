@@ -56,10 +56,15 @@ class LoopState {
     final window3Open = loopDay >= window3OpenDay;
 
     final JourneyPhase phase;
-    if (loopComplete || hasWindow3Reassessment) {
+    if (hasWindow3Reassessment) {
       phase = JourneyPhase.complete;
     } else if (window3Open) {
+      // Checked before loopComplete: true_ascension at Window 2 marks the
+      // loop complete immediately, but the Window 3 durability check exists
+      // specifically to confirm that ascension held — it must still fire.
       phase = JourneyPhase.window3;
+    } else if (loopComplete) {
+      phase = JourneyPhase.complete;
     } else if (hasWindow2Reassessment) {
       // Window 2 answered; routing outcome (M5.4) decides the specific next
       // screen — until Window 3 opens, the general phase is "working the

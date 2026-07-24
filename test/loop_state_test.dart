@@ -171,5 +171,30 @@ void main() {
         JourneyPhase.complete,
       );
     });
+
+    test(
+      'loop marked complete via true_ascension still reaches window3 at day 21',
+      () {
+        expect(
+          computeAt(startDay: 1, nowDay: 21, loopComplete: true).currentPhase,
+          JourneyPhase.window3,
+        );
+      },
+    );
+
+    test(
+      'loop marked complete AND window3 answered -> complete, not window3 again',
+      () {
+        expect(
+          computeAt(
+            startDay: 1,
+            nowDay: 21,
+            loopComplete: true,
+            hasWindow3Reassessment: true,
+          ).currentPhase,
+          JourneyPhase.complete,
+        );
+      },
+    );
   });
 }
