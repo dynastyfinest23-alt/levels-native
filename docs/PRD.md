@@ -728,12 +728,21 @@ record. M3 is done; M4 is next.**
    list expanded from 9 named to 12 named + the ownership-guard note.
    PRD §3 checkboxes updated (this session, see above). `flutter analyze`
    clean, `flutter test` 222/222 green (docs-only change).
-3. **M6.3 — Loose ends audit.** Grep for TODOs introduced by this plan,
-   confirm the `TODO(phase-3)` note in
-   `supabase/functions/generate-dashboard-copy/index.ts` is now satisfied
-   (bridge answer captured in M3.2's flow) and update/remove the comment
-   accordingly (Edge Function redeploy per CLAUDE.md command). Done when:
-   no stale TODOs reference unbuilt phases.
+3. **M6.3 — Loose ends audit. COMPLETE — 2026-07-23.** Grepped `*.dart`,
+   `*.ts`, `*.sql`, `*.yaml`, `*.md` for TODO/FIXME/XXX — the only hit was
+   this task's own description in this file. Confirmed the
+   `TODO(phase-3)` note in `generate-dashboard-copy/index.ts` is satisfied:
+   `drill_controller.dart`'s `fetchBridgeQuestion` reads
+   `bridge_question_shown` back and `drill_screen.dart` renders it as the
+   drill's first free-text prompt, landing in
+   `phase3_origin_drills.q1_free_text` — verified live in M6.1's run (the
+   bridge question was answered as part of that walkthrough). Updated the
+   comment to record the resolution and redeployed (`v9`, MCP read-back
+   confirmed the new comment text is live). No stale TODOs remain
+   anywhere in the repo.
+
+**M6 is now fully complete — all six milestones (M1–M6) shipped, verified,
+and documented. This PRD's five-phase build is done.**
 
 ## 7. HANDOFF NOTES
 

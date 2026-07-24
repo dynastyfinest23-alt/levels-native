@@ -250,10 +250,12 @@ Deno.serve(async (req) => {
     }
 
     // --- Cache write. bridge_question_shown is stored so Phase 3 can seed
-    // its first prompt from it.
-    // TODO(phase-3): the user's ANSWER to bridge_question is the Phase 3
-    // hand-off seam — captured in the Phase 3 flow (not here), keyed by
-    // loop_id + bridge_question_shown. Do not wire until Phase 3 exists.
+    // its first prompt from it. Resolved (M6.3, 2026-07-23): Phase 3 reads
+    // this column back (drill_controller.dart's fetchBridgeQuestion) and
+    // renders it as the free-text prompt on the drill's first question
+    // (drill_screen.dart) — the user's answer lands in
+    // phase3_origin_drills.q1_free_text, keyed by loop_id. Verified live
+    // in M6.1's full-loop run.
     const { data: inserted, error: insertError } = await admin
       .from("phase2_dashboard_views")
       .insert({
