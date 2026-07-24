@@ -659,9 +659,18 @@ record. M3 is done; M4 is next.**
    production; then execute one complete manual loop in Chrome as a fresh
    user (backdating `started_at` twice with Noah's approval to open the
    windows) and record the row trail (loop → phase1 → phase2 → phase3 →
-   phase4 → phase5 ×2 → user_calibration) with read-only SELECTs. Done
-   when: the trail is pasted into the PR/commit description and every row
-   is present and consistent.
+   phase4 → phase5 ×2 → user_calibration) with read-only SELECTs. Also run
+   `get_advisors` (Supabase MCP) and spot-check RLS policies on the phase5
+   tables (`phase5_reassessments`, `user_calibration`) — these are new
+   since CLAUDE.md's last recorded security statement and have not had a
+   dedicated audit. Also run one read-only SELECT against an existing
+   false_positive/retest test account from M5 (see `ACTION-FOR-NOAH.md`
+   for account IDs) confirming its Window 2 row still shows the
+   UPDATE-reuse shape (one row, `administered_at` reset, not duplicated) —
+   a regression check on the `one_window_per_loop` fix. Done when: the row
+   trail is pasted into the PR/commit description, every row is present
+   and consistent, `get_advisors` findings are reported (not just run),
+   and the retest-reuse regression check passes.
 2. **M6.2 — Docs sync.** Update CLAUDE.md: repo tree (new feature dirs),
    open items (mark Phases 2–5 UI shipped; add push/email trigger and
    `checkin_scheduled_at` reminder as future items), and the mirror sync
