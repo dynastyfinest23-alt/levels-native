@@ -53,3 +53,6 @@ marketing-site/dist/
 
 # Local reference-only clones (see CLAUDE.md) — not part of the project tree
 reference-flutteropen/
+
+# Transient manual-verification screenshots (see CLAUDE.md "Commands")
+Screenshots/

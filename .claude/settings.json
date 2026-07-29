@@ -28,5 +28,8 @@
       "mcp__197e78bd-2693-4fbc-9dfd-6e6e5c3d6a89__get_advisors",
       "mcp__197e78bd-2693-4fbc-9dfd-6e6e5c3d6a89__list_migrations"
     ]
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true
   }
 }
