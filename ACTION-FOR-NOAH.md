@@ -573,3 +573,62 @@ Summary:
 `7f1fa09c-8d1c-45a6-a3be-b6bace345051`), same orphaned-`auth.users` reasoning
 as every prior milestone's accounts. This one completed the full five-phase
 trail including both Phase 5 windows.
+
+## Production security sweep (2026-07-28)
+
+Ran the `levels-verify` suite plus a full `get_advisors` pass on `main` after
+deleting the merged `kimi/m5` branch. Scoring core is clean: all 16
+`score_to_zone` boundaries, 4 weighting values, 11 raw-score tokens, and 3
+Phase 5 classification cases match production, `compute_center_of_gravity`
+still captures `was_clamped` before the `LEAST` clamp and still runs the
+consistency cluster check against the raw mean. `flutter analyze` zero
+issues, `flutter test` 222/222, Edge Function v9 ACTIVE, and production's
+migration history matched the repo exactly at 12 files.
+
+Four things came out of it. Three are fixed and deployed; one is yours.
+
+**Fixed: `waitlist` and `join_waitlist()` were never under migration control.**
+Both have existed in production since the marketing-site signup form shipped,
+created through the SQL editor. Production's `schema_migrations` had 12 rows
+and neither object appeared in any of them, so a rebuild from migrations
+would have silently produced a database with no waitlist table. Declared
+as-is in `20260728203732_declare_waitlist_schema.sql`, reproducing the live
+definitions verbatim. No behavior changed.
+
+**Fixed: two trigger functions were callable by `anon` over REST.**
+`handle_new_user()` and `seed_calibration_from_assessment()` are SECURITY
+DEFINER and still carried the default PUBLIC execute grant, so anyone could
+hit them at `/rest/v1/rpc/`. Same class of gap the July 23 and 24 migrations
+closed on the client RPCs; these were missed because they fire from triggers
+rather than from the client. Revoked in `20260728203733`. Both triggers
+verified still enabled afterward (`tgenabled = 'O'`).
+
+**Fixed: five scoring functions had a mutable `search_path`.** Low severity,
+since all five are SECURITY INVOKER and run with the caller's own rights, but
+they were a permanent WARN on every advisor run. Pinned in `20260728203734`.
+Golden values re-verified unchanged after the ALTER.
+
+**Yours: leaked-password protection reads as disabled.** The advisor flags
+`auth_leaked_password_protection` as WARN right now. A session on 2026-07-24
+logged toggling this on along with email confirmation, so either the toggle
+did not save or it was later reverted. Live state wins. It is a switch in
+Auth settings under Password Security, not something a migration can set.
+
+**Also worth a decision, not fixed:** the `waitlist` SELECT policy is
+`auth.uid() = id`, but `id` is the waitlist row's own `gen_random_uuid()`
+primary key, not a `users.id`. The comparison can never be true, so no client
+role can read the table at all and only `service_role` can. That happens to
+be the safe outcome, so the catch-up migration declared it rather than
+changing it. Decide whether you want it left inert or rewritten to match on
+email once a user signs up.
+
+**Not verified this session:** a fresh end-to-end signup. The EXECUTE revoke
+should not affect trigger firing (Postgres invokes trigger functions
+internally, without consulting the caller's grant), and both triggers read as
+enabled, but the confirming check is one real signup in the browser watching
+for a new `public.users` row. Worth doing before launch regardless.
+
+Advisor warning count went from 20 to 9. The 9 that remain are the
+client-facing Phase 3/5 RPCs and `join_waitlist`, all intentional and all
+carrying `auth.uid()` ownership guards, plus the password-protection item
+above.
