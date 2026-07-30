@@ -632,3 +632,48 @@ Advisor warning count went from 20 to 9. The 9 that remain are the
 client-facing Phase 3/5 RPCs and `join_waitlist`, all intentional and all
 carrying `auth.uid()` ownership guards, plus the password-protection item
 above.
+
+## 2026-07-29: signup verification closed, em-dash ban applied to app copy
+
+**Closed: the fresh end-to-end signup the 2026-07-28 entry left open.** A real
+browser signup on the running client created `auth.users` and `public.users`
+together (31 to 32 on both, zero orphans), and completing the assessment seeded
+`user_calibration` from `phase1_assessments`. So both EXECUTE-revoked trigger
+functions, `handle_new_user` and `seed_calibration_from_assessment`, fire
+normally with `anon` and `authenticated` both denied. The revoke is verified,
+not just reasoned about. Test account: `trigger-check-20260729@levels-test.local`
+(user `db0b0118-ad4d-4ede-9029-11e0c6b1652f`), scored 390.00 / builder /
+scattered. That makes 21 test accounts awaiting cleanup, not 20.
+
+**Fixed: the 2026-07-19 em-dash ban had never been applied to the app.** Found
+41 em dashes in user-facing copy. Cleaned 31 of them:
+
+- `index.ts` prompt: added a hard rule forbidding em dashes, and removed the
+  four in the prompt's own instruction text, which had been modelling the exact
+  style it was supposed to forbid.
+- New `leaksEmDash` guard beside the existing `leaksNumbers` guard, so an LLM
+  generation containing an em dash is rejected in favour of fallback copy.
+  Enforced rather than requested.
+- `fallback.ts`: all 17 rewritten with periods, colons, and one parenthetical.
+  Punctuation only. Every approved claim is unchanged in meaning, including the
+  clamped-ceiling illusion framing and the Flow-reachability language.
+- `drill_questions.dart` (13) and `home_screen.dart` (1).
+
+Deployed as Edge Function v10 then v11, both MCP read-back verified. Commits
+`c7ae359` and `e174bcd`, both pushed to `origin/main`.
+
+**Yours: `fallback.ts` copy changed, so the M2.4 tone verdict is arguably
+stale.** The edits are punctuation-only and touch no mechanic, number, or zone
+claim, which is why the existing verdict was treated as still standing rather
+than reopening the gate. If you want it airtight, a fresh cold-context rubric
+pass over the seven zone variants is cheap. Your call, not one to assume.
+
+**Not done, deliberately: `track_content.dart` still has 10 em dashes.** It is
+under the M4.1 content gate, so rewriting it reopens that review. It is the
+last remaining user-facing violation. Also left alone: one em dash in a
+`StateError` in `track_session_controller.dart`, which is a developer-facing
+exception string, not copy.
+
+**Two schema-doc drifts found while verifying:** `phase1_assessments` uses
+`dominant_zone`, not `zone`, and `user_calibration` is keyed on `user_id` with
+no `id` column. Worth checking anywhere that claims otherwise.
