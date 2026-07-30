@@ -185,7 +185,7 @@ String _trackCtaLabel(TrackProgress? track) {
   return switch (gate.status) {
     EmbodimentDayStatus.open => 'Day ${gate.dayNumber} of 7',
     EmbodimentDayStatus.alreadyLoggedToday =>
-      'Day ${gate.dayNumber} logged — come back tomorrow',
+      'Day ${gate.dayNumber} logged. Come back tomorrow',
     EmbodimentDayStatus.windowElapsed => 'Continue your track',
   };
 }

@@ -43,12 +43,19 @@ function leaksNumbers(copy: DashboardCopy): boolean {
   return REQUIRED_FIELDS.some((field) => /\d{3,}|\d+\.\d+/.test(copy[field]));
 }
 
+// Em dashes are banned in all user-facing copy (Noah, 2026-07-19). The prompt
+// forbids them, but a prompt is a request, not a guarantee -- so enforce it the
+// same way numbers are enforced: reject the generation and use fallback copy.
+function leaksEmDash(copy: DashboardCopy): boolean {
+  return REQUIRED_FIELDS.some((field) => copy[field].includes("—"));
+}
+
 function buildSystemPrompt(wasClamped: boolean): string {
   const clampedIllusionRule = wasClamped
     ? `
 For THIS user the assessment result was clamped at the single-assessment
 ceiling. The "illusion" field MUST frame that ceiling exactly like this: a
-peak reading is not arrival — the ceiling they met is the designed doorway
+peak reading is not arrival. The ceiling they met is the designed doorway
 to Flow, which is earned across sustained verified loops, never claimed in
 one sitting. Frame it as the shape of the climb, not a limit on them.`
     : "";
@@ -60,17 +67,19 @@ You describe an outcome; you never compute, adjust, or imply one.
 
 Return JSON with exactly these four fields:
 
-- reality_tunnel: names the perceptual pattern implied by their zone — how
+- reality_tunnel: names the perceptual pattern implied by their zone: how
   the world tends to read from where they stand (2-3 sentences).
-- hidden_benefit: the secondary gain — what staying at this zone has quietly
-  protected them from (1-2 sentences).
+- hidden_benefit: the secondary gain, meaning what staying at this zone has
+  quietly protected them from (1-2 sentences).
 - illusion: the belief that makes the zone feel permanent, reframed as a
   story rather than truth (1-2 sentences).${clampedIllusionRule}
 - bridge_question: one open-ended question that becomes their first Phase 3
   answer. Personal and specific to the zone's pattern, never generic.
 
 Hard rules:
-- NEVER include numbers of any kind — no scores, ranges, counts, or dates.
+- NEVER include numbers of any kind: no scores, ranges, counts, or dates.
+- NEVER use an em dash. Not one, not a pair. Rewrite with a period, comma,
+  colon, or parentheses instead. This applies to every field.
 - NEVER imply Flow is reachable from a single assessment.
 - A zone is a position in a climb, never an identity or a label.
 - No manufactured urgency, no flattery, no toxic positivity. Warm, direct,
@@ -227,12 +236,13 @@ Deno.serve(async (req) => {
           consistencyFlag: assessment.consistency_flag as string,
           wasClamped,
         });
-        if (llmCopy && !leaksNumbers(llmCopy)) {
+        if (llmCopy && !leaksNumbers(llmCopy) && !leaksEmDash(llmCopy)) {
           copy = llmCopy;
           copySource = "llm";
         } else if (llmCopy) {
+          const reason = leaksNumbers(llmCopy) ? "leaked a number" : "used an em dash";
           console.error(
-            `LLM copy for loop ${loopId} leaked a number; using fallback`,
+            `LLM copy for loop ${loopId} ${reason}; using fallback`,
           );
         }
       } catch (err) {

@@ -55,7 +55,7 @@ const List<OriginTypeOption> originTypeOptions = [
     OriginType.childhoodConditioning,
   ),
   OriginTypeOption(
-    'One sharp moment I can still point to — before it, and after it',
+    'One sharp moment I can still point to. Before it, and after it',
     OriginType.acuteTrauma,
   ),
   OriginTypeOption(
@@ -64,7 +64,7 @@ const List<OriginTypeOption> originTypeOptions = [
     OriginType.inheritedBelief,
   ),
   OriginTypeOption(
-    'It stopped being a habit a long time ago — now it feels like who I am',
+    'It stopped being a habit a long time ago. Now it feels like who I am',
     OriginType.identityFusion,
   ),
   OriginTypeOption(
@@ -88,7 +88,7 @@ const List<OriginTypeOption> originTypeOptions = [
   ),
   OriginTypeOption(
     'At some point, getting ready became safer than being judged on the '
-    'result — and I never left that mode',
+    'result, and I never left that mode',
     OriginType.preparationLoop,
   ),
   OriginTypeOption(
@@ -109,7 +109,7 @@ const List<OriginTypeOption> originTypeOptions = [
 /// Q2 — Origin domain: where the pattern actually shows up.
 const String originDomainTitle = 'Where it shows up';
 const String originDomainPrompt =
-    'Same pattern — where does it actually show up the most?';
+    'Same pattern. Where does it actually show up the most?';
 const String originDomainFreeTextPrompt =
     'Say more about where this shows up, in your own words.';
 const List<OriginDomainOption> originDomainOptions = [
@@ -122,7 +122,7 @@ const List<OriginDomainOption> originDomainOptions = [
     OriginDomain.adequacyImpostor,
   ),
   OriginDomainOption(
-    'Big-picture dread — the sense something is fundamentally wrong with '
+    'Big-picture dread, the sense something is fundamentally wrong with '
     'the world',
     OriginDomain.existentialCatastrophic,
   ),
@@ -131,25 +131,25 @@ const List<OriginDomainOption> originDomainOptions = [
     OriginDomain.autonomySovereignty,
   ),
   OriginDomainOption(
-    'Achievement and status — needing the win to matter',
+    'Achievement and status, needing the win to matter',
     OriginDomain.statusAchievement,
   ),
   OriginDomainOption(
-    'Keeping score in relationships — what I give versus what comes back',
+    'Keeping score in relationships: what I give versus what comes back',
     OriginDomain.relationalReciprocity,
   ),
   OriginDomainOption(
-    'How I see systems and institutions — rigged, not built for people '
+    'How I see systems and institutions: rigged, not built for people '
     'like me',
     OriginDomain.ideologicalSystemic,
   ),
   OriginDomainOption(
-    'The voice in my own head — how I talk to myself when no one is '
+    'The voice in my own head: how I talk to myself when no one is '
     'listening',
     OriginDomain.internalSelfDirected,
   ),
   OriginDomainOption(
-    'How I relate to anyone in charge — bosses, parents, rules',
+    'How I relate to anyone in charge: bosses, parents, rules',
     OriginDomain.internalizedAuthority,
   ),
   OriginDomainOption(
@@ -157,7 +157,7 @@ const List<OriginDomainOption> originDomainOptions = [
     OriginDomain.societalComparative,
   ),
   OriginDomainOption(
-    'The standard I hold myself to — never quite clearing the bar I set',
+    'The standard I hold myself to, never quite clearing the bar I set',
     OriginDomain.selfPerfectionism,
   ),
   OriginDomainOption(
@@ -183,11 +183,11 @@ const List<CopingMechanismOption> copingMechanismOptions = [
     CopingMechanism.externalRegulation,
   ),
   CopingMechanismOption(
-    'I shut down — go quiet and wait it out',
+    'I shut down, go quiet and wait it out',
     CopingMechanism.collapseShutdown,
   ),
   CopingMechanismOption(
-    'I think my way out of it — analyze until the feeling loses its grip',
+    'I think my way out of it, analyzing until the feeling loses its grip',
     CopingMechanism.cognitiveOverride,
   ),
   CopingMechanismOption(
