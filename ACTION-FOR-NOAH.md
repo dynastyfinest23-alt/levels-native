@@ -1,11 +1,11 @@
 # Action items for Noah
 
-## M2.4 full-flow artifact — screenshot path unavailable (2026-07-15)
+## M2.4 full-flow artifact: screenshot path unavailable (2026-07-15)
 
 PRD M2.4 status now cites the M-DS.3 reveal-flow screenshot set as its
 full-flow artifact, but `Screenshots/` at the repo root is currently
 empty/absent (per CLAUDE.md, that folder is transient and only present when
-populated). Did not re-shoot per Task 2c instructions — flagging instead.
+populated). Did not re-shoot per Task 2c instructions, flagging instead.
 
 If you want a durable artifact on record for this gate, either point to
 where the M-DS.3 screenshots actually live now, or ask for a fresh screenshot
@@ -14,33 +14,33 @@ pass next session.
 ## M3.4 manual-verification test account (2026-07-16)
 
 Verified the M3.4 drill flow end-to-end in a real browser (release build,
-headless Chromium) — signed up, ran Phase 1, revealed the Phase 2 dashboard,
+headless Chromium): signed up, ran Phase 1, revealed the Phase 2 dashboard,
 completed the Phase 3 drill, confirmed the home hub advanced to "Working
 your track". Left the test account in place rather than partially cleaning
 it up: `public.users`/loop/assessment/drill rows are deletable via SQL, but
 the linked `auth.users` row needs the admin API (service role), which isn't
-available to this client — deleting only the public-schema rows would leave
+available to this client. Deleting only the public-schema rows would leave
 an orphaned auth user, which is worse than leaving the full account intact.
 Add to the existing "test-account deletion" cleanup pass:
 `m34-drill-verify@example.com` (`public.users.id`
 `fd8f6411-02c0-4def-a3ed-dfa71c8a4daa`, loop `b6efaf63-69ac-4891-9ef9-59960f020cbb`).
 
-## Resolved — love_flow decision (2026-07-16)
+## Resolved: love_flow decision (2026-07-16)
 
-**Decision: defer — keep `love_flow` = 530.** Noah reviewed the 530-vs-550
+**Decision: defer, keep `love_flow` = 530.** Noah reviewed the 530-vs-550
 brief and chose to hold off recalibrating; the book's citation for 550 is
 adjacent (a "Love of 550..." quote, not a dedicated anchor heading like the
 other 11 tokens), and a change buys no behavioral difference in the common
-full-`love_flow` case. No scoring artifact touched — `answer_to_raw_score`,
+full-`love_flow` case. No scoring artifact touched: `answer_to_raw_score`,
 `scoring.dart`, golden tests, and CLAUDE.md's scoring table all remain as
 deployed/verified 2026-07-15. Removed from the open list; no further action
 needed unless Noah revisits the citation later.
 
-## Resolved — M4.2 open product decisions (2026-07-16)
+## Resolved: M4.2 open product decisions (2026-07-16)
 
 Built `lib/features/track/track_session_controller.dart` (start/resume +
 per-stage save for all four `phase4_track_sessions` tracks). Verified live
-against production first — two docs corrections came out of that (column is
+against production first. Two docs corrections came out of that (column is
 `preparation_duration` not `prep_duration`; `belief_authorship_age` is
 `int[]` not `text[]`, both now fixed in `docs/PRD.md` §2). No deployed
 function references `phase4_track_sessions` at all (confirmed via
@@ -54,7 +54,7 @@ M4.3-M4.6; implement each as a pure Dart function with a pinned test.
 1. **`success_state_reached` per track:**
    - `completion`, `belief_audit`: finishing the flow = success. The
      integrity-check moment is reflective, not a fail state.
-   - `commitment`: `finish()` is NOT called at declaration time — the
+   - `commitment`: `finish()` is NOT called at declaration time. The
      session stays open until the ~72h check-in (the one-open-session-per-
      loop invariant tolerates this). Success = `checkin_response == yes`
      only; `partially`/`no` = not success (behavior tells the truth over
@@ -65,7 +65,7 @@ M4.3-M4.6; implement each as a pure Dart function with a pinned test.
 2. **`completion` track's `integrity_check_triggered` rule:** fires when
    `preparation_duration` is a year or more (`years1to3` or `over3yr`).
    The statement is free text, so the duration enum is the only structured
-   input a deterministic rule may use — no language classification.
+   input a deterministic rule may use, with no language classification.
 3. **M4.4 belief-count cap: fixed at 3 (min 1, max 3).** Matches the
    3-belief done-when in PRD M4.4 and the tab-navigation UI pattern.
 
@@ -127,7 +127,7 @@ test-account cleanup pass, same reasoning as M3.4/M4.3 (orphaned
 
 `lib/features/track/embodiment_daily_log_controller.dart` and
 `lib/features/track/embodiment_screen.dart` both carry doc comments that
-say "flagged in ACTION-FOR-NOAH.md" — this is that flag, added on review
+say "flagged in ACTION-FOR-NOAH.md". This is that flag, added on review
 since neither file had actually written it yet.
 
 1. **`body_location`/`sensation_words` on `embodiment_daily_logs` are left
@@ -135,19 +135,19 @@ since neither file had actually written it yet.
    `information_schema.columns`), but `track_content.dart` (M4.1,
    gate-approved) only has a prompt for them on the one-time session
    screen, not per day. PRD M4.5's task text also only lists identity
-   statement + body_response as the daily baseline. Read as intentional —
-   the columns are likely vestigial from an earlier schema draft — but
-   flagging since nothing says so explicitly. If you want daily
+   statement + body_response as the daily baseline. Read as intentional:
+   the columns are likely vestigial from an earlier schema draft. Flagging
+   anyway since nothing says so explicitly. If you want daily
    location/sensation capture too, that needs new copy through the content
    gate, not a silent code change.
 2. **"Already logged today" / "window elapsed" states use plain
    functional-chrome copy, not content-gate-reviewed narrative.** Same
-   register as `TrackErrorView` and the router's coming-soon placeholder —
+   register as `TrackErrorView` and the router's coming-soon placeholder:
    status text, not drill/reveal copy. If you want these two states held
    to the M4.1 tone rubric too, say so and they'll go through a review
    pass like the rest of the track content did.
 
-Neither decision touches scoring, schema, or the deployed backend — both
+Neither decision touches scoring, schema, or the deployed backend, and both
 are reversible in a follow-up commit if you want it done differently.
 
 ## M4.5 manual-verification test account (2026-07-17/18)
@@ -184,7 +184,7 @@ build across every rebuild *and every browser process restart* for a long
 stretch of this session, making a working Save button look completely
 broken (no click effect, no network call, nothing). Confirmed via a
 throwaway `--user-data-dir` per Chrome launch, which immediately fixed it.
-No code in `lib/` was changed as a result — the `onPressed` wiring was
+No code in `lib/` was changed as a result. The `onPressed` wiring was
 already correct in the committed code. If browser-based verification ever
 looks inexplicably "dead" again (button does nothing, no errors, no
 requests) on a *rebuilt* release bundle, suspect stale profile/service-
@@ -202,21 +202,23 @@ Add this account to the existing test-account cleanup pass.
 Verified the M4.6 hub track-progress CTA end-to-end in a real browser
 against production. Two accounts:
 
-- `m46-hub-verify@example.com` (loop routed to `completion`) — a keyboard
+- `m46-hub-verify@example.com` (loop routed to `completion`): a keyboard
   focus-traversal mistake during drill Q1 (typing into the wrong focused
   element while hunting for the free-text field via Tab) accidentally
   changed the selected origin-type answer mid-drill, so this account ended
   up on the `completion` track instead of the intended `embodiment` track.
   Not usable for the embodiment CTA test; left as-is.
 - `m46-hub-verify-2@example.com` (loop `17e2e644-355e-42ed-93c9-b529569e16a6`,
-  session `a60803fa-abac-4ebd-a499-8de927487c25`) — driven through signup ->
+  session `a60803fa-abac-4ebd-a499-8de927487c25`), driven through signup ->
   Phase 1 -> Phase 2 reveal -> Phase 3 drill (Q1 `childhood_conditioning`,
   routing to `embodiment`) -> confirmed hub shows generic "Continue your
   track" before a session row exists -> opened the track screen (creates
   the session) -> back to hub, confirmed "Day 1 of 7" -> completed day 1's
   check-in -> back to hub, confirmed "Day 1 logged — come back tomorrow".
   MCP SELECT on `embodiment_daily_logs` confirmed `day_number=1`,
-  `completed_at` set, matching the UI.
+  `completed_at` set, matching the UI. (That quoted string is the copy as it
+  existed on 2026-07-18 and is left verbatim as a record. The em dash in it
+  was removed from `home_screen.dart` on 2026-07-29; do not "fix" the quote.)
 
 Both accounts left in place, same reasoning as prior milestones (orphaned
 `auth.users` row risk without the admin/service-role API). Add both to the
@@ -224,21 +226,21 @@ existing test-account cleanup pass.
 
 **Browser-automation note:** on this Flutter web build, Tab-key focus
 traversal through a `_DrillQuestionPage`'s answer options is unreliable
-when driven in rapid batched keypresses (many `Tab`s in one tool call) —
+when driven in rapid batched keypresses (many `Tab`s in one tool call):
 focus lands inconsistently and typed text can land on a still-focused
 option button instead of the free-text field, silently changing the
 selected answer via type-ahead-style key handling. Tabbing one key at a
 time with a short wait and a screenshot between each step was reliable;
-batching all Tabs in one call was not. Not a product bug — an artifact of
+batching all Tabs in one call was not. Not a product bug, just an artifact of
 CanvasKit's accessibility tree being sparse for automation tooling.
 
-## M5.2 Window 2 flow — manual run pending, assumptions flagged (2026-07-19)
+## M5.2 Window 2 flow: manual run pending, assumptions flagged (2026-07-19)
 
 **Resolved (2026-07-22).** The manual run this section flags completed
-2026-07-19 (see "M5 browser manual run — COMPLETE" below; screenshots
+2026-07-19 (see "M5 browser manual run: COMPLETE" below; screenshots
 `m5-01` through `m5-08` in `Screenshots/`). Of the four blind assumptions
 listed here, assumption 1 (insert columns) was disproven and fixed: the
-client insert now carries only `loop_id`/`user_id`/`window_number` — the
+client insert now carries only `loop_id`/`user_id`/`window_number`. The
 answer columns are `q1_trigger_answer`/`q2_body_state_answer` and are
 written by the processing RPC itself, not the client insert (see "Phase 5
 client verified against production" below, bug 1). Left as historical
@@ -251,7 +253,7 @@ to match.
 
 **The PRD M5.2 done-when manual run is still pending.** It needs a day-5+
 test loop (backdating `ascension_loops.started_at` is a production data
-edit — your approval required each time, per PRD §7) showing a real
+edit, so your approval is required each time, per PRD §7) showing a real
 classification from `process_phase5_reassessment`. The fake-client test
 pins the insert -> RPC -> read-back order, but per the definition of done,
 unit tests do not substitute for the manual run.
@@ -272,23 +274,23 @@ Phase 5 schema; `20260623000001_baseline.sql` is an empty file):
    Window 3 closing screen in M5.5 does not depend on them.
 4. Result-screen copy (`ClassificationCopy`) and the gate-closed/error copy
    are executor-written functional copy, not content-gate-reviewed
-   narrative — same standing as the M4.5 status states. Say the word if you
+   narrative, same standing as the M4.5 status states. Say the word if you
    want it run through the rubric judge.
 
-## M5.3 rediag path — gaps coded around, not resolved (2026-07-19)
+## M5.3 rediag path: gaps coded around, not resolved (2026-07-19)
 
 1. **`route_false_positive` RPC arg names are assumed.** PRD §2's signature
    table writes them without the `p_` prefix the other Phase 5 functions use
    (`rediag_resistance`, `rediag_feeling`, `rediag_pattern`, optional
    `free_text`; `p_reassessment_id` IS prefixed there). Coded exactly as the
    PRD writes them. If the deployed function actually uses `p_` prefixes,
-   the RPC will 400 on the first real false_positive run — the manual M5.2
+   the RPC will 400 on the first real false_positive run, so the manual M5.2
    verification pass should include one false_positive answer set to catch
    this.
 2. **`rediag_classification` enum values are documented nowhere in this
    repo** (the Phase 5 schema lives only in production; the local baseline
    migration is empty). Per the no-invented-schema rule, the client stores
-   it as an opaque string and never renders it — the post-rediag screen
+   it as an opaque string and never renders it. The post-rediag screen
    shows a quiet acknowledgement plus the way home. To render it properly
    (typed throwing lookup like `ZoneStyle.of`), paste the output of
    `SELECT enumlabel FROM pg_enum e JOIN pg_type t ON t.oid = e.enumtypid
@@ -302,7 +304,7 @@ Phase 5 schema; `20260623000001_baseline.sql` is an empty file):
    `ensureVisible` before tapping. `DrillScreen`'s lazy `ListView` pages
    have the same latent test quirk; left untouched as out of scope.
 
-## M5.4 routing outcomes — assumptions flagged (2026-07-19)
+## M5.4 routing outcomes: assumptions flagged (2026-07-19)
 
 All four routing outcomes are wired: `new_loop` (controller marks the loop
 `complete` on read-back, CTA to `/assessment`), `deepening_protocol`
@@ -315,7 +317,7 @@ blind:
    column's enum/text domain is not in this repo (baseline migration is
    empty); `'complete'` is the value `JourneyRepository` already reads for.
    If the deployed enum spells it differently, the new_loop path throws at
-   runtime — the manual verification run covers this.
+   runtime, and the manual verification run covers this.
 2. **A retest inserts a second `window_2` row.** No unique constraint is
    documented; `JourneyRepository` now reads the latest row by `created_at`
    to tolerate it. If a unique(loop_id, window_number) constraint exists,
@@ -326,10 +328,10 @@ blind:
    if retests should instead be clipped to the window.
 4. **Hub/CTA copy is executor-written functional chrome** ("Continue your
    practice", "Start a fresh drill", "Your check-in opens soon", "Take your
-   check-in"), same standing as the M4.5 status states — not
+   check-in"), same standing as the M4.5 status states, not
    content-gate-reviewed narrative.
 
-## M5.5 Window 3 flow — manual day-21 run pending (2026-07-19)
+## M5.5 Window 3 flow: manual day-21 run pending (2026-07-19)
 
 Built the Window 3 durability flow on `kimi/m5`: same three questions with
 `window_number = 'window_3'`, `process_window3_durability` RPC, read-back of
@@ -349,11 +351,11 @@ manual run.
 
 Assumption flagged: whether `process_window3_durability` also writes
 `classification`/`routing_outcome` to the reassessment row is unverifiable
-from this repo — the closing screen deliberately depends only on
+from this repo. The closing screen deliberately depends only on
 `user_calibration`, and the row's classification fields are treated as
 nullable, so either deployed behavior works.
 
-## Phase 5 client verified against production — three real bugs found and fixed (2026-07-19)
+## Phase 5 client verified against production: three real bugs found and fixed (2026-07-19)
 
 No Supabase MCP tools were connected in the executor session, so the blind
 spots were verified a different read-only way: started Docker Desktop and
@@ -362,11 +364,11 @@ written to production). The dumped DDL answered every open assumption from
 the M5.2–M5.5 flags, and three of them were live bugs:
 
 1. **Insert columns were wrong.** The M5.2 client inserted `q1_answer` /
-   `q2_answer` / `q3_block_flag` — none of the answer columns exist under
+   `q2_answer` / `q3_block_flag`, and none of the answer columns exist under
    those names (real: `q1_trigger_answer`, `q2_body_state_answer`; all
    answer/score/delta columns are written by the processing RPC itself).
    The insert now carries only `loop_id`, `user_id`, `window_number`.
-2. **`created_at` does not exist on `phase5_reassessments`** — the column
+2. **`created_at` does not exist on `phase5_reassessments`.** The column
    is `administered_at`. The hub's Window 2 query and ordering used
    `created_at` and would have failed for every loop. Fixed everywhere
    (repository, screen gate, hub).
@@ -383,16 +385,16 @@ Also resolved by the dump:
   throwing `RediagCopy` display lookup; the post-rediag screen renders it.
   The earlier "stored opaque, never rendered" workaround is gone.
 - **Rediag always routes `track_reassignment`** (and may rotate
-  `ascension_loops.assigned_track` server-side) — the client's post-rediag
+  `ascension_loops.assigned_track` server-side), and the client's post-rediag
   CTA matches.
 - **Client `markLoopComplete` was removed.** The deployed
   `process_phase5_reassessment` already writes `status='complete'` +
   `completed_at` + exit score/zone on `true_ascension`, and rediag never
   returns `new_loop`. A client UPDATE could only ever write an incomplete
   copy of that fact. PRD M5.4's wording is corrected accordingly.
-- **No unique(loop_id, window_number) constraint exists** — the
+- **No unique(loop_id, window_number) constraint exists**, so the
   second-row retest design is valid as built.
-- `loop_status` = `active`/`complete`/`stalled` (no `lapsed` value yet —
+- `loop_status` = `active`/`complete`/`stalled` (no `lapsed` value yet, since
   the lapse policy's enum addition is still future backend work).
 
 `flutter analyze` clean, `flutter test` 211/211 green after the fixes.
@@ -401,17 +403,17 @@ Also resolved by the dump:
 with your approved `started_at` backdates. Note Docker Desktop was started
 on this machine for the dump and left running.
 
-## Phase 5 API-level verification against production — ALL PASS (2026-07-19)
+## Phase 5 API-level verification against production: ALL PASS (2026-07-19)
 
 With the schema-dump fixes in place, the full client contract was exercised
 against production via PostgREST + RPC with a fresh test user's own JWT
-(RLS-scoped, publishable key only — the exact calls the Flutter client
+(RLS-scoped, publishable key only, the exact calls the Flutter client
 makes). Round 1 (14/18) surfaced one more real bug the dump-reading had
 missed; round 2 (11/11) passed everything.
 
-**Bug 4 — `one_window_per_loop` UNIQUE(loop_id, window_number).** The M5.4
+**Bug 4, `one_window_per_loop` UNIQUE(loop_id, window_number).** The M5.4
 retest design assumed a retest could insert a second `window_2` row; the
-insert 409'd live. The constraint WAS in the dump — my earlier grep missed
+insert 409'd live. The constraint WAS in the dump; my earlier grep missed
 it (the "no unique constraint" claim in the previous entry was wrong, and
 this correction supersedes it). Fixed: a retest now resets
 `administered_at` on the loop's one row and re-runs
@@ -419,7 +421,7 @@ this correction supersedes it). Fixed: a retest now resets
 Verified live: same row id, clock reset, `false_positive` reclassified to
 `true_ascension`/`new_loop` on the retest.
 
-**Bug 5 — `one_drill_per_loop` UNIQUE(loop_id).** Same shape: M5.4's
+**Bug 5, `one_drill_per_loop` UNIQUE(loop_id).** Same shape: M5.4's
 deepening/track-reassignment drills would have 409'd on a second drill
 insert. Fixed: `DrillController` now updates the loop's one drill row (new
 answers, resolved `deepening_layer`) and re-runs `process_phase3_drill`.
@@ -431,7 +433,7 @@ window2 false_positive/retest_scheduled read back with deltas
 (-175/-175/-175); rediag -> reclassify_residual + track_reassignment;
 retest row reuse + clock reset + reclassification; loop auto-completed by
 the RPC itself (`status=complete`, `completed_at`, `exit_score=442.5`,
-`exit_zone=builder` — confirms removing the client `markLoopComplete` was
+`exit_zone=builder`, which confirms removing the client `markLoopComplete` was
 right); drill deepening update path; window3 durability (classification
 written, `routing_outcome` null as the client assumes); `user_calibration`
 read back after the durability engine ran.
@@ -448,23 +450,23 @@ and rendering end to end. The backend contract those runs depend on is now
 verified; what remains unverified is the Flutter UI against production
 (window gates, hub states, closing screen).
 
-## M5 browser manual run — COMPLETE, two more real bugs found and fixed (2026-07-19)
+## M5 browser manual run: COMPLETE, two more real bugs found and fixed (2026-07-19)
 
 Full browser verification against production (release build, headless
 Chromium via Playwright, fresh test accounts, `started_at` backdates run
-through each test account's own JWT under RLS — covered by your 2026-07-19
+through each test account's own JWT under RLS, covered by your 2026-07-19
 blanket approval). Screenshots are in `Screenshots/` (m5-01 through m5-08).
 
-**Bug 6 — rediag navigation crashed in release builds.** On a
+**Bug 6, rediag navigation crashed in release builds.** On a
 `false_positive` submit, the flow swapped the PageView out for the loading
 dot; the submit finished with the PageView unmounted, so
 `PageController.nextPage` had no attached position and threw
 `Bad state: No element` (asserts stripped in release). The widget test
-could never catch this — tester frames don't interleave with the handler.
+could never catch this, since tester frames don't interleave with the handler.
 Fixed by keeping the PageView mounted and rendering the loading state as
 an overlay.
 
-**Bug 7 — the rediag path mounted for Window 3 too.** A day-21
+**Bug 7, the rediag path mounted for Window 3 too.** A day-21
 `false_positive` continued into rediag questions instead of closing on the
 calibration view, and `route_false_positive`'s `track_reassignment`
 routing would have contradicted the loop's close. Rediag is now scoped to
@@ -477,7 +479,7 @@ flow with `false_positive` answers; rediag mounting inline and completing;
 post-rediag result showing typed copy ("The change is real", never the
 token) with the Start-a-fresh-drill CTA; the drill destination loading;
 the hub reflecting `track_reassignment`; the 48-hour retest wait state
-(disabled "Your check-in opens soon" on the hub — verified live on an
+(disabled "Your check-in opens soon" on the hub, verified live on an
 earlier account); the gate-closed backstop when re-entering a completed
 check-in's URL; the hub offering the Day 21 durability check after
 backdating; the Window 3 flow closing on "Three weeks later, it holds"
@@ -500,7 +502,7 @@ outside the viewport, so a normal Playwright click times out); page
 reloads reset that toggle; the first keystroke after focusing a text
 field can be eaten (settle ~500ms before typing); option clicks right
 after a page transition can be dropped (click-verify-retry); `fill()`
-can miss Flutter's onChanged — click then `keyboard.type`. The M4.5
+can miss Flutter's onChanged, so click then `keyboard.type`. The M4.5
 stale-bundle warning still applies; serving `build/web` with
 `Cache-Control: no-store` avoided it this time.
 
@@ -509,7 +511,7 @@ COMPLETE (day-5 Window 2 shows a classification; day-21 Window 3 updates
 the hub calibration display). No M5 items remain pending except your
 review and the test-account cleanup.
 
-## M5.R2 cold-context copy rubric judge — one violation found and fixed (2026-07-22)
+## M5.R2 cold-context copy rubric judge: one violation found and fixed (2026-07-22)
 
 Per CLAUDE.md's copy-gate rule, dispatched a fresh subagent with only the
 rubric (raw tokens, zone-as-noun, calibration vocabulary, mechanic
@@ -522,20 +524,20 @@ strings extracted verbatim from `reassessment_tokens.dart`
 context given to the judge.
 
 **Verdict: one violation, fixed.** `RediagClassification.reclassifyResidual`
-body read "Your scores were flat, but your behavior was not." — "scores" is
+body read "Your scores were flat, but your behavior was not." The word "scores" is
 calibration/instrument vocabulary (rubric rule 3). Changed to "What you
 reported stayed flat, but your behavior did not." in
 `lib/features/reassessment/reassessment_tokens.dart`. `flutter analyze`
 clean, `flutter test` 220/220 green after the fix. Not re-judged by a fresh
 pass per the brief (self-review by the fixing session doesn't count as a
-gate) — flagging here for your own read if you want a second look.
+gate), so flagging here for your own read if you want a second look.
 
 All other strings passed every rule, including the `Flow` display-name
 usage in `_ClosingView` (sanctioned exception, rule 2) and the "never to a
 single assessment" / "earned loop by loop" framing (correct compliance with
 rule 7, not a violation).
 
-## M6.1 full-loop verification — two real bugs found and fixed, one open item (2026-07-23)
+## M6.1 full-loop verification: two real bugs found and fixed, one open item (2026-07-23)
 
 Ran the complete `levels-verify` suite (all PASS) plus the two checks added
 to M6.1's done-when this session (security audit, retest-reuse regression
@@ -547,23 +549,23 @@ Summary:
    `process_window3_durability`, `apply_window3_calibration`,
    `route_false_positive`) had no ownership check and were anon-executable.
    Fixed via two migrations, verified clean post-fix.
-2. **`true_ascension` loops could never reach Window 3 — fixed.**
+2. **`true_ascension` loops could never reach Window 3, now fixed.**
    `LoopState` checked `loopComplete` before `window3Open`, so
    `apply_window3_calibration`'s durability confirmation was dead code for
    the one classification it exists to confirm. Fixed in `loop_state.dart`,
    pinned with two new tests, verified live.
-3. **Open item — `ascension_loops.exit_score`/`exit_zone` are unclamped.**
+3. **Open item: `ascension_loops.exit_score`/`exit_zone` are unclamped.**
    `process_phase5_reassessment` writes `exit_score = center_of_gravity +
    combined_delta` with no ceiling, so a single Window 2 true_ascension can
-   write `exit_zone = 'flow'` directly — on its face this contradicts
+   write `exit_zone = 'flow'` directly, which on its face contradicts
    CLAUDE.md's "Flow reachability is climb-based, never single-assessment"
    rule. Confirmed via `grep` that no client Dart code reads either column
    today (`lib/` has zero references beyond one doc comment), so this is
-   not currently a live UI bug — the actual Flow-gating path
+   not currently a live UI bug. The actual Flow-gating path
    (`user_calibration.calibrated_level`, via `apply_window3_calibration`)
    is correctly clamped and gated on the 3-loop streak, verified live in
    this same run (`calibrated_level = 500.00`, `flow_resident = false`
-   after 1 loop). Not fixed — `process_phase5_reassessment`'s body is
+   after 1 loop). Not fixed, because `process_phase5_reassessment`'s body is
    frozen without your sign-off, and it's unclear whether `exit_score` is
    meant to be a raw historical snapshot (current behavior, arguably fine)
    or should carry the same clamp. Flagging for a decision, not urgent.
