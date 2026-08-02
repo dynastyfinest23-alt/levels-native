@@ -45,7 +45,7 @@ const List<PrepDurationOption> completionDurationOptions = [
   PrepDurationOption('Under a year', PrepDuration.months3to12),
   PrepDurationOption('One to three years', PrepDuration.years1to3),
   PrepDurationOption(
-    'Longer than three years — possibly much longer',
+    'Longer than three years (possibly much longer)',
     PrepDuration.over3yr,
   ),
 ];
@@ -58,7 +58,7 @@ const List<PrepDurationOption> completionDurationOptions = [
 const String completionIntegrityCheckTitle = 'One more look';
 const String completionIntegrityCheckCopy =
     "If nothing about your approach changes, is this still sitting here a "
-    "year from now, the same way? Just notice the honest answer — you don't "
+    "year from now, the same way? Just notice the honest answer. You don't "
     'have to act on it yet.';
 
 // ---------------------------------------------------------------------------
@@ -121,7 +121,7 @@ const String embodimentLocationPrompt =
 
 const String embodimentSensationTitle = 'Name the sensation';
 const String embodimentSensationPrompt =
-    'What words describe it — tight, hot, heavy, hollow? Use your own '
+    'What words describe it: tight, hot, heavy, hollow? Use your own '
     'words.';
 
 const String embodimentStage4Title = 'After sitting with it';
@@ -154,7 +154,7 @@ const List<String> embodimentDailyIdentityStatements = [
   'I get to decide what this means, not the pattern.', // day 4
   "I've done the harder thing before. I can do it again.", // day 5
   'This is loosening its grip, one day at a time.', // day 6
-  "This isn't running me anymore — I am.", // day 7
+  "This isn't running me anymore. I am.", // day 7
 ];
 
 /// Daily body-response check, every day of the loop. Fills `body_response`.
@@ -171,12 +171,12 @@ class BodyResponseOption {
 }
 
 const List<BodyResponseOption> embodimentBodyResponseOptions = [
-  BodyResponseOption('True — it opened something in me', BodyResponse.trueOpen),
+  BodyResponseOption('True, it opened something in me', BodyResponse.trueOpen),
   BodyResponseOption(
     'Strange, like it belongs to someone else',
     BodyResponse.strangeForeign,
   ),
-  BodyResponseOption("False — like I'm lying to myself", BodyResponse.falseLying),
+  BodyResponseOption("False, like I'm lying to myself", BodyResponse.falseLying),
 ];
 
 /// Day 6 only: compares against day 1. Fills `day6_delta_reported`.
@@ -217,7 +217,7 @@ const String embodimentDay7ConfirmPrompt = 'Will you actually do it?';
 /// Fills `declaration_text`.
 const String commitmentDeclarationTitle = 'Say it plainly';
 const String commitmentDeclarationPrompt =
-    "State exactly what you're committing to — specific enough that you'll "
+    "State exactly what you're committing to, specific enough that you'll "
     'know if you did it.';
 
 /// Fills `constraint_chosen`.
@@ -235,11 +235,11 @@ class ConstraintTypeOption {
 
 const List<ConstraintTypeOption> commitmentConstraintOptions = [
   ConstraintTypeOption(
-    "A hard deadline — a specific day and time it's done by",
+    "A hard deadline: a specific day and time it's done by",
     ConstraintType.time,
   ),
   ConstraintTypeOption(
-    'Something real on the line — money, a favor, a forfeit',
+    'Something real on the line: money, a favor, a forfeit',
     ConstraintType.resource,
   ),
   ConstraintTypeOption(
@@ -264,7 +264,7 @@ class CheckinResponseOption {
 
 const List<CheckinResponseOption> commitmentCheckinOptions = [
   CheckinResponseOption('Yes, I did it', CheckinResponse.yes),
-  CheckinResponseOption('Partway — some of it happened', CheckinResponse.partially),
+  CheckinResponseOption('Partway, some of it happened', CheckinResponse.partially),
   CheckinResponseOption("No, it didn't happen", CheckinResponse.no),
 ];
 
