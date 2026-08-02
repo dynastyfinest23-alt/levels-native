@@ -36,71 +36,7 @@ All scoring, classification, and routing logic lives in deterministic Postgres f
 
 This repo (`levels-native`, Flutter project name `levels_native`) is the **native client track**. It also owns the Supabase migrations and Edge Functions for the shared backend (the `supabase/` dir here is linked to the production project). **Web (Chrome) is the only enabled platform for now.**
 
-```
-lib/
-  main.dart                     # Env.validate() → Supabase.initialize → LevelsApp
-  core/
-    env.dart                    # compile-time config via --dart-define-from-file
-    router.dart                 # go_router + default-deny auth gate (authRedirect)
-    design_tokens.dart          # ALL colors/type/spacing/motion from MASTER.md §1–§5
-    zone_style.dart             # ZoneStyle.of(zone) → display name + color + glow; throws on unknown
-    widgets/                    # aurora_backdrop.dart, breathing_dot.dart, progress_dots.dart (shared design-system widgets)
-  features/
-    auth/                       # login_screen.dart, signup_screen.dart
-    home/                       # home_screen.dart — journey hub (loop, phase CTA, progress dots)
-    assessment/
-      questions.dart            # the 7 questions + behavioral answer copy
-      scoring.dart              # Dart mirrors of the deployed Postgres scoring fns
-      assessment_controller.dart # single typed state object + single submit path
-      assessment_screen.dart
-    dashboard/
-      dashboard_copy.dart       # typed parser for the four-part reveal schema
-      dashboard_repository.dart # Edge Function invoke + reveal-tracking column updates
-      dashboard_controller.dart, dashboard_screen.dart  # Phase 2 tap-to-reveal
-    drill/                      # Phase 3 origin drill (3 structured + free-text questions)
-      drill_questions.dart      # origin_type/domain/mechanism question copy
-      drill_tokens.dart         # typed token mirrors + throwing display-copy helpers
-      drill_controller.dart     # insertDrill → saveDrill upsert; deepening-layer resolution
-      drill_screen.dart
-    track/                      # Phase 4 track sessions (completion/belief_audit/commitment/embodiment)
-      track_content.dart        # static protocol content, gated by Noah's review (M4.1)
-      track_tokens.dart, track_widgets.dart
-      track_screen.dart, track_session_controller.dart  # per-track dispatch
-      completion_screen.dart, commitment_screen.dart, belief_audit_screen.dart
-      embodiment_screen.dart, embodiment_gate.dart, embodiment_daily_log_controller.dart  # 7-day daily loop
-    journey/
-      loop_state.dart           # pure phase/window model (day 5–7, day 21 gates)
-      journey_repository.dart   # single read path for active loop + calibration + phase5 state
-    reassessment/                # Phase 5 (Window 2 check-in, rediag, Window 3 durability)
-      reassessment_questions.dart
-      reassessment_tokens.dart  # classification/rediag token mirrors + throwing display-copy helpers
-      reassessment_controller.dart  # insertOrReset submit path (one row per loop per window)
-      reassessment_screen.dart  # gate logic, PageView, rediag mount-gating, Window 3 closing view
-      routing.dart               # pure routing fn: routing_outcome (+ rediag) → CTA/destination
-test/
-  scoring_mirror_test.dart      # golden-mirror suite (client ↔ deployed DB fns)
-  auth_gate_test.dart           # pins the default-deny auth-gate contract
-  router_test.dart
-  loop_state_test.dart          # pins phase progression + window boundaries
-  dashboard_repository_test.dart
-  zone_style_test.dart          # pins the six zone names/colors to MASTER.md §2
-  drill_questions_test.dart, drill_tokens_test.dart, drill_controller_test.dart
-  track_session_controller_test.dart, embodiment_gate_test.dart, embodiment_daily_log_controller_test.dart
-  reassessment_controller_test.dart, reassessment_screen_test.dart, routing_test.dart
-assets/fonts/                   # Fraunces + Inter variable fonts (OFL; files approved, google_fonts package is not)
-design-system/
-  MASTER.md                     # binding visual system — read before touching any screen
-supabase/
-  migrations/                   # the ONLY schema-change path
-  functions/generate-dashboard-copy/  # index.ts + fallback.ts
-marketing-site/                 # separate React/Vite/Three.js app (Kimi-built) — not Dart, not this repo's standards
-docs/
-  PRD.md                        # standing PRD + task roadmap (Phases 2–6)
-  copy-tone-rubric.md           # committed rubric content-gate reviewers judge against
-  dodson-2e-reference.md        # book-canon extraction, source of truth for content tasks
-  m3.2-copy-review-verdict.md, m4.1-track-content-review-verdict.md  # committed gate verdicts
-ACTION-FOR-NOAH.md              # running log of decisions, assumptions, and blockers batched for Noah
-```
+Layout is `ls`-derivable; the parts that are *not* obvious from the tree: `lib/features/<phase>/` mirrors the five-phase journey below, `design-system/MASTER.md` is the binding visual system (read before touching any screen), `supabase/migrations/` is the ONLY schema-change path, `marketing-site/` is a separate React app that does not follow this repo's standards, and `ACTION-FOR-NOAH.md` is the running log of decisions and blockers batched for Noah.
 
 Dependencies are deliberately minimal: `go_router` and `supabase_flutter` only (plus `flutter_lints`). **Do not add a dependency — including any state-management package — without explicit approval.** State management is plain `ChangeNotifier`; keep it that way.
 
@@ -199,7 +135,7 @@ Classification thresholds: combined_delta = (q1_delta + q2_delta) / 2. Delta ≥
 
 These artifact groups share no runtime; nothing but discipline (and the tests listed) keeps them aligned. Any change to one member of a group must update every member in the same commit.
 
-1. **Scoring:** deployed Postgres functions (`answer_to_raw_score`, `apply_downward_anchor_weight`, `score_to_zone`, `compute_center_of_gravity` incl. clamp + `was_clamped`) ↔ `lib/features/assessment/scoring.dart` ↔ `test/scoring_mirror_test.dart` ↔ the golden values in this file.
+1. **Scoring:** deployed Postgres functions (`answer_to_raw_score`, `apply_downward_anchor_weight`, `score_to_zone`, `compute_center_of_gravity` incl. clamp + `was_clamped`) ↔ `lib/features/assessment/scoring.dart` ↔ `test/scoring_mirror_test.dart` ↔ the expected values in `.claude/skills/levels-verify/SKILL.md` ↔ the canonical score tables in this file (answer→raw score, score→zone).
 2. **Four-part reveal schema:** `supabase/functions/generate-dashboard-copy/fallback.ts` (TS interface + static copy) ↔ `index.ts` (`REQUIRED_FIELDS`, prompt, JSON schema) ↔ `lib/features/dashboard/dashboard_copy.dart` (Dart parser).
 3. **Auth-gate contract:** `authRedirect` in `lib/core/router.dart` ↔ `test/auth_gate_test.dart`.
 4. **Drill/reassessment token mirrors:** deployed enums (`origin_type`, `origin_domain`, `coping_mechanism`, `phase5_classification`, `routing_outcome`, `rediag_classification`) ↔ `lib/features/drill/drill_tokens.dart` + `lib/features/reassessment/reassessment_tokens.dart` (typed mirrors + throwing display-copy helpers) ↔ `test/drill_tokens_test.dart` + `test/reassessment_controller_test.dart` + `test/reassessment_screen_test.dart` + `test/routing_test.dart`.
@@ -238,10 +174,9 @@ The binding end-to-end loop (read live state → migrate → MCP-verify → Dart
 - Enum values: query `pg_type` joined to `pg_enum` (NOT `information_schema.columns`).
 - Function body: `SELECT pg_get_functiondef(p.oid) FROM pg_proc p WHERE proname = '<name>';`
 - RLS INSERT policy: check the `with_check` column on `pg_policies`.
-- Golden tests for scoring: `score_to_zone(60)→collapsed`, `(110)→contracted`, `(165)→reactive`, `(230)→threshold`, `(380)→builder`, `(520)→flow`; boundary edges: `(89.99)→collapsed`, `(90)→contracted`, `(139.99)→contracted`, `(140)→reactive`, `(199.99)→reactive`, `(200)→threshold`, `(299.99)→threshold`, `(300)→builder`, `(499.99)→builder`, `(500)→flow`; `apply_downward_anchor_weight(100)→150.00`, `(199)→298.50`, `(200)→200.00`, `(225)→225.00`. Clamp/consistency discriminators (full `compute_center_of_gravity` runs): all-`love_flow` → 499.99, `builder`, `was_clamped=true`; 5×`love_flow`+2×`neutrality` → 492.86, `builder`, `was_clamped=false`; all-`pride` → 285.00, `consistent` (proves the cluster check uses the raw mean — a clamped/weighted-CoG check would return `transitional`).
-- Classification tests: `compute_phase5_classification(30, 28.5, 'ascension')` → delta 29.25, true_ascension, new_loop; `(15, 12.0, 'movement')` → residual_charge, deepening_protocol; `(-5, -8.0, 'regression')` → false_positive, track_reassignment.
+- Golden scoring values, clamp/consistency discriminators, and classification tests: **the `levels-verify` skill (`.claude/skills/levels-verify/SKILL.md`) is the single source of truth** for the expected values and the runnable SQL. Invoke it rather than restating the numbers here. It was the second copy of this table; keeping one copy is the point.
 
-The client-side golden-mirror suite already exists at `test/scoring_mirror_test.dart` and pins the values above against the Dart mirrors. Whenever a deployed scoring function changes: re-read the function body from production, update the golden values here, and extend the mirror suite — all in the same change.
+The client-side golden-mirror suite exists at `test/scoring_mirror_test.dart` and pins those same values against the Dart mirrors. Whenever a deployed scoring function changes: re-read the function body from production, update the expected values in the `levels-verify` skill, and extend the mirror suite — all in the same change.
 
 ## Client architecture rules
 
@@ -297,11 +232,11 @@ Work is finished only when all of these hold:
 - Google/Apple OAuth wiring (blocked on credentials).
 - Phase 2 Edge Function (generate-dashboard-copy): VERIFIED end-to-end on the fallback path in production (caller auth via user JWT, ownership 403, cache-hit/miss, one_dashboard_per_loop race handling, four-part schema write, bridge_question_shown stored). LLM path is code-complete and verified up to the Anthropic API boundary: request shape and model ID (claude-sonnet-4-6) confirmed valid against the live API reference; the sole blocker is Anthropic credit balance (API returns 400 'credit balance too low'). No code changes needed — the LLM path activates automatically when credits are added; the secret is already set. Root cause history: the multi-session debugging chain was (a) an invalid API key, then (b) zero credits — never an architecture, auth-design, or code defect. NOTE: an abandoned 2-month-old function `generate_phase2_dashboard` (underscores) was deleted 2026-07-08 via `supabase functions delete`; `generate-dashboard-copy` (hyphens) is canonical.
 - Phase 2 dashboard UI: SHIPPED and COMPLETE — progressive tap-to-reveal writes all three reveal columns; `time_on_screen_secs` is written on dispose via `recordTimeOnScreen` (verified in code 2026-07-11); M2.4 tone review passed 2026-07-10 (rubric judge pass; two `fallback.ts` fixes — flow + builder_clamped — deployed as Edge Function v8, MCP read-back confirmed).
-- Design system M-DS: M-DS.1–.5 SHIPPED (tokens, ZoneStyle, dashboard/home/auth+assessment restyles; calibration strip replaced with mechanic-free progress dots 2026-07-10). M-DS.6 (placeholders/loading/error states + anti-pattern grep sweep) NOT yet run.
-- Phases 3–5 UI: SHIPPED. M3 (origin drill), M4 (all four track sessions, embodiment's 7-day daily loop), and M5 (Window 2/3 reassessment, rediag path, all four routing outcomes) are built, content-gate-approved, and verified end-to-end against production — most recently M6.1 (2026-07-23), which walked a fresh account through the complete five-phase loop in a real browser and confirmed every row present and consistent. M6 (docs sync, loose-ends audit) is the only remaining milestone.
+- Design system M-DS: M-DS.1–.6 SHIPPED (tokens, ZoneStyle, dashboard/home/auth+assessment restyles; calibration strip replaced with mechanic-free progress dots 2026-07-10). M-DS.6 (placeholders/loading/error states + anti-pattern grep sweep) ran 2026-07-15, commit `2624fcb`.
+- Phases 3–5 UI: SHIPPED. M3 (origin drill), M4 (all four track sessions, embodiment's 7-day daily loop), and M5 (Window 2/3 reassessment, rediag path, all four routing outcomes) are built, content-gate-approved, and verified end-to-end against production — most recently M6.1 (2026-07-23), which walked a fresh account through the complete five-phase loop in a real browser and confirmed every row present and consistent. M6 (docs sync, loose-ends audit) COMPLETE 2026-07-23 — all six milestones (M1–M6) shipped, verified, and documented per `docs/PRD.md` §7.
 - Push/email reminder trigger (future milestone, explicitly out of scope for M1–M6): the Day 5–7 and Day 21 windows are in-app-only today, computed purely from `ascension_loops.started_at`. A scheduled `checkin_scheduled_at`-style reminder (email first per the 2026-07-15 product decision below, push once mobile ships) needs its own migration + pg_cron/Edge Function design — not built, not started.
 - iOS/Android platform enablement (near-term; web/Chrome is the only enabled platform today — see "This repository").
-- Test-account cleanup: ~20 accounts accumulated across M3.4 through M6.1's manual-verification runs (full list in `ACTION-FOR-NOAH.md`) need the service-role/admin API this client doesn't have — orphaned `auth.users` rows block a client-side-only delete.
+- Test-account cleanup: 21 accounts accumulated across M3.4 through the 2026-07-29 trigger-verification run (full list in `ACTION-FOR-NOAH.md`) need the service-role/admin API this client doesn't have — orphaned `auth.users` rows block a client-side-only delete.
 - (Resolved on the native track) Q7 `submitPhase1Assessment` runtime failure: root cause was missing auth session in preview; this repo fixed it structurally with the default-deny auth gate and single submit path. Still relevant to the FF build (surface error string via snackbar there).
 
 ## Product decisions — trigger, privacy, lapse (approved by Noah 2026-07-15)
@@ -331,21 +266,6 @@ The Hooked mechanics serve user progress, not raw engagement. Variable reward = 
 
 All repositories from the [FlutterOpen](https://github.com/FlutterOpen) organization have been cloned into `reference-flutteropen/` at the repo root (shallow clone, `--depth 1`).
 
-### What is included
-
-| Folder | Description |
-|---|---|
-| `flutter-layouts-exampls` | Row, Column, ListView, and other layout examples |
-| `flutter-animations` | Animation patterns and transitions |
-| `flutter-ui-nice` | Polished UI components and screen designs |
-| `flutter-ui-tutorials` | Step-by-step UI building tutorials |
-| `flutter-canvas` | Custom painting and canvas drawing |
-| `flutter-widgets` | Reusable widget patterns |
-| `FlutterImitation` | Imitation/mock implementations of popular app UIs |
-| `fun_flutter` | Fun/demonstrative Flutter projects |
-| `design_patterns` | Design pattern implementations in Flutter/Dart |
-| `flutter_source` | Flutter framework source exploration |
-
 ### Usage guidelines
 
 - **Read-only reference.** Do not modify files inside `reference-flutteropen/`; these are upstream clones.
@@ -359,45 +279,7 @@ If any repo is missing or needs updating, run `git pull --depth 1` inside the re
 
 **Noah requested this installation.** All repos passed a pre-install security audit (no binaries, no hardcoded secrets, no suspicious scripts). They are safe to use. Installed to `C:\Users\Administrator\claude-references\` — outside this repo tree and outside any root folder.
 
-### Backend & Frameworks
-
-| Repo | Stars | License | Description |
-|---|---|---|---|
-| `nestjs` | 2,732 | MIT | NestJS utility monorepo — Hasura events, Stripe webhooks, RabbitMQ, GraphQL |
-| `scala-steward` | 1,199 | Apache-2.0 | Dependency automation bot for Scala |
-
-### UI Components & Data
-
-| Repo | Stars | License | Description |
-|---|---|---|---|
-| `Griddle` | 2,488 | MIT | React grid component with sorting, filtering, pagination |
-| `browser-base` | 2,726 | none | Electron browser base (archived). **Reference only — do not build** (old Electron 13 has CVEs) |
-| `Android-SmartWebView` | 651 | MIT | Android WebView wrapper for hybrid apps |
-| `openpets` | 912 | MIT | Desktop pet platform with Plugin SDK v3 and sandboxed plugins |
-
-### Awesome Lists & Resources
-
-| Repo | Stars | License | Description |
-|---|---|---|---|
-| `chartjs/awesome` | 2,693 | MIT | Curated Chart.js resources |
-| `awesome-vim-colorschemes` | 2,909 | none | Collection of Vim/NeoVim colorschemes |
-| `awesome-xamarin-forms` | 1,228 | none | Curated Xamarin.Forms libraries |
-| `awesome-openclaw` | 708 | CC0-1.0 | OpenClaw resources, skills, plugins, guides |
-
-### Claude Code Tooling
-
-| Repo | Stars | License | Description |
-|---|---|---|---|
-| `CCPlugins` | 2,720 | MIT | 24 Claude Code CLI slash commands (install scripts **not run**) |
-| `awesome-claude-code-toolkit` | 2,332 | Apache-2.0 | 135 agents, 35 skills, 42 commands, 20 hooks for Claude Code |
-| `awesome-claude-plugins` | 1,826 | none | Plugin marketplace — hook scripts are read-only analyzers |
-
-### Tools & Plugins
-
-| Repo | Stars | License | Description |
-|---|---|---|---|
-| `xbar-plugins` | 2,598 | none | 800+ community plugins for xbar (macOS menu bar). **Review individual scripts before executing** |
-| `ClawKeeper` | 1,033 | none | Security scanner framework for OpenClaw agents. **`legacy/` directory removed post-clone** — core `clawkeeper_core/` is clean |
+The per-repo inventory (names, licenses, descriptions, security notes) lives in `C:\Users\Administrator\claude-references\README.md`. Read it before adapting code from any of them; two carry standing cautions: `browser-base` is **reference only, do not build** (old Electron 13 has CVEs), and `xbar-plugins` scripts must be reviewed individually before executing.
 
 ### Skipped (security risk)
 
@@ -412,9 +294,4 @@ If any repo is missing or needs updating, run `git pull --depth 1` inside the re
 - **Respect licenses.** Attribution in code comments is sufficient when adapting substantial logic.
 - **Keep it out of the build.** These repos are **not** part of the Flutter project tree. They exist solely as a local reference library for Noah and Claude Code during development.
 
-### Repo notes
-
-- **`nestjs` — golevelup/nestjs:** well-known NestJS utility monorepo (updated 2026-07-15). Useful when building backend integrations or reviewing webhook/event handling architectures (Hasura, Stripe, RabbitMQ, GraphQL). Packages live in `packages/`; docs in `docs/`.
-- **`CCPlugins` — notlikeDev/CCPlugins:** 24 Claude Code CLI slash commands, each a markdown prompt file in `commands/` (updated 2026-07-15). The install scripts (`install.py` / `install.sh`) were **not run** — they only copy `.md` files to `~/.claude/commands/` and are safe to run manually if Noah wants the slash commands activated. Useful as a reference for well-structured prompt engineering.
-
-See `C:\Users\Administrator\claude-references\README.md` for the full security audit summary and command listing.
+One standing note not in that README: `CCPlugins`' install scripts (`install.py` / `install.sh`) were deliberately **not run**. They only copy `.md` files into `~/.claude/commands/` and are safe to run manually if Noah wants those slash commands activated.
