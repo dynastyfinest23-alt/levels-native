@@ -679,3 +679,35 @@ exception string, not copy.
 **Two schema-doc drifts found while verifying:** `phase1_assessments` uses
 `dominant_zone`, not `zone`, and `user_calibration` is keyed on `user_id` with
 no `id` column. Worth checking anywhere that claims otherwise.
+
+## 2026-08-03: test-account cleanup DONE, and the blocker was never real
+
+**29 test accounts deleted. `auth.users` is down to 4, with zero orphans.**
+
+**The documented blocker was wrong, and it cost weeks.** Every prior entry
+said this needed "the service-role/admin API this client doesn't have." That
+is true of the Flutter client and irrelevant to the cleanup: the Supabase MCP
+connects as `postgres` with `rolbypassrls`, and `users_id_fkey`
+(`public.users.id` to `auth.users.id`) is ON DELETE CASCADE, as are all nine
+phase tables. One `DELETE FROM auth.users` removed the auth rows, identities,
+sessions, and every dependent phase row in a single statement. Verified after:
+`auth_users` 4, `public_users` 4, `orphaned_public_users` 0. Use this path for
+future cleanups instead of deferring them.
+
+**Cascade removed:** 33 loops, 27 assessments, 22 dashboards, 10 drills,
+9 track sessions, 17 reassessments, 26 calibrations, 5 embodiment logs.
+Remaining rows all belong to the four preserved accounts.
+
+**The count was 30, not 21.** The tracked list only started at M3.4. It missed
+`test@levels.com`, `test2@levels.com`, and the seven `levels-ds3` / `ds4` /
+`ds5` design-system accounts from 2026-06-26 through 2026-07-10.
+
+**Preserved (4):** `dynastyfinest23@gmail.com`, `dynastyfinest92@gmail.com`,
+`noahtesfaye92@gmail.com`, and `m52-ui-verify-1785738681863@example.com`.
+
+**Yours: one unexplained account.** `m52-ui-verify-1785738681863@example.com`
+was created 2026-08-03 06:31 UTC. It matches the M5.2 UI verification pattern
+exactly, but that verification last ran 2026-07-19, and no session since then
+recorded a run. Either you ran something that morning or one of the two agent
+worktrees under `.claude/worktrees/` did. Noah chose to keep it rather than
+delete something possibly in use. Drop it once you know where it came from.
