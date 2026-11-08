@@ -36,8 +36,10 @@ const String blockMapPrimer =
 const String blockMapLowConfidenceCaption =
     'Check this against what you know about yourself.';
 
-/// Canonical order: `OriginDomain` enum order, then _1.._4 (_4 is reverse and
-/// pairs with _1).
+/// Canonical order: `OriginDomain` enum order, then _1.._4. _4 is reverse and
+/// pairs with _1, except relational_attachment_4, which pairs with _3 (Noah's
+/// call on the judge finding, 2026-11-08). Reverse items are worded so
+/// agreeing carries a small cost, not the flattering answer (same decision).
 const List<BlockMapItem> blockMapItems = [
   // relational_attachment
   BlockMapItem(
@@ -45,7 +47,6 @@ const List<BlockMapItem> blockMapItems = [
     OriginDomain.relationalAttachment,
     'I reread messages from people close to me, looking for signs '
     "they're pulling away.",
-    pairKey: 'relational_attachment_pair',
   ),
   BlockMapItem(
     'relational_attachment_2',
@@ -56,11 +57,12 @@ const List<BlockMapItem> blockMapItems = [
     'relational_attachment_3',
     OriginDomain.relationalAttachment,
     'When someone close goes quiet, I assume I did something wrong.',
+    pairKey: 'relational_attachment_pair',
   ),
   BlockMapItem(
     'relational_attachment_4',
     OriginDomain.relationalAttachment,
-    "When a close friend is slow to reply, I assume they're busy.",
+    "When someone close goes quiet, I figure it has nothing to do with me.",
     reverse: true,
     pairKey: 'relational_attachment_pair',
   ),
@@ -85,7 +87,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'adequacy_impostor_4',
     OriginDomain.adequacyImpostor,
-    "When I'm trusted with something, I take it as a fair read of me.",
+    'When things go well, I take the credit, even when others helped.',
     reverse: true,
     pairKey: 'adequacy_impostor_pair',
   ),
@@ -110,7 +112,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'existential_catastrophic_4',
     OriginDomain.existentialCatastrophic,
-    "When I think about where the world is headed, I picture things holding together.",
+    "When I think about the world's future, I shrug and get on with my day.",
     reverse: true,
     pairKey: 'existential_catastrophic_pair',
   ),
@@ -135,7 +137,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'autonomy_sovereignty_4',
     OriginDomain.autonomySovereignty,
-    'I decide for myself how my days go.',
+    'I hold to my own plans, even when it annoys other people.',
     reverse: true,
     pairKey: 'autonomy_sovereignty_pair',
   ),
@@ -160,7 +162,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'status_achievement_4',
     OriginDomain.statusAchievement,
-    "I'm fine with people not knowing what I've achieved.",
+    'I let my wins go unmentioned unless someone asks me directly.',
     reverse: true,
     pairKey: 'status_achievement_pair',
   ),
@@ -185,7 +187,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'relational_reciprocity_4',
     OriginDomain.relationalReciprocity,
-    "I give and receive without keeping score.",
+    'I lose track of who has done what for whom.',
     reverse: true,
     pairKey: 'relational_reciprocity_pair',
   ),
@@ -210,7 +212,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'ideological_systemic_4',
     OriginDomain.ideologicalSystemic,
-    'When I deal with institutions, I expect to be treated fairly.',
+    'When I deal with institutions, I take what they tell me at face value.',
     reverse: true,
     pairKey: 'ideological_systemic_pair',
   ),
@@ -235,7 +237,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'internal_self_directed_4',
     OriginDomain.internalSelfDirected,
-    'I speak to myself as kindly as I would to a friend.',
+    'I brush off my own mistakes without much thought.',
     reverse: true,
     pairKey: 'internal_self_directed_pair',
   ),
@@ -260,7 +262,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'internalized_authority_4',
     OriginDomain.internalizedAuthority,
-    'I speak up to bosses or authority figures as easily as to anyone.',
+    'I tell bosses what I think, even when keeping quiet would be smarter.',
     reverse: true,
     pairKey: 'internalized_authority_pair',
   ),
@@ -285,7 +287,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'societal_comparative_4',
     OriginDomain.societalComparative,
-    "I notice how others are doing without comparing my life to theirs.",
+    'I ignore how others are doing when I size up my own life.',
     reverse: true,
     pairKey: 'societal_comparative_pair',
   ),
@@ -310,7 +312,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'self_perfectionism_4',
     OriginDomain.selfPerfectionism,
-    "I stop working on something once it does the job.",
+    "I hand things in once they're good enough, even if they're a bit rough.",
     reverse: true,
     pairKey: 'self_perfectionism_pair',
   ),
@@ -335,7 +337,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'visibility_fear_4',
     OriginDomain.visibilityFear,
-    "In groups, I share my ideas when I have them.",
+    "In groups, I voice ideas before I've fully thought them through.",
     reverse: true,
     pairKey: 'visibility_fear_pair',
   ),

@@ -1,6 +1,6 @@
 // Purpose: pins the block-map question bank structure (design section 4,
 // approved 2026-11-08): 48 items, 4 per origin_domain in enum order, 3 forward
-// + 1 reverse, reverse paired with _1, keys = '<token>_<n>', short, no em dash.
+// + 1 reverse, reverse paired with _1 (relational: _3), keys = '<token>_<n>', short, no em dash.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:levels_native/features/block_map/block_map_items.dart';
 import 'package:levels_native/features/drill/drill_tokens.dart';
@@ -16,10 +16,13 @@ void main() {
         expect(items[n].key, '${domain.token}_${n + 1}');
         expect(items[n].reverse, n == 3);
       }
-      expect(items[0].pairKey, '${domain.token}_pair');
-      expect(items[3].pairKey, items[0].pairKey);
-      expect(items[1].pairKey, isNull);
-      expect(items[2].pairKey, isNull);
+      // Reverse pairs with _1, except relational_attachment (_3), 2026-11-08.
+      final fwd = domain == OriginDomain.relationalAttachment ? 2 : 0;
+      for (var n = 0; n < 3; n++) {
+        expect(items[n].pairKey, n == fwd ? '${domain.token}_pair' : isNull,
+            reason: items[n].key);
+      }
+      expect(items[3].pairKey, '${domain.token}_pair');
     }
     expect(blockMapItems.map((i) => i.key).toSet().length, 48);
   });

@@ -420,3 +420,18 @@ Files: `lib/features/block_map/block_map_items.dart` (48 items, primer, caption)
 - `ideological_systemic_4` and `autonomy_sovereignty_4`: low answers can be accurate for people facing real unfair treatment or structural limits. Downstream domain copy needs care.
 - Primer says "Your answers save as you go": true only once autosave-per-tap ships (section 2). Verify before release.
 - Likert middle labels not chosen yet (endpoints locked: "Not at all like me" / "Always like me").
+
+**Reverse-item rewrite: cold judge log (2026-11-08, fresh Sonnet judge each round, rubric = section 4 rules + "not the flattering option" + "truly opposes its pair")**
+
+Round 1 (all 12 rewritten): 5 PASS (existential_catastrophic_4, relational_reciprocity_4, ideological_systemic_4, internalized_authority_4, self_perfectionism_4), 7 FAIL. Judge finding: indifference ("barely notice") is not the opposite of anxiety or comparison; several items were the healthy pole with a thin cost clause.
+
+Round 2 (the 7 failures rewritten, new judge): 3 PASS (relational_attachment_4, autonomy_sovereignty_4, societal_comparative_4), 4 FAIL:
+
+| key | statement (current in Dart) | failed | reason |
+|---|---|---|---|
+| adequacy_impostor_4 | When things go well, I take the credit, even when others helped. | opposes pair, domain drift | grabbing credit is not the opposite of fearing exposure; drifts into status |
+| status_achievement_4 | I let my wins go unmentioned unless someone asks me directly. | flattering, domain drift | modesty with no cost; overlaps visibility_fear |
+| internal_self_directed_4 | I brush off my own mistakes without much thought. | opposes pair | indifference is not the opposite of harsh self-talk |
+| visibility_fear_4 | In groups, I voice ideas before I've fully thought them through. | opposes pair | measures impulsivity, not the absence of holding back |
+
+Round 2 suggested rewrites circle back to wording round 1 failed. For these 4 domains the true opposite of the pattern is the healthy pole, so "opposes its pair" and "not flattering" conflict. Stopped rewriting; design call queued for Noah.
