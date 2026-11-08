@@ -11,6 +11,10 @@ on:
 jobs:
   analyze-and-test:
     runs-on: ubuntu-latest
+    # embodiment_gate_test's local-vs-UTC case only discriminates west of UTC;
+    # runners default to UTC. Match the dev machine (US Central).
+    env:
+      TZ: America/Chicago
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
