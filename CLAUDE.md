@@ -47,7 +47,7 @@ Dependencies are deliberately minimal: `go_router` and `supabase_flutter` only (
 - When Noah supplies screenshots for a review gate, they land in `Screenshots/` at the repo root — check there before saying you can't see the UI. (Folder is transient; absent when empty.)
 - Tests: `flutter test` — must pass before any commit.
 - Static analysis: `flutter analyze` — zero warnings before any commit.
-- New migration: `npx supabase migration new <name>` → paste SQL → `npx supabase db push`
+- New migration: `npx supabase migration new <name>` → paste SQL → (after the PR merges, from `main`) `npx supabase db push --remote`. Supabase CLI v3 targets the **local** stack by default; without `--remote` the push goes nowhere useful (verified 2026-11-08, CLI 3.0.0). `functions deploy` is remote-only and needs no flag.
 - Deploy an Edge Function: `npx supabase functions deploy generate-dashboard-copy`
 
 ## Environment & secrets
@@ -193,7 +193,13 @@ The client-side golden-mirror suite exists at `test/scoring_mirror_test.dart` an
 - **Pure functions for testable contracts.** Logic that pins a contract (auth gate, scoring) is extracted as a pure function so tests need no Supabase.
 - **Assessment question copy is behavioral, never emotional.** Answer options describe reactions; the token mapping stays invisible to the user. Each question spans low-to-high tokens; across the 7 questions all 11 v1.1 tokens appear.
 - **Commit messages:** imperative mood, no prefixes/conventional-commit tags, one summary line describing the change and its scope (see `git log` for the register). **No Co-Authored-By or other AI trailers** — plain messages only.
-- **Branch:** the default branch is `main` (renamed from `master` 2026-07-08; no remote configured yet). Commit directly to `main` unless the user asks for a branch.
+- **Branches (GitHub flow with short-lived branches, adopted 2026-11-08):** `main` is always releasable and is what production runs. Remote: `origin` on GitHub; `main` is protected (no force-push, no deletion).
+  1. Every change starts on a branch off an up-to-date `main`: `feat/`, `fix/`, `chore/`, or `docs/` + kebab-case. One task per branch, one commit per verified step.
+  2. Branches live hours to a couple of days. A milestone too big for that (e.g. the block map) ships as several reviewable slices; unfinished UI stays unreachable (no route, no hub card) until its last slice lands.
+  3. Push the branch and open a PR (`gh pr create`). CI (`.github/workflows/ci.yml`) runs `flutter analyze` + `flutter test`. **Noah reviews and merges; Claude never merges.**
+  4. Before merge, rebase on `main`. If another migration landed on `main` meanwhile, re-timestamp yours so it sorts last.
+  5. **Production migrations run only from `main`, after merge:** `git switch main && git pull`, then `npx supabase db push --remote`, then the MCP read-back. A failed verify is fixed forward on a new branch; never edit a migration that already ran.
+  6. Release tags `vX.Y.Z` on `main` begin when app-store builds do.
 - **Tests are pinned contracts, not coverage filler.** Each test group states which source of truth it pins and when that truth was verified. A pinning test must fail when the change it pins is reverted — before writing one, confirm it would fail without the change; a test that passes either way pins nothing.
 
 ## Design system (reference — do not restyle ad hoc)
