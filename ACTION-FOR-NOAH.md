@@ -711,3 +711,15 @@ exactly, but that verification last ran 2026-07-19, and no session since then
 recorded a run. Either you ran something that morning or one of the two agent
 worktrees under `.claude/worktrees/` did. Noah chose to keep it rather than
 delete something possibly in use. Drop it once you know where it came from.
+
+## 2026-11-08: Supabase project paused itself; keep-alive half done
+
+The production project went `INACTIVE` (free-tier inactivity pause) and was
+restored by Noah the same day. `scripts/keep-alive.ps1` (one read-only REST
+ping, key read from `env.json`, logs to `%LOCALAPPDATA%\levels-keep-alive.log`)
+ran once by hand: `OK 200`.
+
+**Closed 2026-11-08.** Noah registered task `Levels Supabase keep-alive`
+from an elevated PowerShell (Claude's shell got "Access is denied"). Verified:
+daily 9:00 AM trigger with StartWhenAvailable, test run LastTaskResult 0, log
+`2026-11-08T14:52:58 OK 200`, next run 2026-11-09 09:00. Script committed.
