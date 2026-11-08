@@ -87,7 +87,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'adequacy_impostor_4',
     OriginDomain.adequacyImpostor,
-    'When things go well, I take the credit, even when others helped.',
+    'When things go well, I accept the result as mine and move on.',
     reverse: true,
     pairKey: 'adequacy_impostor_pair',
   ),
@@ -162,7 +162,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'status_achievement_4',
     OriginDomain.statusAchievement,
-    'I let my wins go unmentioned unless someone asks me directly.',
+    'I mention my achievements only when they come up naturally.',
     reverse: true,
     pairKey: 'status_achievement_pair',
   ),
@@ -237,7 +237,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'internal_self_directed_4',
     OriginDomain.internalSelfDirected,
-    'I brush off my own mistakes without much thought.',
+    "When I make a mistake, I talk to myself the way I'd talk to a friend.",
     reverse: true,
     pairKey: 'internal_self_directed_pair',
   ),
@@ -337,7 +337,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'visibility_fear_4',
     OriginDomain.visibilityFear,
-    "In groups, I voice ideas before I've fully thought them through.",
+    'In groups, I share my ideas when I have them.',
     reverse: true,
     pairKey: 'visibility_fear_pair',
   ),

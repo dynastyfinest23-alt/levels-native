@@ -435,3 +435,12 @@ Round 2 (the 7 failures rewritten, new judge): 3 PASS (relational_attachment_4, 
 | visibility_fear_4 | In groups, I voice ideas before I've fully thought them through. | opposes pair | measures impulsivity, not the absence of holding back |
 
 Round 2 suggested rewrites circle back to wording round 1 failed. For these 4 domains the true opposite of the pattern is the healthy pole, so "opposes its pair" and "not flattering" conflict. Stopped rewriting; design call queued for Noah.
+
+Noah's call on the 4 (2026-11-08): **true opposite, accept skew.** For adequacy_impostor_4, status_achievement_4, internal_self_directed_4, visibility_fear_4 the reverse item is the plain healthy opposite; flattery is a documented, accepted skew (honesty flags only lower confidence and are tunable by migration). Later judges were told not to fail these for flattery.
+
+Round 3 (true-opposite wording, new judge): PASS internal_self_directed_4 ("When I make a mistake, I talk to myself the way I'd talk to a friend."), PASS visibility_fear_4 ("In groups, I share my ideas when I have them."). FAIL adequacy_impostor_4 ("...I take it as a fair sign of what I can do.": a belief, not a behavior) and status_achievement_4 ("I leave it to others to notice what I've achieved.": nearly restates _2, drifts into visibility_fear).
+
+Round 4 (new judge): both FAIL again.
+- adequacy_impostor_4 "When things go well, I accept the result as mine and move on.": two actions; owning a result is not the opposite of bracing for exposure.
+- status_achievement_4 "I mention my achievements only when they come up naturally.": "only" muddles with "Not at all like me"; "naturally" is vague.
+Round 4's status suggestion ("go unmentioned unless someone asks") is the round 2 wording that failed for visibility_fear overlap, so the judges are cycling. **Stopped: these 2 stay at the round-4 wording and go to Noah's read-through as open items.** 10/12 reverse items PASS.
