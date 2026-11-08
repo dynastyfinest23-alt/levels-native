@@ -350,3 +350,73 @@ These show the density and shape of the data in the demo. Replace every name wit
 5. Build the results shell and tabs in this order: Overview → Integration Map → Progress → Occlusion → Inner Balance → Honesty → (Vertical, your own design).
 6. Build the generic wizard engine and one sample protocol.
 7. Check each screen on a phone width before calling it done.
+
+
+---
+
+## Question bank draft + cold judge gate (2026-11-08, Sonnet)
+Files: `lib/features/block_map/block_map_items.dart` (48 items, primer, caption), `test/block_map_items_test.dart` (structure + copy-rule pins).
+
+**Gate status: NOT fully met.** Four cold judge passes (fresh Sonnet each). Item FAILs per pass: 16 (round 1), 7 (round 2), 6 (round 3), 4 (round 4, targeted at the 6 items changed after round 3). The same four reverse items (`existential_catastrophic_4`, `status_achievement_4`, `relational_reciprocity_4`, `societal_comparative_4`) kept failing R7/R1 with a different complaint each round, so I stopped looping and applied the round-4 rewrites without a fifth pass. Those four are the ones to read hardest. Every other item passed its last judged round. Primer: PASS rounds 2-3 (round 1 FAIL for "choose the lower one", removed). Caption: now "Check this against what you know about yourself." PASS round 4.
+
+**Final items**
+
+| item_key | statement | status |
+|---|---|---|
+| relational_attachment_1 | I reread messages from people close to me, looking for signs they're pulling away. | PASS (last judged) |
+| relational_attachment_2 | I hold on to relationships I know aren't working. | PASS (last judged) |
+| relational_attachment_3 | When someone close goes quiet, I assume I did something wrong. | PASS (last judged) |
+| relational_attachment_4 | When a close friend is slow to reply, I assume they're busy. | PASS (last judged) |
+| adequacy_impostor_1 | When things go well, I wait for someone to find out I'm less capable. | PASS (last judged) |
+| adequacy_impostor_2 | When someone praises my work, I assume they're being generous. | PASS (last judged) |
+| adequacy_impostor_3 | I over-prepare so no one sees what I don't know. | PASS (last judged) |
+| adequacy_impostor_4 | When I'm trusted with something, I take it as a fair read of me. | PASS (last judged) |
+| existential_catastrophic_1 | I picture the world getting worse in ways I can't do anything about. | PASS (last judged) |
+| existential_catastrophic_2 | News about large-scale problems stays on my mind for days. | PASS (last judged) |
+| existential_catastrophic_3 | I hold off on long-term plans when the world feels unstable. | PASS (last judged) |
+| existential_catastrophic_4 | When I think about where the world is headed, I picture things holding together. | REWRITTEN after FAIL, not re-judged |
+| autonomy_sovereignty_1 | I let other people decide how my days go. | PASS (last judged) |
+| autonomy_sovereignty_2 | I drop my own plans when someone else wants something. | PASS (last judged) |
+| autonomy_sovereignty_3 | I put up with situations I didn't choose instead of trying to change them. | PASS (last judged) |
+| autonomy_sovereignty_4 | I decide for myself how my days go. | PASS (last judged) |
+| status_achievement_1 | I make sure people know about what I've achieved. | PASS (last judged) |
+| status_achievement_2 | I wait for someone else to notice a win before I let myself enjoy it. | PASS (last judged) |
+| status_achievement_3 | I judge a day as good or bad by what I accomplished. | PASS (last judged) |
+| status_achievement_4 | I'm fine with people not knowing what I've achieved. | REWRITTEN after FAIL, not re-judged |
+| relational_reciprocity_1 | I keep track of who has done what for whom. | PASS (last judged) |
+| relational_reciprocity_2 | When I give more than I get, I start to pull back. | PASS (last judged) |
+| relational_reciprocity_3 | I avoid accepting help I can't pay back. | PASS (last judged) |
+| relational_reciprocity_4 | I give and receive without keeping score. | REWRITTEN after FAIL, not re-judged |
+| ideological_systemic_1 | When I deal with institutions, I brace for being treated unfairly. | PASS (last judged) |
+| ideological_systemic_2 | I read official rules and forms looking for the catch. | PASS (last judged) |
+| ideological_systemic_3 | I skip applying for things when I assume the odds are stacked. | PASS (last judged) |
+| ideological_systemic_4 | When I deal with institutions, I expect to be treated fairly. | PASS (last judged) |
+| internal_self_directed_1 | I talk to myself in ways I'd never talk to a friend. | PASS (last judged) |
+| internal_self_directed_2 | When I make a mistake, the voice in my head turns harsh. | PASS (last judged) |
+| internal_self_directed_3 | I replay things I said or did and criticize myself for them. | PASS (last judged) |
+| internal_self_directed_4 | I speak to myself as kindly as I would to a friend. | PASS (last judged) |
+| internalized_authority_1 | Around bosses or authority figures, I get quieter and more careful. | PASS (last judged) |
+| internalized_authority_2 | I follow rules I disagree with rather than risk disapproval. | PASS (last judged) |
+| internalized_authority_3 | Before I decide, I think about what the people in charge would want. | PASS (last judged) |
+| internalized_authority_4 | I speak up to bosses or authority figures as easily as to anyone. | PASS (last judged) |
+| societal_comparative_1 | I compare my life to other people's lives, even strangers'. | PASS (last judged) |
+| societal_comparative_2 | I measure myself against where other people my age are. | PASS (last judged) |
+| societal_comparative_3 | After scrolling through other people's lives, I think less of my own. | PASS (last judged) |
+| societal_comparative_4 | I notice how others are doing without comparing my life to theirs. | REWRITTEN after FAIL, not re-judged |
+| self_perfectionism_1 | I keep reworking things long after others would call them finished. | PASS (last judged) |
+| self_perfectionism_2 | I hold my own work to a higher standard than I'd hold anyone else's. | PASS (last judged) |
+| self_perfectionism_3 | Even when it's done well, I notice only what could be better. | PASS (last judged) |
+| self_perfectionism_4 | I stop working on something once it does the job. | PASS (last judged) |
+| visibility_fear_1 | In groups, I hold back my ideas so I don't stand out. | PASS (last judged) |
+| visibility_fear_2 | I avoid being the center of attention whenever I can. | PASS (last judged) |
+| visibility_fear_3 | I let others take credit rather than put myself forward. | PASS (last judged) |
+| visibility_fear_4 | In groups, I share my ideas when I have them. | PASS (last judged) |
+
+**Open findings from the judges (design calls, not copy fails)**
+- Reverse items are mostly the flattering option ("kindly", "fairly", "easily"), so they partly measure social desirability and will skew high; pair checks may flag noisily.
+- `_4` is always the reverse item and always pairs with `_1`. The runner must shuffle (section 2 already has `item_order`), never render canonical order.
+- Weak pair: `relational_attachment_4` opposes `_3` more tightly than `_1`; consider re-pairing it with `_3` in the seed.
+- Expect `internalized_authority` and `visibility_fear` to co-move, and `adequacy_impostor_3` / `self_perfectionism_1` to blur.
+- `ideological_systemic_4` and `autonomy_sovereignty_4`: low answers can be accurate for people facing real unfair treatment or structural limits. Downstream domain copy needs care.
+- Primer says "Your answers save as you go": true only once autosave-per-tap ships (section 2). Verify before release.
+- Likert middle labels not chosen yet (endpoints locked: "Not at all like me" / "Always like me").
