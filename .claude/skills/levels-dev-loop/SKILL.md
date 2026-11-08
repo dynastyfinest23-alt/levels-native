@@ -38,7 +38,10 @@ the artifact copies aligned. Follow the phases in order, every time, even for
 
 ## Phase 2 — WRITE the migration under the known constraints
 
-- `npx supabase migration new <name>` → paste SQL → `npx supabase db push` from this
+- Work on a branch off `main` (CLAUDE.md "Branches"). Write the migration there, open a PR,
+  and push to production only from `main` after Noah merges it.
+- `npx supabase migration new <name>` → paste SQL → (after merge, on `main`)
+  `npx supabase db push --remote` (CLI v3 defaults to the local stack) from this
   repo (sole migration authority — never from levels-app). Success signal:
   `Applying migration ...` + `Finished supabase db push`; Docker Desktop warnings are noise.
 - **`ALTER TYPE ... ADD VALUE` must be its own migration**, pushed before any function
