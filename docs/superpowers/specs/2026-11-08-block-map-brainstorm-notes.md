@@ -46,7 +46,7 @@ Mockup: `.superpowers/brainstorm/2278-1794118967/content/section3-top-marker.htm
 - **Motion:** shape fades in with existing `reveal`; never grows from center (anti-pattern 6).
 - **New MASTER.md tokens:** `wheelFill` (zoneColor @ 18%), `wheelGrid` (white @ 7%), `priorShape` (textFaint, dashed), plus the glow exception above.
 
-## Design section 4: question bank (DRAFT, presented 2026-11-08, NOT yet approved)
+## Design section 4: question bank (APPROVED by Noah, 2026-11-08)
 - 48 statements, 4 per domain: 3 forward ("agree = this holds me") + 1 reverse, reverse paired with one forward item asking the same thing from the other side (drives the contradiction check).
 - Every statement: first person, behavioral, present tense (what you do, not what you feel/believe); one idea, under ~15 words, plain reading level; original wording only (no Abke/SQ items, no book vocabulary = leak class 3); no diagnosis/clinical/shaming/verdict tone; no em dashes; reads sensibly on all 5 Likert options.
 - Text lives in Dart (`block_map_items.dart`, keys like `self_perfectionism_1`); DB seed holds key/domain/reverse/pair only. User-facing domain labels reuse `drill_questions.dart`.
@@ -54,7 +54,7 @@ Mockup: `.superpowers/brainstorm/2278-1794118967/content/section3-top-marker.htm
 - Model tier: drafting = Sonnet against the rubric; judge = fresh Sonnet.
 - Also in scope: intro primer (our own honesty framing, e.g. "when torn, pick the lower answer") and the low-confidence caption, same gate.
 
-## Next: get section 4 approved, then (question bank authoring + cold rubric judge gate), then write the spec doc here and run writing-plans.
+## Next: author the question bank (Sonnet) + cold rubric judge gate + Noah read-through, then write the spec doc here and run writing-plans.
 
 ---
 
