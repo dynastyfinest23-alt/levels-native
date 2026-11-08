@@ -65,7 +65,7 @@ Confirm, in this order inside the body: (a) `v_was_clamped := (v_cog > 499.99)` 
 
 One combined query where possible:
 
-- Trigger: `SELECT tgname, tgrelid::regclass FROM pg_trigger WHERE tgname = 'on_auth_user_created';` → one row on `users`.
+- Trigger: `SELECT tgname, tgrelid::regclass FROM pg_trigger WHERE tgname = 'on_auth_user_created';` → one row on `auth.users` (it fires on auth signup and populates `public.users`; verified 2026-11-08).
 - RLS: check `with_check` on `pg_policies` for any table touched this session (`SELECT policyname, cmd, qual, with_check FROM pg_policies WHERE tablename = '<table>';`).
 - Enum values (only if enums changed): query `pg_type` joined to `pg_enum` — never `information_schema.columns`.
 

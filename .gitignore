@@ -57,3 +57,6 @@ reference-flutteropen/
 # Transient manual-verification screenshots (see CLAUDE.md "Commands")
 Screenshots/
 docs-export/
+
+# superpowers visual-companion scratch (brainstorm mockups)
+.superpowers/
