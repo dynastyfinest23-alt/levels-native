@@ -2,7 +2,7 @@
 
 # Block map: design
 
-Status: DRAFT for Noah's review, 2026-11-08. Every decision below was approved in the brainstorm notes unless it is marked **(new, needs approval)**.
+Status: APPROVED by Noah, 2026-11-08, including the three section 10 calls (marked **(new, approved)**).
 
 ## 1. What it is
 
@@ -53,7 +53,7 @@ Contradiction compares **effective** values. Both members of a pair measure the 
 Migration 1 (one transaction; `CREATE TYPE` is fine in-transaction, only `ADD VALUE` is not):
 
 - `CREATE TYPE block_map_kind AS ENUM ('initial','retake')`
-- **(new, needs approval)** `CREATE TYPE block_map_flag AS ENUM ('straight_line','minimizing','contradiction')` and `CREATE TYPE block_map_confidence AS ENUM ('high','moderate','low')`. Section 2 left `flags` and `confidence` untyped. Enums match the repo's typed-token pattern, and each gets a Dart mirror in group 5.
+- **(new, approved)** `CREATE TYPE block_map_flag AS ENUM ('straight_line','minimizing','contradiction')` and `CREATE TYPE block_map_confidence AS ENUM ('high','moderate','low')`. Section 2 left `flags` and `confidence` untyped. Enums match the repo's typed-token pattern, and each gets a Dart mirror in group 5.
 - `block_map_items` (config): `item_key text PK`, `domain origin_domain NOT NULL`, `reverse_scored boolean NOT NULL`, `pair_key text NULL`, `position smallint UNIQUE NOT NULL` (canonical order 1..48). Seeded in this migration from the Dart bank's metadata. Authenticated SELECT only, no writes. No statement text.
 - `block_map_assessments`: `id uuid PK default gen_random_uuid()`, `user_id uuid NOT NULL → users(id) ON DELETE CASCADE`, `loop_id uuid NOT NULL → ascension_loops(id) ON DELETE CASCADE`, `kind block_map_kind NOT NULL`, `item_order text[] NOT NULL` (48 keys, client-shuffled), `started_at timestamptz default now()`, `completed_at timestamptz NULL`, `domain_sums smallint[]` (12, enum order), `ranked_domains origin_domain[]` (12), `flags block_map_flag[]`, `confidence block_map_confidence`. `UNIQUE (loop_id, kind)`.
 - `block_map_responses`: `assessment_id uuid → block_map_assessments(id) ON DELETE CASCADE`, `user_id uuid NOT NULL`, `item_key text → block_map_items`, `value smallint CHECK (value BETWEEN 0 AND 4)`, `answered_at timestamptz default now()`, `PK (assessment_id, item_key)`.
@@ -63,7 +63,7 @@ Migration 1 (one transaction; `CREATE TYPE` is fine in-transaction, only `ADD VA
 
 Migration 2, functions + grants:
 
-- `compute_block_map(p_values smallint[])` → `(domain_sums smallint[], ranked_domains origin_domain[], flags block_map_flag[], confidence block_map_confidence)`. SECURITY INVOKER, STABLE, `SET search_path = public, pg_temp`. Takes 48 values in canonical `position` order. **(new, needs approval)** It reads reverse/pair metadata from `block_map_items` instead of hard-coding it, so the seed is the single DB source; that is why it is STABLE, not IMMUTABLE. Raises on length ≠ 48 or a null value.
+- `compute_block_map(p_values smallint[])` → `(domain_sums smallint[], ranked_domains origin_domain[], flags block_map_flag[], confidence block_map_confidence)`. SECURITY INVOKER, STABLE, `SET search_path = public, pg_temp`. Takes 48 values in canonical `position` order. **(new, approved)** It reads reverse/pair metadata from `block_map_items` instead of hard-coding it, so the seed is the single DB source; that is why it is STABLE, not IMMUTABLE. Raises on length ≠ 48 or a null value.
 - `score_block_map(p_assessment_id uuid)`: SECURITY DEFINER, `search_path` pinned, NOT FOUND guard, then the `auth.uid()` ownership guard (rule 8). It reads the responses, raises unless all 48 are present, orders them by `position`, calls the pure function, writes the results and `completed_at`, and returns the row. Idempotent: a second call on a completed row returns it unchanged.
 - Grants: EXECUTE on both to `authenticated` only. Revoke from `anon` and `PUBLIC`.
 
@@ -104,7 +104,8 @@ The hub card title and link, the results hero ("Where you're most held" is appro
 6. Drill hand-off + hub card + copy gate; this slice makes it reachable. Manual browser run end to end (release build, per CLAUDE.md).
 7. Day 21 retake + prior-shape overlay.
 
-## 10. Open questions for Noah
+## 10. Decisions closed (Noah, 2026-11-08)
 
-1. Approve the two **(new)** calls: the flag/confidence enums, and the pure function reading pair metadata from `block_map_items` instead of hard-coding it.
-2. Hub card timing: show it as soon as the reveal row exists (proposed), or only after the user has finished reading all four reveal parts?
+1. Flag and confidence are typed enums (`block_map_flag`, `block_map_confidence`) with Dart mirrors.
+2. `compute_block_map` reads reverse/pair metadata from `block_map_items` (STABLE), not hard-coded.
+3. The hub card shows as soon as the loop's Phase 2 dashboard row exists.
