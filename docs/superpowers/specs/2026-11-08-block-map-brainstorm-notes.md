@@ -420,3 +420,35 @@ Files: `lib/features/block_map/block_map_items.dart` (48 items, primer, caption)
 - `ideological_systemic_4` and `autonomy_sovereignty_4`: low answers can be accurate for people facing real unfair treatment or structural limits. Downstream domain copy needs care.
 - Primer says "Your answers save as you go": true only once autosave-per-tap ships (section 2). Verify before release.
 - Likert middle labels not chosen yet (endpoints locked: "Not at all like me" / "Always like me").
+
+**Noah's decisions on the judge findings (2026-11-08)**
+- Likert labels, 0..4: "Not at all like me" / "Rarely like me" / "Sometimes like me" / "Often like me" / "Always like me".
+- Re-pair `relational_attachment_4` with `relational_attachment_3` in the seed. All other domains keep `_4` paired with `_1`.
+- Social-desirability skew: rewrite the 12 reverse items (`*_4`) so they are not the flattering option, then re-run the cold rubric judge on those 12 before Noah's read-through of all 48. Not "ship and tune later".
+**Reverse-item rewrite: cold judge log (2026-11-08, fresh Sonnet judge each round, rubric = section 4 rules + "not the flattering option" + "truly opposes its pair")**
+
+Round 1 (all 12 rewritten): 5 PASS (existential_catastrophic_4, relational_reciprocity_4, ideological_systemic_4, internalized_authority_4, self_perfectionism_4), 7 FAIL. Judge finding: indifference ("barely notice") is not the opposite of anxiety or comparison; several items were the healthy pole with a thin cost clause.
+
+Round 2 (the 7 failures rewritten, new judge): 3 PASS (relational_attachment_4, autonomy_sovereignty_4, societal_comparative_4), 4 FAIL:
+
+| key | statement (current in Dart) | failed | reason |
+|---|---|---|---|
+| adequacy_impostor_4 | When things go well, I take the credit, even when others helped. | opposes pair, domain drift | grabbing credit is not the opposite of fearing exposure; drifts into status |
+| status_achievement_4 | I let my wins go unmentioned unless someone asks me directly. | flattering, domain drift | modesty with no cost; overlaps visibility_fear |
+| internal_self_directed_4 | I brush off my own mistakes without much thought. | opposes pair | indifference is not the opposite of harsh self-talk |
+| visibility_fear_4 | In groups, I voice ideas before I've fully thought them through. | opposes pair | measures impulsivity, not the absence of holding back |
+
+Round 2 suggested rewrites circle back to wording round 1 failed. For these 4 domains the true opposite of the pattern is the healthy pole, so "opposes its pair" and "not flattering" conflict. Stopped rewriting; design call queued for Noah.
+
+Noah's call on the 4 (2026-11-08): **true opposite, accept skew.** For adequacy_impostor_4, status_achievement_4, internal_self_directed_4, visibility_fear_4 the reverse item is the plain healthy opposite; flattery is a documented, accepted skew (honesty flags only lower confidence and are tunable by migration). Later judges were told not to fail these for flattery.
+
+Round 3 (true-opposite wording, new judge): PASS internal_self_directed_4 ("When I make a mistake, I talk to myself the way I'd talk to a friend."), PASS visibility_fear_4 ("In groups, I share my ideas when I have them."). FAIL adequacy_impostor_4 ("...I take it as a fair sign of what I can do.": a belief, not a behavior) and status_achievement_4 ("I leave it to others to notice what I've achieved.": nearly restates _2, drifts into visibility_fear).
+
+Round 4 (new judge): both FAIL again.
+- adequacy_impostor_4 "When things go well, I accept the result as mine and move on.": two actions; owning a result is not the opposite of bracing for exposure.
+- status_achievement_4 "I mention my achievements only when they come up naturally.": "only" muddles with "Not at all like me"; "naturally" is vague.
+Round 4's status suggestion ("go unmentioned unless someone asks") is the round 2 wording that failed for visibility_fear overlap, so the judges are cycling. **Stopped: these 2 stay at the round-4 wording and go to Noah's read-through as open items.** 10/12 reverse items PASS.
+
+Final wording, Noah's pick (2026-11-08), closing the 2 open items:
+- adequacy_impostor_4: "When my work goes well, I share it without bracing for it to be picked apart."
+- status_achievement_4: "I talk about my achievements about as much as anything else."
