@@ -421,6 +421,10 @@ Files: `lib/features/block_map/block_map_items.dart` (48 items, primer, caption)
 - Primer says "Your answers save as you go": true only once autosave-per-tap ships (section 2). Verify before release.
 - Likert middle labels not chosen yet (endpoints locked: "Not at all like me" / "Always like me").
 
+**Noah's decisions on the judge findings (2026-11-08)**
+- Likert labels, 0..4: "Not at all like me" / "Rarely like me" / "Sometimes like me" / "Often like me" / "Always like me".
+- Re-pair `relational_attachment_4` with `relational_attachment_3` in the seed. All other domains keep `_4` paired with `_1`.
+- Social-desirability skew: rewrite the 12 reverse items (`*_4`) so they are not the flattering option, then re-run the cold rubric judge on those 12 before Noah's read-through of all 48. Not "ship and tune later".
 **Reverse-item rewrite: cold judge log (2026-11-08, fresh Sonnet judge each round, rubric = section 4 rules + "not the flattering option" + "truly opposes its pair")**
 
 Round 1 (all 12 rewritten): 5 PASS (existential_catastrophic_4, relational_reciprocity_4, ideological_systemic_4, internalized_authority_4, self_perfectionism_4), 7 FAIL. Judge finding: indifference ("barely notice") is not the opposite of anxiety or comparison; several items were the healthy pole with a thin cost clause.
