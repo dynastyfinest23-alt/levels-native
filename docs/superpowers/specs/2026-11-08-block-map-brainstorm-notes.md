@@ -444,3 +444,7 @@ Round 4 (new judge): both FAIL again.
 - adequacy_impostor_4 "When things go well, I accept the result as mine and move on.": two actions; owning a result is not the opposite of bracing for exposure.
 - status_achievement_4 "I mention my achievements only when they come up naturally.": "only" muddles with "Not at all like me"; "naturally" is vague.
 Round 4's status suggestion ("go unmentioned unless someone asks") is the round 2 wording that failed for visibility_fear overlap, so the judges are cycling. **Stopped: these 2 stay at the round-4 wording and go to Noah's read-through as open items.** 10/12 reverse items PASS.
+
+Final wording, Noah's pick (2026-11-08), closing the 2 open items:
+- adequacy_impostor_4: "When my work goes well, I share it without bracing for it to be picked apart."
+- status_achievement_4: "I talk about my achievements about as much as anything else."

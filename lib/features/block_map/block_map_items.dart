@@ -87,7 +87,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'adequacy_impostor_4',
     OriginDomain.adequacyImpostor,
-    'When things go well, I accept the result as mine and move on.',
+    'When my work goes well, I share it without bracing for it to be picked apart.',
     reverse: true,
     pairKey: 'adequacy_impostor_pair',
   ),
@@ -162,7 +162,7 @@ const List<BlockMapItem> blockMapItems = [
   BlockMapItem(
     'status_achievement_4',
     OriginDomain.statusAchievement,
-    'I mention my achievements only when they come up naturally.',
+    'I talk about my achievements about as much as anything else.',
     reverse: true,
     pairKey: 'status_achievement_pair',
   ),
