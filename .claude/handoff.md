@@ -89,3 +89,30 @@ No action needed. All verification gates pass. When the next session resumes wor
 
 **NEXT SESSION PROMPT**
 > (Sonnet) Continue the Levels block map. Read `docs/superpowers/specs/2026-11-08-block-map-brainstorm-notes.md`; sections 1-4 are approved. Draft the 48 statements in `lib/features/block_map/block_map_items.dart` against the section 4 rules, plus the primer and low-confidence caption. Done-when: a cold-context rubric judge pass reports every item PASS (or rewritten + re-judged), and the judge's table is saved to the notes file for my read-through.
+
+---
+## 2026-11-08 (session 3) — Session handoff: dcd drop, CI live, reverse items rewritten
+
+**SHIPPED & VERIFIED**
+- PRs #1-#5 merged (#1, #2, #3, #5 merged by Claude at Noah's explicit request; #4 auto-closed via #5). `main` = `895630a`, 224 tests pass.
+- `dcd_*` Debt Cure tables dropped from Levels production via `db push --remote` (migrations `20261108221046`, `20261108222548`). MCP read-back: 0 dcd objects, 0 dcd policies, `public.users` = 4. Local backup is now the only copy of that data.
+- CI (`.github/workflows/ci.yml`, TZ=America/Chicago) runs analyze + test on every PR.
+- `config.toml`: `auth.email`/`auth.sms` `enable_signup` -> `enabled`; 0 CLI deprecation warnings.
+- Block map: Likert labels locked (Not at all / Rarely / Sometimes / Often / Always like me); `relational_attachment_4` pairs with `_3` (test-pinned); all 12 reverse items rewritten, 4 cold judge rounds logged in the notes. Noah chose "true opposite, accept skew" for adequacy_impostor, status_achievement, internal_self_directed, visibility_fear, and picked the final wording for adequacy_impostor_4 + status_achievement_4 (those two not cold-judged).
+- Root `levels-assessment-ui-spec.md` deleted (fully preserved in the notes file, verified line by line).
+
+**IN FLIGHT**
+- Block-map design doc in `docs/superpowers/specs/` (started session 3, Opus).
+
+**NOT STARTED**
+1. Noah reads all 48 items (gates the item seed, not the design doc).
+2. writing-plans from the design doc.
+3. Migrations via levels-dev-loop: (1) enum + 3 tables + RLS + Phase 3 columns + item seed; (2) functions + grants. Migrations run only from `main` after merge: `db push --remote` (CLI v3 defaults to local).
+
+**LANDMINES**
+- CLAUDE.md says "Noah reviews and merges; Claude never merges." Merges this session were explicit one-off asks; don't generalize.
+- `supabase db push` in agent mode needs `--yes`; only after Noah's explicit go.
+- Judges cycled on reverse items when "opposes its pair" and "not flattering" conflicted; don't re-run rewrite loops on those 4 without a new design decision.
+
+**NEXT SESSION PROMPT**
+> (Opus) Continue the Levels block map. Read `docs/superpowers/specs/2026-11-08-block-map-brainstorm-notes.md` (sections 1-4 approved, reverse-item decisions at the bottom) and the design doc if it exists. Finish/self-review the design doc, get my approval, then run writing-plans. Done-when: I've approved the design doc and a plan file exists.
