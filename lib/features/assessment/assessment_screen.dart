@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/design_tokens.dart';
+import '../../core/user_error.dart';
 import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
 import 'assessment_controller.dart';
@@ -57,7 +58,14 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
       // Surface the full error string — never swallow it.
       setState(() => _submitError = error.toString());
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Submission failed: $error')),
+        SnackBar(
+          content: Text(
+            friendlyError(
+              'Your answers did not save. Check your connection and try again.',
+              error,
+            ),
+          ),
+        ),
       );
     }
   }
@@ -281,12 +289,14 @@ class _SubmitErrorView extends StatelessWidget {
               style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: LevelsSpace.space8),
-            Text(
-              error,
-              style: LevelsType.caption,
-              textAlign: TextAlign.center,
-            ),
+            if (showErrorDetail) ...[
+              const SizedBox(height: LevelsSpace.space8),
+              Text(
+                error,
+                style: LevelsType.caption,
+                textAlign: TextAlign.center,
+              ),
+            ],
             const SizedBox(height: LevelsSpace.space24),
             OutlinedButton(
               onPressed: onRetry,

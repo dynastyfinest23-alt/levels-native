@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/design_tokens.dart';
+import '../../core/user_error.dart';
 import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
 
@@ -40,7 +41,12 @@ class _LoginScreenState extends State<LoginScreen> {
     } on AuthException catch (error) {
       _showError(error.message);
     } catch (error) {
-      _showError('Sign-in failed: $error');
+      _showError(
+        friendlyError(
+          'Could not sign in. Check your connection and try again.',
+          error,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

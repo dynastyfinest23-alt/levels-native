@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/design_tokens.dart';
+import '../../core/user_error.dart';
 import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
 import '../drill/drill_tokens.dart' show AscensionTrack;
@@ -88,7 +89,7 @@ class _CompletionScreenState extends State<CompletionScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Something went wrong: $error')),
+        SnackBar(content: Text(friendlyError(saveFailedCopy, error))),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
