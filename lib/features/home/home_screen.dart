@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/design_tokens.dart';
+import '../../core/user_error.dart';
 import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
 import '../../core/widgets/progress_dots.dart';
@@ -62,7 +63,10 @@ class _HomeScreenState extends State<HomeScreen> {
       _showError(context, error.message);
     } catch (error) {
       if (!context.mounted) return;
-      _showError(context, 'Sign-out failed: $error');
+      _showError(
+        context,
+        friendlyError('Could not sign out. Please try again.', error),
+      );
     }
   }
 
@@ -127,12 +131,14 @@ class _HubErrorView extends StatelessWidget {
               style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: LevelsSpace.space8),
-            Text(
-              error,
-              style: LevelsType.caption,
-              textAlign: TextAlign.center,
-            ),
+            if (showErrorDetail) ...[
+              const SizedBox(height: LevelsSpace.space8),
+              Text(
+                error,
+                style: LevelsType.caption,
+                textAlign: TextAlign.center,
+              ),
+            ],
             const SizedBox(height: LevelsSpace.space24),
             OutlinedButton(
               onPressed: onRetry,

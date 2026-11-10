@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/design_tokens.dart';
+import '../../core/user_error.dart';
 import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
 import 'drill_controller.dart';
@@ -87,7 +88,7 @@ class _DrillScreenState extends State<DrillScreen> {
       if (!mounted) return;
       // Surface the full error string — never swallow it.
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Submission failed: $error')),
+        SnackBar(content: Text(friendlyError(saveFailedCopy, error))),
       );
     }
   }
@@ -338,8 +339,10 @@ class _DrillErrorView extends StatelessWidget {
               style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: LevelsSpace.space8),
-            Text(error, style: LevelsType.caption, textAlign: TextAlign.center),
+            if (showErrorDetail) ...[
+              const SizedBox(height: LevelsSpace.space8),
+              Text(error, style: LevelsType.caption, textAlign: TextAlign.center),
+            ],
             const SizedBox(height: LevelsSpace.space24),
             OutlinedButton(
               onPressed: onRetry,

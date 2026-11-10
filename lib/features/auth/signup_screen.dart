@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/design_tokens.dart';
+import '../../core/user_error.dart';
 import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
 
@@ -48,7 +49,12 @@ class _SignupScreenState extends State<SignupScreen> {
     } on AuthException catch (error) {
       _showMessage(error.message);
     } catch (error) {
-      _showMessage('Sign-up failed: $error');
+      _showMessage(
+        friendlyError(
+          'Could not create your account. Check your connection and try again.',
+          error,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
