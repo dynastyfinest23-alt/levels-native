@@ -1,11 +1,11 @@
 {
-    "name": "levels_native",
-    "short_name": "levels_native",
+    "name": "Levels",
+    "short_name": "Levels",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0B0C15",
+    "theme_color": "#0B0C15",
+    "description": "Levels is a short check-in on where your energy sits, followed by guided work to raise it.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

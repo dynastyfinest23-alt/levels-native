@@ -18,21 +18,50 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Levels is a short check-in on where your energy sits, followed by guided work to raise it.">
+  <meta name="theme-color" content="#0B0C15">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="levels_native">
+  <meta name="apple-mobile-web-app-title" content="Levels">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>levels_native</title>
+  <title>Levels</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    Pre-Flutter paint. Colours mirror design-system/MASTER.md tokens `void`
+    (#0B0C15) and the neutral accent (#5F6FC0) so the page never flashes
+    white while main.dart.js and CanvasKit load. The dot mirrors BreathingDot
+    and is removed on Flutter's first frame.
+  -->
+  <style>
+    html, body { margin: 0; height: 100%; background: #0B0C15; }
+    #boot-dot {
+      position: fixed; top: 50%; left: 50%;
+      width: 12px; height: 12px; margin: -6px 0 0 -6px;
+      border-radius: 50%; background: #5F6FC0;
+      animation: boot-breath 2.4s ease-in-out infinite alternate;
+    }
+    @keyframes boot-breath { from { opacity: 0.35; } to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      #boot-dot { animation: none; opacity: 0.7; }
+    }
+  </style>
 </head>
 <body>
+  <div id="boot-dot" role="status" aria-label="Loading"></div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var dot = document.getElementById('boot-dot');
+      if (dot) dot.remove();
+    });
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

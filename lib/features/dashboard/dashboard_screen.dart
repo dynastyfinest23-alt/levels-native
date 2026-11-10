@@ -200,7 +200,19 @@ class _DashboardBody extends StatelessWidget {
               ),
               if (allRevealed) ...[
                 const SizedBox(height: LevelsSpace.space32),
-                Center(child: _PrimaryCta(zoneColor: style.zoneColor)),
+                Center(
+                  child: _PrimaryCta(
+                    zoneColor: style.zoneColor,
+                    drillRoute: drillRouteFor(result.loopId),
+                  ),
+                ),
+                const SizedBox(height: LevelsSpace.space12),
+                Center(
+                  child: TextButton(
+                    onPressed: () => context.go('/'),
+                    child: const Text('Back to home'),
+                  ),
+                ),
               ],
             ],
           ),
@@ -216,10 +228,20 @@ class _DashboardBody extends StatelessWidget {
   }
 }
 
+/// Where the reveal's primary button leads: the origin drill, where the
+/// bridge question the reveal just posed is answered. Same route the hub's
+/// drill CTA uses. Pure so `test/dashboard_next_step_test.dart` can pin it
+/// without Supabase.
+String drillRouteFor(String loopId) => '/drill/$loopId';
+
+/// Label shared with the hub's drill CTA (`home_screen.dart`).
+const String revealPrimaryCtaLabel = 'Start your origin drill';
+
 class _PrimaryCta extends StatelessWidget {
-  const _PrimaryCta({required this.zoneColor});
+  const _PrimaryCta({required this.zoneColor, required this.drillRoute});
 
   final Color zoneColor;
+  final String drillRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +259,7 @@ class _PrimaryCta extends StatelessWidget {
         ],
       ),
       child: FilledButton(
-        onPressed: () => context.go('/'),
+        onPressed: () => context.go(drillRoute),
         style: FilledButton.styleFrom(
           backgroundColor: fill,
           foregroundColor: LevelsColors.voidColor,
@@ -248,7 +270,7 @@ class _PrimaryCta extends StatelessWidget {
           ),
           shape: const StadiumBorder(),
         ),
-        child: const Text('Done'),
+        child: const Text(revealPrimaryCtaLabel),
       ),
     );
   }

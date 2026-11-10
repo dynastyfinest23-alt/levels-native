@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/design_tokens.dart';
 import '../../core/user_error.dart';
+import '../../core/widgets/answer_card.dart';
 import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
 import 'assessment_controller.dart';
@@ -117,7 +118,7 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
           listenable: _controller,
           builder: (context, _) {
             if (_controller.submitting) {
-              return _SubmittingView(previewScore: _controller.previewScore);
+              return const _SubmittingView();
             }
             if (_submitError != null) {
               return _SubmitErrorView(
@@ -178,7 +179,7 @@ class _QuestionPage extends StatelessWidget {
               for (final option in question.options)
                 Padding(
                   padding: const EdgeInsets.only(bottom: LevelsSpace.space12),
-                  child: _AnswerCard(
+                  child: AnswerCard(
                     label: option.label,
                     selected: option.answer == selected,
                     onTap: () => onTap(option.answer),
@@ -192,51 +193,11 @@ class _QuestionPage extends StatelessWidget {
   }
 }
 
-class _AnswerCard extends StatelessWidget {
-  const _AnswerCard({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(LevelsSpace.radiusPanel),
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: LevelsColors.glassFill,
-            border: Border(
-              top: const BorderSide(color: LevelsColors.glassStroke),
-              right: const BorderSide(color: LevelsColors.glassStroke),
-              bottom: const BorderSide(color: LevelsColors.glassStroke),
-              left: BorderSide(
-                color: selected ? LevelsColors.neutralAccent : LevelsColors.glassStroke,
-                width: selected ? 2 : 1,
-              ),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: LevelsSpace.space16,
-            vertical: LevelsSpace.space16,
-          ),
-          child: Text(label, style: LevelsType.body),
-        ),
-      ),
-    );
-  }
-}
-
+/// Deliberately shows no number: the first sight of the score is the
+/// dashboard reveal (design review 2026-11-09, issue 21). The client-mirror
+/// `previewScore` stays on the controller for the scoring mirror contract.
 class _SubmittingView extends StatelessWidget {
-  const _SubmittingView({required this.previewScore});
-
-  final double? previewScore;
+  const _SubmittingView();
 
   @override
   Widget build(BuildContext context) {
@@ -247,17 +208,9 @@ class _SubmittingView extends StatelessWidget {
           const BreathingDot(),
           const SizedBox(height: LevelsSpace.space24),
           Text(
-            'Computing your Center of Gravity…',
+            'Reading your answers…',
             style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
           ),
-          if (previewScore != null) ...[
-            const SizedBox(height: LevelsSpace.space8),
-            // Client-mirror preview only; the database result replaces it.
-            Text(
-              'Provisional: ~${previewScore!.toStringAsFixed(0)}',
-              style: LevelsType.caption,
-            ),
-          ],
         ],
       ),
     );
