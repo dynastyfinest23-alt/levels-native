@@ -109,7 +109,7 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
           listenable: _controller,
           builder: (context, _) {
             if (_controller.submitting) {
-              return _SubmittingView(previewScore: _controller.previewScore);
+              return const _SubmittingView();
             }
             if (_submitError != null) {
               return _SubmitErrorView(
@@ -225,10 +225,11 @@ class _AnswerCard extends StatelessWidget {
   }
 }
 
+/// Deliberately shows no number: the first sight of the score is the
+/// dashboard reveal (design review 2026-11-09, issue 21). The client-mirror
+/// `previewScore` stays on the controller for the scoring mirror contract.
 class _SubmittingView extends StatelessWidget {
-  const _SubmittingView({required this.previewScore});
-
-  final double? previewScore;
+  const _SubmittingView();
 
   @override
   Widget build(BuildContext context) {
@@ -239,17 +240,9 @@ class _SubmittingView extends StatelessWidget {
           const BreathingDot(),
           const SizedBox(height: LevelsSpace.space24),
           Text(
-            'Computing your Center of Gravity…',
+            'Reading your answers…',
             style: LevelsType.body.copyWith(color: LevelsColors.textSecondary),
           ),
-          if (previewScore != null) ...[
-            const SizedBox(height: LevelsSpace.space8),
-            // Client-mirror preview only; the database result replaces it.
-            Text(
-              'Provisional: ~${previewScore!.toStringAsFixed(0)}',
-              style: LevelsType.caption,
-            ),
-          ],
         ],
       ),
     );
