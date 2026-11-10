@@ -116,3 +116,30 @@ No action needed. All verification gates pass. When the next session resumes wor
 
 **NEXT SESSION PROMPT**
 > (Opus) Continue the Levels block map. Read `docs/superpowers/specs/2026-11-08-block-map-brainstorm-notes.md` (sections 1-4 approved, reverse-item decisions at the bottom) and the design doc if it exists. Finish/self-review the design doc, get my approval, then run writing-plans. Done-when: I've approved the design doc and a plan file exists.
+
+---
+## 2026-11-08 (session 3, end) — Handoff: block map planned, Fable-reviewed, Task 1 done
+
+**SHIPPED & VERIFIED**
+- Merged: PRs #1-#7. `main` has the design doc, the 6-task plan (`docs/superpowers/plans/2026-11-08-block-map.md`), the Fable 5.1 review packet + result with a per-finding disposition table. Fable's 15 findings applied (no client UPDATE on results, loop-owner INSERT check, named threshold constants, enum-order pin, FOR UPDATE in the scorer, route `?kind=`, etc.). Cuts decided by Noah: outer ring cut, spoke-tap labels kept, Day 21 retake deferred to its own later plan.
+- Noah approved all 48 items (read-through done). Golden vectors G1-G8b were recomputed independently in Python (all match the plan table).
+- WSLg disabled (`%USERPROFILE%\.wslconfig`: `guiApplications=false`) after it filled C: with 60 GB of msrdc traces. 133 GB free at last check. Undo = delete that line. Linux GUI apps no longer work; Docker/terminal WSL unaffected.
+
+**IN FLIGHT (open PRs, Noah merges)**
+- #8 docs: records the 48-item approval (unblocks Task 2). Merge first.
+- #9 Task 1: `AnswerCard` extracted to `lib/core/widgets/answer_card.dart`; analyze clean, 227 tests pass. Not visually checked in a browser (tests pin border/tap only).
+
+**NOT STARTED**
+1. Task 2 (Opus): migration 1, schema + seed + RLS. Gate is open once #8 merges. Push only from `main` after merge: `npx supabase db push --remote --yes`, only on Noah's explicit go. Then the MCP read-back in plan step 6.
+2. Task 3 (Opus): functions + Dart mirror + levels-verify + CLAUDE.md sync map.
+3. Tasks 4-6 (Sonnet): runner, wheel/result, drill hand-off + hub card + copy gate + manual browser run.
+4. Later plan: Day 21 retake + threshold tuning from real data.
+
+**LANDMINES**
+- Task 2 is the security surface: assessments get SELECT + INSERT policies only and `REVOKE UPDATE, DELETE`; responses have no `user_id` column. Don't "simplify" these back.
+- CLAUDE.md says Claude never merges; this session's merges were explicit one-off asks. Don't generalize.
+- Docker Desktop's distro was restarted by `wsl --shutdown`; restart any containers you need.
+- If C: fills again, check `%TEMP%\DiagOutputDir\RdClientAutoTrace` first.
+
+**NEXT SESSION PROMPT**
+> (Opus) Continue the Levels block map. First check PR #8 and #9 are merged (`gh pr list --state all`), then `git switch main && git pull`. Read `docs/superpowers/plans/2026-11-08-block-map.md` Task 2 and the spec section 5. Do Task 2 on branch `feat/block-map-2-schema`: seed test first, then the migration, PR, and stop for my merge. After I merge, `db push --remote --yes` (I'll say go) and run the MCP read-back. Done-when: the read-back table in the PR shows 48 items / 12 reverse, no UPDATE policy or privilege on `block_map_assessments`, anon has no SELECT on `block_map_items`.
