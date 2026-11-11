@@ -162,6 +162,7 @@ No action needed. All verification gates pass. When the next session resumes wor
 1. Fix 5 component pass (48px buttons, CTA inside the column, real selected state on shared `AnswerCard`). Unblocked.
 2. Fix 3 welcome screen before login. Noah approves copy first.
 3. Fix 6 hub cleanup, fix 8 assessment/auth friction (list in the review doc).
+4. Separate track, still pending: block-map Task 2 (schema migration). Its prompt is in the session 3 entry above; pick one track per session.
 
 **LANDMINES**
 - Anthropic key expires 2026-11-21; rotate in a separate terminal. Copy silently falls back to static text after.
