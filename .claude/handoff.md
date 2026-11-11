@@ -143,3 +143,32 @@ No action needed. All verification gates pass. When the next session resumes wor
 
 **NEXT SESSION PROMPT**
 > (Opus) Continue the Levels block map. First check PR #8 and #9 are merged (`gh pr list --state all`), then `git switch main && git pull`. Read `docs/superpowers/plans/2026-11-08-block-map.md` Task 2 and the spec section 5. Do Task 2 on branch `feat/block-map-2-schema`: seed test first, then the migration, PR, and stop for my merge. After I merge, `db push --remote --yes` (I'll say go) and run the MCP read-back. Done-when: the read-back table in the PR shows 48 items / 12 reverse, no UPDATE policy or privilege on `block_map_assessments`, anon has no SELECT on `block_map_items`.
+
+---
+## 2026-11-09 (session 4): design review, fixes 2/4/7 shipped
+
+**SHIPPED & VERIFIED**
+- PRs #8-#14 merged (Noah's explicit one-off ask; Claude does not merge by default). `main` = `848ab00`: analyze clean, 234 tests pass, release web build ok.
+- Review saved: `docs/reviews/2026-11-09-design-ux-review.md` (37 issues, fix list, status checklist).
+- Fix 2 web shell (#11): title/manifest `Levels`, `#0B0C15`, pre-load dot. Shell-only render and settled login render both looked at.
+- Fix 4 (#13): reveal ends in `/drill/<loopId>`, no provisional score on the submit screen. Test pinned, fails on revert.
+- Fix 7 (#14): `lib/core/user_error.dart`; raw error text debug-only. Test pinned, fails on revert.
+
+**IN FLIGHT**
+- PR #15 (checklist update for fixes 2/4/7) and PR for this handoff are open for Noah.
+- Fix 4 visual check open: dashboard and submit screens never rendered; needs a signed-in session (throwaway prod account, deleted after; Noah has not approved).
+
+**NOT STARTED**
+1. Fix 5 component pass (48px buttons, CTA inside the column, real selected state on shared `AnswerCard`). Unblocked.
+2. Fix 3 welcome screen before login. Noah approves copy first.
+3. Fix 6 hub cleanup, fix 8 assessment/auth friction (list in the review doc).
+
+**LANDMINES**
+- Anthropic key expires 2026-11-21; rotate in a separate terminal. Copy silently falls back to static text after.
+- Fix 7: the six error views are not widget-tested (private classes, tests run in debug).
+- Icons are still Flutter defaults. Description copy in #11 awaits Noah's edit.
+- Do not `git checkout -- file` to undo an experiment with uncommitted work in that file (it wiped fix 4 edits once; use a backup copy).
+- Noah declined force-push this session: resolve PR conflicts by merging main into the branch.
+
+**NEXT SESSION PROMPT**
+> (Sonnet) Continue the Levels design review fixes. Read `docs/reviews/2026-11-09-design-ux-review.md`. Start fix 5 on branch `fix/component-pass` off an up-to-date main: 48px primary buttons, hub and drill CTA constrained to the 512px column, one shared answer card width, a visible selected state. Done-when: analyze clean, tests pass, a pinning test fails on revert, and I have looked at rendered screenshots of the assessment and drill screens.
