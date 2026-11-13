@@ -56,7 +56,7 @@ No action needed. All verification gates pass. When the next session resumes wor
 3. Commit notes + add `.superpowers/` to `.gitignore` (not yet ignored).
 
 **LANDMINES**
-- Visual companion server (port 57580) dies with the session; restart with `start-server.sh --project-dir C:/Users/Administrator/levels-native --open` (same port reused).
+- Visual companion server (port 57580) dies with the session; restart with `start-server.sh --project-dir C:/dev/levels-native --open` (same port reused).
 - Never answer Noah's in-progress SQ Test (Q12/180) or copy Abke items/copy verbatim.
 - Pasted spec says "FlutterFlow", 1-1000 score, chakra tiers, fl_chart: all REJECTED (see notes file). Do not reintroduce.
 - Section 2 adds a new mirror-sync group (DB fn + Dart mirror + golden tests): Opus-tier design work.

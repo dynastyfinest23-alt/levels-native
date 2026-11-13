@@ -7,7 +7,7 @@
 
 ## How to run
 
-1. Open a Claude Code terminal on `C:\Users\Administrator\levels-native`, set model to **Sonnet 5** (`/model`).
+1. Open a Claude Code terminal on `C:\dev\levels-native`, set model to **Sonnet 5** (`/model`).
 2. Paste this single instruction:
 
    > Read `docs/dodson-2e-extraction-prompt.md` in full and execute the task it describes. Follow every constraint. Stop at the review gate — do not edit any scoring code, migration, or CLAUDE.md table.
