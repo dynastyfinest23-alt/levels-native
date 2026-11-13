@@ -92,12 +92,12 @@ The three that move the score most: 3 (with 2), 4, and 5. Estimated result: 7.5/
 ## Status
 
 - [ ] 1 Key rotation
-- [ ] 2 Web shell (branch `fix/web-shell-metadata`)
+- [x] 2 Web shell (PR #11, merged 2026-11-09). Icons are still the Flutter defaults.
 - [ ] 3 Welcome screen
-- [ ] 4 Reveal ending
+- [x] 4 Reveal ending (PR #13, merged 2026-11-09). Rendered dashboard and submit screens NOT yet looked at; needs a signed-in session.
 - [ ] 5 Component pass
 - [ ] 6 Hub
-- [ ] 7 Error copy
+- [x] 7 Error copy (PR #14, merged 2026-11-09). Raw detail is debug-only; the six error views are not widget-tested.
 - [ ] 8 Assessment and auth friction
 - [ ] 9 Atomic submit
 - [ ] 10 Answer order
