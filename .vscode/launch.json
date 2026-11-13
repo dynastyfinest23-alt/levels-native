@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Levels (web-server :8080)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "web-server",
+      "args": ["--web-port=8080", "--dart-define-from-file=env.json"]
+    }
+  ]
+}

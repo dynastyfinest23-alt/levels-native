@@ -146,6 +146,8 @@ Known external snapshot (NOT in the sync set): `C:\Users\Administrator\nexus\app
 
 - Workspace: `movewithnoaht@gmail.com` via the Notion connector.
 - Anchor page: `📈 Levels — App Notes` (id `3a0c30c2-f733-81bd-b521-f989ab2ad9da`) — product/planning notes live there; fetch it when product intent is unclear from code.
+- Foundational doc: `The Levels App: Foundational Documentation` (https://app.notion.com/p/371c30c2f73380679e4cf93c7c1171d2). Anchor page link: https://app.notion.com/p/3a0c30c2f73381bdb521f989ab2ad9da
+- Code truth lives in this repo. Notion holds product notes only; if the two disagree, the repo wins and the Notion page gets fixed.
 - Notion never holds scoring/classification logic (rule 2) — Postgres functions + Dart mirrors + golden tests remain the only truth for that.
 
 ## Database inventory (deployed, verified)
