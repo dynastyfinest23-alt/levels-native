@@ -198,7 +198,7 @@ The client-side golden-mirror suite exists at `test/scoring_mirror_test.dart` an
 - **Branches (GitHub flow with short-lived branches, adopted 2026-11-08):** `main` is always releasable and is what production runs. Remote: `origin` on GitHub; `main` is protected (no force-push, no deletion).
   1. Every change starts on a branch off an up-to-date `main`: `feat/`, `fix/`, `chore/`, or `docs/` + kebab-case. One task per branch, one commit per verified step.
   2. Branches live hours to a couple of days. A milestone too big for that (e.g. the block map) ships as several reviewable slices; unfinished UI stays unreachable (no route, no hub card) until its last slice lands.
-  3. Push the branch and open a PR (`gh pr create`). CI (`.github/workflows/ci.yml`) runs `flutter analyze` + `flutter test`. **Noah reviews and merges; Claude never merges.**
+  3. Push the branch and open a PR (`gh pr create`). CI (`.github/workflows/ci.yml`) runs `flutter analyze` + `flutter test`. **Claude merges a PR only when Noah names it (e.g. "merge PR 17"); Claude never merges on its own initiative** (changed 2026-11-16; was "Noah reviews and merges; Claude never merges").
   4. Before merge, rebase on `main`. If another migration landed on `main` meanwhile, re-timestamp yours so it sorts last.
   5. **Production migrations run only from `main`, after merge:** `git switch main && git pull`, then `npx supabase db push --remote`, then the MCP read-back. A failed verify is fixed forward on a new branch; never edit a migration that already ran.
   6. Release tags `vX.Y.Z` on `main` begin when app-store builds do.
