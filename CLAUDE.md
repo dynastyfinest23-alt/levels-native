@@ -204,6 +204,22 @@ The client-side golden-mirror suite exists at `test/scoring_mirror_test.dart` an
   6. Release tags `vX.Y.Z` on `main` begin when app-store builds do.
 - **Tests are pinned contracts, not coverage filler.** Each test group states which source of truth it pins and when that truth was verified. A pinning test must fail when the change it pins is reverted — before writing one, confirm it would fail without the change; a test that passes either way pins nothing.
 
+## Failure scenarios, open risks, and test gaps (added 2026-11-19)
+
+What the code does today, read from source on 2026-11-19. Not what it should do.
+
+**Failure scenarios**
+- **Supabase project paused (the real one; happened 2026-11-08 and again 2026-11-19).** Free-tier inactivity pause: the project URL stops resolving and every screen fails. Guard: the "Levels Supabase keep-alive" scheduled task runs `scripts/keep-alive.ps1` daily at 09:00 (read-only ping, log at `%LOCALAPPDATA%\levels-keep-alive.log`). Restore: Supabase MCP `restore_project`, about 2 minutes, then confirm `ACTIVE_HEALTHY`. A missing or stale ping is the early warning.
+- **DB unreachable.** Screens that load data (hub, dashboard, drill, reassessment, tracks) show an error view with a Retry button (`_HubErrorView`, `_DashboardErrorView`, `_DrillErrorView`, `_ReassessmentErrorView`, `TrackErrorView`). Failed writes show a snackbar with `saveFailedCopy` and the user stays on the screen. Raw error text appears only in debug builds (`lib/core/user_error.dart`). Dashboard reveal telemetry writes (`markPanelOpened`, `recordTimeOnScreen`) are log-and-continue and never block the user.
+- **Edge Function failure.** Two layers. Server side, `generate-dashboard-copy` falls back to the static copy in `fallback.ts` on any LLM or API failure, so an expired Anthropic key degrades silently (rows get `copy_source = 'fallback'`). Client side there is no static copy: if the function call itself throws (function down, 4xx or 5xx, no network), `DashboardController.load` sets `error` and the user sees "Could not load your dashboard." with Retry, and no reveal.
+- **Auth failure.** No session means `authRedirect` sends any non-public route to `/login` (`lib/core/router.dart`, pinned by `test/auth_gate_test.dart`); signing out or an expired session follows the same path through `onAuthStateChange`. A failed sign-in or sign-up shows a snackbar. A Supabase `AuthException` (for example wrong password) shows Supabase's own message verbatim, not the friendly copy; any other failure shows the friendly copy.
+
+**Open risks (decision is Noah's)**
+- **No rate limiting on `generate-dashboard-copy`** (nothing in `supabase/functions/` or this file mentions one, 2026-11-19). Existing mitigation: one dashboard per loop (`one_dashboard_per_loop`), and a repeat call for the same loop returns the stored copy without a new LLM call. Not covered: an authenticated user creating many loops, each costing one LLM call. Not decided, not built.
+
+**Test gaps**
+- **No automated E2E.** There is no `integration_test/` directory and CI runs only `flutter analyze` + `flutter test`. The full five-phase loop was verified manually in a real browser against production on 2026-07-23 (M6.1, `docs/PRD.md` §3). Browser re-verification is manual.
+
 ## Design system (reference — do not restyle ad hoc)
 
 The visual system lives in `design-system/MASTER.md` (authored 2026-07-08 from `levels-design-system-brief.md`; the ui-ux-pro-max skill it was once planned around does not exist). Application roadmap is PRD milestone M-DS. Rules:
