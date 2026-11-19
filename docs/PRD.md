@@ -9,24 +9,28 @@ were read from production (project `dnqwsgpkinieitiiikij`) on 2026-07-08.
 
 ---
 
-## 0. NOW (next ~2 weeks)
+## 0. NOW (refreshed 2026-11-19)
 
-- **Current milestone:** M3, M4.1, M4.2, M4.3, M4.4 all COMPLETE. M4.5
-  (embodiment screen + 7-day daily loop) COMPLETE 2026-07-18 — manually
-  verified end-to-end through day 7 (session screen, day 1, and days 6-7
-  via SQL-backdated `started_at`). M4.6 (hub integration — track progress
-  + daily CTA) COMPLETE 2026-07-19 — manually verified in-browser. All
-  Phase 4 work is now built and wired into the hub. M5 (Phase 5
-  reassessment) is next.
-- **Resolved:** love_flow 530-vs-550 — Noah decided to defer, keep 530
-  (`ACTION-FOR-NOAH.md`, 2026-07-16). No scoring artifact touched.
-- **Flagged for cleanup:** a real test account created during M3.4's manual
-  verification run needs deletion alongside the existing parked
-  test-account cleanup item (`ACTION-FOR-NOAH.md`).
-- **Parked on purpose:** Dodson extraction doc (done — see
-  `docs/dodson-2e-reference.md`); OAuth (blocked on credentials); test-account
-  deletion (needs Noah's ID list); marketing site (separate workstream, own
-  standards).
+- **Milestones M1 to M6: all shipped.** M6 (docs sync, loose-ends audit)
+  closed 2026-07-23; M6.1 walked a fresh account through the full
+  five-phase loop in a real browser against production (source: `CLAUDE.md`
+  "Current open items"). No milestone in this PRD is "next".
+- **Active tracks (pick one per session; source: `.claude/handoff.md`,
+  session 4, 2026-11-09):**
+  1. Design review fixes (`docs/reviews/2026-11-09-design-ux-review.md`).
+     Fixes 2, 4, 7 shipped (PRs #11, #13, #14). Fix 5 (component pass) is
+     next and unblocked. Fixes 3, 6, 8 follow.
+  2. Block map. Task 1 shipped (`AnswerCard` extracted, PR #9). Task 2
+     (schema migration) is not started; the plan is
+     `docs/superpowers/plans/2026-11-08-block-map.md`.
+- **Open and blocked:** Google/Apple OAuth (waiting on credentials);
+  iOS/Android enablement (web is the only enabled platform); Day 5 to 7 and
+  Day 21 email reminders (not designed, out of scope for M1 to M6); Fix 4's
+  visual check (dashboard and submit screens never rendered in a signed-in
+  session; needs a throwaway prod account Noah has not approved).
+- **Dated risk:** the Anthropic key behind `generate-dashboard-copy`
+  expires 2026-11-21. Noah rotates it in a separate terminal. After expiry
+  the reveal falls back to the static copy in `fallback.ts`.
 - This section is refreshed at every gate close and session handoff.
 
 ## 1. OBJECTIVE
