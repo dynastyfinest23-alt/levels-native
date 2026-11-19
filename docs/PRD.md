@@ -52,6 +52,127 @@ score, classification, and routing decision computed by deployed Postgres
 functions and every screen faithfully displaying (never computing) those
 results.
 
+## 1a. PRODUCT (added 2026-11-19)
+
+Drafted only from existing sources: §1 above; `CLAUDE.md` ("What this
+project is", "Product decisions", "Tone and product ethics", "Flow
+reachability"); the §2 schema list; §3 and §4 of this file. The Notion anchor
+page (`3a0c30c2-f733-81bd-b521-f989ab2ad9da`), fetched 2026-11-19, holds one
+purpose line and no product content, so it is not a source. Anything not
+stated in those sources is under "Open questions for Noah" at the end of this
+section and is not part of the spec.
+
+### Target user
+
+- **Who:** someone actively working on their inner state who wants evidence
+  of change, not affirmations (§1).
+- **Needs, as the product is built to serve them:** a measured starting
+  point (7-question behavioral assessment, Phase 1); an explanation of the
+  pattern behind it (Phase 2 reveal); a matched practice (Phase 3 origin
+  drill, Phase 4 track); and a check that the change held (Phase 5 Day 5 to
+  7 and Day 21 windows). Source: `CLAUDE.md` "The five-phase journey".
+- **Pain points addressed, as stated in sources:** self-report alone is not
+  trusted, so behavior outranks it ("behavior tells the truth over
+  self-report", `CLAUDE.md` classification rules); a single good reading is
+  not arrival ("a peak reading isn't arrival; Flow is earned across verified
+  loops", `CLAUDE.md` Phase 2). Other pain points are not documented; see
+  Open questions.
+
+### User stories
+
+Each maps to a Hooked phase (`CLAUDE.md` "What this project is").
+
+1. As a new user, I want to answer 7 behavioral questions with one tap each
+   so that I get a starting reading without effort. (Action; Phase 1)
+2. As a user who just finished the assessment, I want to see my reading
+   revealed in steps, with an open question at the end, so that the result
+   feels earned and points to what to look at next. (Variable reward; Phase 2)
+3. As a user, I want to answer a short drill about where my dominant pattern
+   came from so that I am given a practice that fits it. (Investment;
+   Phase 3)
+4. As a user with an assigned track (completion, belief audit, embodiment,
+   commitment), I want to work it across the loop, including the 7-day
+   embodiment log, so that the practice is concrete. (Action + investment;
+   Phase 4)
+5. As a user at Day 5 to 7, I want a short reassessment so that I can see
+   whether anything moved. (Trigger; Phase 5, Window 2)
+6. As a user at Day 21, I want a durability check so that a change counts
+   only if it held. (Phase 5, Window 3)
+7. As a user whose result is not an improvement, I want to be routed to a
+   different next step (deepening protocol, retest, or track change) and not
+   told I failed, so that the product stays useful without shaming
+   (`CLAUDE.md` "Tone and product ethics"; routing values in
+   `compute_phase5_classification`).
+8. As a returning user with a completed loop, I want to start a fresh loop
+   so that I can keep climbing (`ascension_loops.loop_number`).
+
+### Product success metrics
+
+Each is computable from tables in the §2 schema. None has a target value yet
+(see Open questions). "Loop" means one `ascension_loops` row.
+
+| Metric | Computed from |
+|---|---|
+| Assessment completion (started signup, finished Phase 1) | `users` rows with a `phase1_assessments` row, per `user_id` |
+| Reveal engagement | share of `phase2_dashboard_views` with `reality_tunnel_read`, `hidden_benefit_opened` and `illusion_opened` all true; median `time_on_screen_secs` |
+| Drill completion | `phase3_origin_drills.completed_at` not null, per loop |
+| Track completion | `phase4_track_sessions.completed_at` not null, and `success_state_reached` true, per loop and `track_type` |
+| Window 2 completion | loops with a `phase5_reassessments` row where `window_number = 'window_2'`, over loops past day 5 (`ascension_loops.started_at`) |
+| Window 3 completion | same, `window_number = 'window_3'`, over loops past day 21 |
+| Loop completion | `ascension_loops.status = 'complete'` and `completed_at` not null, over all loops |
+| Verified change | `phase5_reassessments.classification` distribution (`true_ascension` / `residual_charge` / `false_positive`) and `combined_delta` |
+| LLM vs fallback copy rate | `phase2_dashboard_views.copy_source` (`llm` / `fallback`); a health signal for the Edge Function, not a user outcome |
+
+### Non-goals
+
+Consolidated from §4 and `CLAUDE.md`; none are new decisions.
+
+- iOS and Android enablement; web (Chrome) is the only platform (§4).
+- Push or email reminders for the Day 5 to 7 and Day 21 windows. Planned
+  later, email first (`CLAUDE.md` product decision 1); no pg_cron or email
+  infra in this plan (§4).
+- OAuth wiring, payments, any admin UI, `window_1` reassessments, and
+  analytics beyond existing columns (§4).
+- The FlutterFlow repo and the Framer site (§4). The marketing site is a
+  separate workstream with its own standards (`CLAUDE.md`).
+- Any new dependency or state-management package (§4).
+- The LLM deciding anything. It presents; it never scores, classifies or
+  routes (`CLAUDE.md` "The one inviolable principle"). Free-text answers are
+  never sent to it (`CLAUDE.md` product decision 2).
+- Reaching the Flow band from one assessment, or copy implying it
+  (`CLAUDE.md` "Flow reachability").
+- Manufactured urgency, streak or guilt language, or presenting a zone as
+  a permanent identity (`CLAUDE.md` "Tone and product ethics").
+
+### Open questions for Noah
+
+Not in the spec until answered.
+
+1. **Persona detail.** Sources give one sentence for the user. Age, context,
+   how they find the app, and whether the Habesha community or busy
+   professionals (your MoveWithNoah audiences) are also Levels audiences are
+   not documented anywhere I read.
+2. **Other pain points.** Only the two above are stated. Is there a user
+   research source, or should this stay at two?
+3. **Metric targets.** No target values exist anywhere (e.g. a Window 2
+   completion rate you would call good). Set them, or leave metrics
+   unthresholded until real users exist?
+4. **User count.** The 2026-11-19 handoff read-back shows 4 auth users;
+   `CLAUDE.md` (as of 2026-08-03) calls them 3 real accounts plus one
+   unidentified. Ratios on that base are not meaningful yet. Are there
+   launch or recruitment plans to cite here?
+5. **Lapse metric.** `CLAUDE.md` product decision 3 specifies a `lapsed`
+   loop status. `grep` of `lib/` and `supabase/migrations/` (2026-11-19)
+   finds no such value, and §2 lists `loop_status` as
+   `active/complete/stalled`. Is lapse still wanted, and should "lapsed
+   rate" join the metrics once it exists?
+6. **Retention.** No metric covers a user starting a second loop. It can be
+   computed from `ascension_loops.loop_number > 1`; say if you want it
+   listed.
+7. **Block map.** Its stories and metrics are not here. They belong to its
+   own plan (`docs/superpowers/plans/2026-11-08-block-map.md`); say if they
+   should be folded into this section.
+
 ## 2. CONTEXT
 
 ### Already built and working (do not rebuild, do not break)
