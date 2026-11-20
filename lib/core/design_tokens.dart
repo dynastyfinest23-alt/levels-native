@@ -159,6 +159,10 @@ abstract final class LevelsSpace {
   /// Pill (button) corner radius.
   static const radiusButton = 999.0;
 
+  /// Minimum primary-button height: the 48px touch target (design review
+  /// 2026-11-09, issue 1).
+  static const buttonMinHeight = 48.0;
+
   /// Reveal-panel fade+rise distance (§5 `reveal`).
   static const revealRise = 12.0;
 }

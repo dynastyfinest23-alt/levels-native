@@ -3,8 +3,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/design_tokens.dart';
 import '../../core/user_error.dart';
+import '../../core/widgets/answer_card.dart';
 import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
+import '../../core/widgets/column_cta.dart';
 import '../../core/widgets/progress_dots.dart';
 import '../../core/zone_style.dart';
 import '../assessment/scoring.dart' show EnergyZone;
@@ -382,15 +384,9 @@ class ReassessmentFlowState extends State<ReassessmentFlow> {
                 ),
             ],
           ),
-          bottomNavigationBar: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(LevelsSpace.screenGutter),
-              child: FilledButton(
-                onPressed: submitting || !_canContinue ? null : _onContinue,
-                child: Text(
-                    _currentPage < _pageCount - 1 ? 'Continue' : 'Finish'),
-              ),
-            ),
+          bottomNavigationBar: ColumnCta(
+            label: _currentPage < _pageCount - 1 ? 'Continue' : 'Finish',
+            onPressed: submitting || !_canContinue ? null : _onContinue,
           ),
         );
       },
@@ -491,7 +487,7 @@ class _QuestionPage<T> extends StatelessWidget {
                   Padding(
                     padding:
                         const EdgeInsets.only(bottom: LevelsSpace.space12),
-                    child: _OptionCard(
+                    child: AnswerCard(
                       label: option.label,
                       selected: option.value == selected,
                       onTap: () => onSelect(option.value),
@@ -501,42 +497,6 @@ class _QuestionPage<T> extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _OptionCard extends StatelessWidget {
-  const _OptionCard({required this.label, required this.selected, required this.onTap});
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(LevelsSpace.radiusPanel),
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: LevelsColors.glassFill,
-            border: Border(
-              top: const BorderSide(color: LevelsColors.glassStroke),
-              right: const BorderSide(color: LevelsColors.glassStroke),
-              bottom: const BorderSide(color: LevelsColors.glassStroke),
-              left: BorderSide(
-                color: selected
-                    ? LevelsColors.neutralAccent
-                    : LevelsColors.glassStroke,
-                width: selected ? 2 : 1,
-              ),
-            ),
-          ),
-          padding: const EdgeInsets.all(LevelsSpace.space16),
-          child: Text(label, style: LevelsType.body),
         ),
       ),
     );

@@ -22,7 +22,7 @@ class LevelsApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Levels',
-      theme: _levelsTheme,
+      theme: levelsTheme,
       routerConfig: appRouter,
     );
   }
@@ -32,7 +32,7 @@ class LevelsApp extends StatelessWidget {
 /// built entirely from `lib/core/design_tokens.dart` — no seed-generated
 /// Material colors, so no Material-default purple leaks into secondary/
 /// tertiary/error slots.
-final ThemeData _levelsTheme = ThemeData(
+final ThemeData levelsTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
   scaffoldBackgroundColor: LevelsColors.voidColor,
@@ -74,6 +74,7 @@ final ThemeData _levelsTheme = ThemeData(
       backgroundColor: LevelsColors.neutralAccent,
       foregroundColor: LevelsColors.voidColor,
       textStyle: LevelsType.button,
+      minimumSize: const Size(0, LevelsSpace.buttonMinHeight),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(LevelsSpace.radiusButton),
       ),

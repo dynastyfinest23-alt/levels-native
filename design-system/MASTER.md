@@ -88,6 +88,10 @@ Bundled asset fonts (OFL), declared in `pubspec.yaml` under `fonts:` —
   Content max-width 560px centered on web — the app is a column of focus,
   not a full-bleed dashboard.
 - Radii: panels 16, buttons 999 (pill), the score has no container.
+- Primary buttons are at least 48px tall (`LevelsSpace.buttonMinHeight`, set once in
+  `filledButtonTheme`). Bottom CTAs use `ColumnCta` so they stay in the content
+  column. Every option list uses the one `AnswerCard`: full column width,
+  selected = even 2px accent border (never a one-sided border).
 - Elevation is light, not shadow: raised = `surfaceRaised` + `glassStroke`.
   Drop shadows exist only as zone glows. No Material elevation tints.
 
