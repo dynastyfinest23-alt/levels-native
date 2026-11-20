@@ -95,7 +95,7 @@ The three that move the score most: 3 (with 2), 4, and 5. Estimated result: 7.5/
 - [x] 2 Web shell (PR #11, merged 2026-11-09). Icons are still the Flutter defaults.
 - [ ] 3 Welcome screen
 - [x] 4 Reveal ending (PR #13, merged 2026-11-09). Rendered dashboard and submit screens NOT yet looked at; needs a signed-in session.
-- [x] 5 Component pass (branch fix/component-pass; PR pending merge). 48px buttons, CTA in the column, one shared AnswerCard (drill, reassessment, tracks, assessment), even selected border. Components rendered in a test harness and looked at; real signed-in drill and assessment screens NOT yet looked at.
+- [x] 5 Component pass (PR #20, merged 2026-11-20). 48px buttons, CTA in the column, one shared AnswerCard (drill, reassessment, tracks, assessment), even selected border. Components rendered in a test harness and looked at; real signed-in drill and assessment screens NOT yet looked at.
 - [ ] 6 Hub
 - [x] 7 Error copy (PR #14, merged 2026-11-09). Raw detail is debug-only; the six error views are not widget-tested.
 - [ ] 8 Assessment and auth friction
