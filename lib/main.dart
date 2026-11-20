@@ -75,6 +75,9 @@ final ThemeData levelsTheme = ThemeData(
       foregroundColor: LevelsColors.voidColor,
       textStyle: LevelsType.button,
       minimumSize: const Size(0, LevelsSpace.buttonMinHeight),
+      // Desktop web defaults to compact density, which takes 8px off the
+      // minimum height (measured 40px in Chrome, 2026-11-20). Standard keeps 48.
+      visualDensity: VisualDensity.standard,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(LevelsSpace.radiusButton),
       ),

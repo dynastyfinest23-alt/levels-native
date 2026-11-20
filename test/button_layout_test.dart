@@ -9,8 +9,12 @@ import 'package:levels_native/main.dart' show levelsTheme;
 
 // shrinkWrap removes the default 48px tap-target padding, which would report
 // 48px for any button and make these checks pass without the fix.
-final _measured =
-    levelsTheme.copyWith(materialTapTargetSize: MaterialTapTargetSize.shrinkWrap);
+// compact density is what desktop web (Chrome on Windows) applies; the test
+// platform defaults to standard, which hid the 8px loss until Chrome showed it.
+final _measured = levelsTheme.copyWith(
+  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  visualDensity: VisualDensity.compact,
+);
 
 void main() {
   testWidgets('FilledButton is at least 48px tall under the app theme',
