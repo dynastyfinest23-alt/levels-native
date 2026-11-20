@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/design_tokens.dart';
 import '../../core/user_error.dart';
+import '../../core/widgets/answer_card.dart';
 import '../../core/widgets/aurora_backdrop.dart';
 import '../../core/widgets/breathing_dot.dart';
 import '../drill/drill_tokens.dart' show AscensionTrack;
@@ -480,7 +481,7 @@ class _DailyCheckStage extends StatelessWidget {
               for (final option in embodimentBodyResponseOptions)
                 Padding(
                   padding: const EdgeInsets.only(bottom: LevelsSpace.space12),
-                  child: TrackOptionCard(
+                  child: AnswerCard(
                     label: option.label,
                     selected: option.response == selected,
                     onTap: () => onSelect(option.response),
@@ -520,13 +521,13 @@ class _Day7ConfirmStage extends StatelessWidget {
               const SizedBox(height: LevelsSpace.space8),
               Text(embodimentDay7ConfirmPrompt, style: LevelsType.displayTitle),
               const SizedBox(height: LevelsSpace.space24),
-              TrackOptionCard(
+              AnswerCard(
                 label: 'Yes',
                 selected: confirmed == true,
                 onTap: () => onSelect(true),
               ),
               const SizedBox(height: LevelsSpace.space12),
-              TrackOptionCard(
+              AnswerCard(
                 label: 'No',
                 selected: confirmed == false,
                 onTap: () => onSelect(false),
